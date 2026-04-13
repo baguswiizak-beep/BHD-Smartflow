@@ -519,7 +519,7 @@ input[type="date"].form-input::-webkit-calendar-picker-indicator{opacity:.45;cur
 .fab-lbl{font-size:9px;font-weight:600;color:var(--text3);}
 
 /* FAB POPUP */
-#fab-popup{position:fixed;bottom:calc(88px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(16px);z-index:200;display:flex;gap:14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
+#fab-popup{position:fixed;bottom:calc(120px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(16px);z-index:200;display:flex;gap:14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
 #fab-popup.open{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0);}
 .fab-opt{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;}
 .fab-opt-c{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-lg);border:2px solid rgba(255,255,255,.15);transition:transform .18s;}
@@ -1228,7 +1228,9 @@ async function apiPing(){
 }
 
 async function apiFetch(path, opts={}){
-  const r = await fetch(API_BASE + path, {
+  const sep = path.includes('?') ? '&' : '?';
+  const finalPath = opts.method ? path : path + sep + '_t=' + Date.now();
+  const r = await fetch(API_BASE + finalPath, {
     headers: {'Content-Type':'application/json'},
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
