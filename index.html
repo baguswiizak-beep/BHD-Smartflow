@@ -2,7 +2,7 @@
 <html lang="id" data-theme="light">
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
-<title>BHD SmartFlow System</title>
+<title>BHD Smart Flow v9</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -519,7 +519,7 @@ input[type="date"].form-input::-webkit-calendar-picker-indicator{opacity:.45;cur
 .fab-lbl{font-size:9px;font-weight:600;color:var(--text3);}
 
 /* FAB POPUP */
-#fab-popup{position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(16px);z-index:200;display:flex;gap:14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
+#fab-popup{position:fixed;bottom:calc(88px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(16px);z-index:200;display:flex;gap:14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
 #fab-popup.open{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0);}
 .fab-opt{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;}
 .fab-opt-c{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-lg);border:2px solid rgba(255,255,255,.15);transition:transform .18s;}
@@ -1679,7 +1679,7 @@ function buildWAText(){
   lines.push(SEP);
   lines.push('*📦 STOK KRITIS*');lines.push(kritTxt);
   lines.push(SEP);
-  lines.push('_BHD SmartFlow System - PT. Bagus Harya Dwiprima_');
+  lines.push('_BHD SmartFlow v9 - PT. Bagus Harya Dwiprima_');
   return lines.join('\n');
 }
 
