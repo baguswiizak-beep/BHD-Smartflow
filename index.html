@@ -2775,7 +2775,8 @@ function openModal(type){
       <div class="form-group"><label class="form-label">Titik Bongkar</label><input class="form-input" id="inf-bongkar" placeholder="Gudang / Kota Tujuan"/></div>
       <div class="form-group"><label class="form-label">Jumlah Setoran Netto (Rp)</label><input class="form-input" id="inf-amount" placeholder="0" inputmode="numeric"/></div>
       <div class="form-group"><label class="form-label">Tanggal</label><input type="date" class="form-input" id="inf-date" value="${today()}"/></div>
-      <div class="form-group"><label class="form-label">Update Status Armada</label><select class="form-select" id="inf-antre"><option value="jalan">🟢 Jalan — Aktif beroperasi</option><option value="antre">🟡 Antre — Menunggu bongkar</option><option value="bengkel">🔴 Bengkel — Dalam perbaikan</option></select></div>
+      <div class="form-group"><label class="form-label">Update Status Armada</label><select class="form-select" id="inf-antre" onchange="document.getElementById('inf-antre-hint').style.display=this.value==='antre'?'block':'none'"><option value="jalan">🟢 Jalan — Aktif beroperasi</option><option value="antre">🟡 Antre — Menunggu bongkar</option><option value="bengkel">🔴 Bengkel — Dalam perbaikan</option></select></div>
+      <div id="inf-antre-hint" style="display:none;font-size:10.5px;color:var(--text3);background:var(--bg3);padding:8px 10px;border-radius:10px;margin-bottom:8px;">💡 Status Antre bisa disimpan tanpa isi nominal uang.</div>
       <button class="form-btn inflow" onclick="submitInflow()">Simpan Inflow</button>`;
     setupCurrencyInput('inf-amount');syncDriverFromArmada();
   } else {
@@ -2889,22 +2890,23 @@ function submitInflow(){
   const bongkar=document.getElementById('inf-bongkar')?.value||'—';
   const date=document.getElementById('inf-date')?.value;
   const antre=document.getElementById('inf-antre')?.value;
-  if(!amount||amount<=0){showToast('Masukkan jumlah yang valid');return;}
+  if(antre!=='antre' && (!amount||amount<=0)){showToast('Masukkan jumlah yang valid');return;}
   // Ambil status armada SEBELUM diupdate — untuk logika ritase
   const fUnit=fleetData.find(x=>x.nopol===armada);
   const statusSebelum=fUnit?fUnit.status:'jalan';
   const txnId = 'txn_'+Date.now();
-  const newTxn={id:txnId,type:'inflow',label:'Setoran '+armada,sub:driver+' · Netto',amount,date,armada,muat:muat||'',bongkar:bongkar||'',driver,nota:'',toko:'',kategori:'Inflow',status:'lunas'};
+  const txnLabel = (amount > 0) ? 'Setoran ' + armada : 'Antrean ' + armada;
+  const newTxn={id:txnId,type:'inflow',label:txnLabel,sub:driver+' · Netto',amount,date,armada,muat:muat||'',bongkar:bongkar||'',driver,nota:'',toko:'',kategori:'Inflow',status:'lunas'};
   transactions.unshift(newTxn);
   if(fUnit){fUnit.status=antre;fUnit.driver=driver;}
   incrementRitaseForArmada(armada, statusSebelum);
   // Simpan ke server jika online
   if(_useAPI){
-    apiFetch('/api/transactions',{method:'POST',body:{...newTxn,label:'Setoran '+armada}}).catch(e=>console.warn('Sync inflow gagal:',e));
+    apiFetch('/api/transactions',{method:'POST',body:newTxn}).catch(e=>console.warn('Sync inflow gagal:',e));
     apiFetch('/api/fleet/'+fUnit?.id,{method:'PUT',body:{nopol:armada,driver,status:antre,pajak:fUnit?.pajak||'',kir:fUnit?.kir||''}}).catch(e=>console.warn('Sync fleet gagal:',e));
   }
   closeModal();renderDashboard();applyTxnFilters();renderLaporanTable();
-  showToast('Inflow '+fmt(amount)+' berhasil disimpan');vibrate(30);
+  showToast(amount > 0 ? 'Inflow ' + fmt(amount) + ' berhasil disimpan' : 'Status armada '+armada+' diperbarui ke Antre');vibrate(30);
 }
 function submitOutflow(){
   const nota=document.getElementById('out-nota')?.value||'—';
