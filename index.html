@@ -2906,7 +2906,7 @@ function submitInflow(){
     apiFetch('/api/fleet/'+fUnit?.id,{method:'PUT',body:{nopol:armada,driver,status:antre,pajak:fUnit?.pajak||'',kir:fUnit?.kir||''}}).catch(e=>console.warn('Sync fleet gagal:',e));
   }
   closeModal();renderDashboard();applyTxnFilters();renderLaporanTable();
-  showToast(amount > 0 ? 'Inflow ' + fmt(amount) + ' berhasil disimpan' : 'Status armada '+armada+' diperbarui ke Antre');vibrate(30);
+  showToast(amount>0?'Inflow '+fmt(amount)+' berhasil disimpan':'Armada '+armada+' status Antre');vibrate(30);
 }
 function submitOutflow(){
   const nota=document.getElementById('out-nota')?.value||'—';
@@ -2919,7 +2919,7 @@ function submitOutflow(){
   const armada=isUnit?document.getElementById('out-armada')?.value:'UMUM';
   const driver=isUnit?document.getElementById('out-driver')?.value:'';
   if(!label){showToast('Masukkan keterangan pengeluaran');return;}
-  if(!amount||amount<=0){showToast('Masukkan jumlah yang valid');return;}
+  if(antre!=='antre'&&(!amount||amount<=0)){showToast('Masukkan jumlah yang valid');return;}
   // Handle gudang item selection (Onderdil from stok)
   let spId=null;
   if(cat==='Onderdil'){
