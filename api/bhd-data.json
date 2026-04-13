@@ -1,0 +1,71 @@
+{
+  "transactions": [],
+  "fleet": [
+    {
+      "id": "f1",
+      "nopol": "B 1234 CD",
+      "driver": "Budi Santoso",
+      "status": "jalan",
+      "pajak": "2025-07-20",
+      "kir": "2025-07-18"
+    },
+    {
+      "id": "f2",
+      "nopol": "B 5678 EF",
+      "driver": "Andi Pratama",
+      "status": "jalan",
+      "pajak": "2025-09-15",
+      "kir": "2025-10-01"
+    },
+    {
+      "id": "f3",
+      "nopol": "B 9012 GH",
+      "driver": "Rudi Hartono",
+      "status": "bengkel",
+      "pajak": "2025-08-05",
+      "kir": "2025-08-10"
+    },
+    {
+      "id": "f4",
+      "nopol": "B 3456 IJ",
+      "driver": "Sari Dewi",
+      "status": "antre",
+      "pajak": "2025-07-22",
+      "kir": "2025-07-25"
+    },
+    {
+      "id": "f5",
+      "nopol": "B 7890 KL",
+      "driver": "Hendra Wijaya",
+      "status": "jalan",
+      "pajak": "2025-12-01",
+      "kir": "2025-11-15"
+    },
+    {
+      "id": "f6",
+      "nopol": "B 2345 MN",
+      "driver": "Teguh Purnomo",
+      "status": "jalan",
+      "pajak": "2025-10-10",
+      "kir": "2025-09-20"
+    }
+  ],
+  "drivers": [
+    "Budi Santoso",
+    "Andi Pratama",
+    "Rudi Hartono",
+    "Sari Dewi",
+    "Hendra Wijaya",
+    "Teguh Purnomo",
+    "Agus Setiawan",
+    "Dian Kusuma"
+  ],
+  "inventory": [],
+  "settings": {
+    "company_name": "PT. BAGUS HARYA DWIPRIMA",
+    "fleet_count": "6",
+    "gudang_kategori": "[\"Ban\",\"Oli\",\"Filter\",\"Spare\"]",
+    "login_username": "admin",
+    "login_password": "bhd2024"
+  }
+}
