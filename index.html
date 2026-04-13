@@ -1518,20 +1518,24 @@ function saveSparepart(editId){
       sp.stokAwal=jml;
       sp.stokSisa=Math.min(isNaN(sp.stokSisa)?jml:sp.stokSisa,jml);
       sp.hargaSatuan=isNaN(harga)?0:harga;
+      if(_useAPI) apiFetch('/api/inventory/'+sp.id,{method:'PUT',body:sp}).catch(e=>console.warn(e));
     }
   } else {
-    sparepartStock.push({
+    const spNew = {
       id:'sp'+Date.now(),nama,spek,kategori:kat,toko,nota,
       tglMasuk:tgl,stokAwal:jml,stokSisa:jml,
       hargaSatuan:isNaN(harga)?0:harga,
       installed:[],catatan:''
-    });
+    };
+    sparepartStock.push(spNew);
+    if(_useAPI) apiFetch('/api/inventory',{method:'POST',body:spNew}).catch(e=>console.warn(e));
   }
   closeSm();renderGudang();showToast(editId?'Item diperbarui':'Stok ditambahkan');vibrate(30);
 }
 
 function deleteSparepart(id){
   const i=sparepartStock.findIndex(s=>s.id===id);if(i>-1)sparepartStock.splice(i,1);
+  if(_useAPI) apiFetch('/api/inventory/'+id,{method:'DELETE'}).catch(e=>console.warn(e));
   renderGudang();showToast('Item dihapus');vibrate(40);
 }
 
@@ -1566,14 +1570,19 @@ function confirmPasang(spId){
   for(let i=0;i<jml;i++){
     sp.installed.push({armada,tglPasang:tgl,ritase:0,txnId:Date.now()+i});
   }
-  transactions.unshift({
-    id:Date.now(),type:'outflow',
+  const newTxn = {
+    id:'txn_'+Date.now(),type:'outflow',
     label:sp.nama+' ('+sp.spek+') — '+jml+' unit',
     sub:'No.Nota: '+sp.nota+' · '+sp.toko+' · '+driver,
     amount:sp.hargaSatuan*jml,date:tgl,
     armada,nota:sp.nota,toko:sp.toko,
     kategori:'Onderdil',driver,status:'lunas',sparepartId:spId
-  });
+  };
+  transactions.unshift(newTxn);
+  if(_useAPI){
+    apiFetch('/api/inventory/'+spId,{method:'PUT',body:sp}).catch(e=>console.warn(e));
+    apiFetch('/api/transactions',{method:'POST',body:newTxn}).catch(e=>console.warn(e));
+  }
   closeSm();renderGudang();renderDashboard();applyTxnFilters();renderLaporanTable();
   showToast(sp.nama+' ('+jml+' unit) dipasang ke '+armada);vibrate([30,50,30]);
 }
