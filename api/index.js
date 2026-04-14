@@ -24,7 +24,16 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════
+// PING (alias health check untuk frontend)
+app.get('/api/ping', async (req, res) => {
+  try {
+    const { error } = await supabase.from('settings').select('key').limit(1);
+    if (error) throw error;
+    res.json({ status: 'ok', db: 'supabase', timestamp: new Date().toISOString() });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});// ══════════════════════════════════════
 // TRANSACTIONS (Inflow & Outflow)
 // ══════════════════════════════════════
 app.get('/api/transactions', async (req, res) => {
