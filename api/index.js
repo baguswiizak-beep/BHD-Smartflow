@@ -6,8 +6,27 @@ const db = require('./database');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// ── DATABASE INITIALIZATION PROMISE ──
+let dbInitPromise = null;
+const ensureDb = async () => {
+    if (!dbInitPromise) dbInitPromise = db.init();
+    return dbInitPromise;
+};
+// ──────────────────────────────────────
+
 app.use(cors());
 app.use(express.json());
+
+// Middleware untuk memastikan DB siap sebelum request diproses
+app.use(async (req, res, next) => {
+    // Abaikan ping/health check jika ingin respons cepat, atau tetap cek DB
+    try {
+        await ensureDb();
+        next();
+    } catch (e) {
+        res.status(500).json({ status: 'error', message: 'Database initialization failed: ' + e.message });
+    }
+});
 
 // ── HEALTH CHECK ─────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {
