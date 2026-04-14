@@ -124,7 +124,9 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .tb-acts{display:flex;gap:6px;}
 .tb-btn{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;}
 .tb-btn:hover{background:var(--bg4);}
-.tb-btn svg{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:2;}
+@keyframes spin { 100% { transform:rotate(360deg); } }
+.spinning { animation: spin 1s linear infinite; }
+.tb-btn svg { transition: transform 0.2s; }
 #notif-wrap{position:relative;}
 #notif-dot{position:absolute;top:5px;right:5px;width:6px;height:6px;background:var(--danger);border-radius:50%;border:1.5px solid var(--card);}
 
@@ -824,6 +826,9 @@ input,select,textarea{font-size:16px!important;}
     <div class="tb-clock" id="tb-clock">00:00:00</div>
     <span id="api-status-badge" title="Status koneksi server" style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--text3);border:1px solid var(--card-b);letter-spacing:.03em;cursor:default;display:none;">🟡 Offline</span>
     <div class="tb-acts">
+      <button class="tb-btn" onclick="syncAllData()" title="Sinkronkan data sekarang" id="sync-btn">
+        <svg id="sync-icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+      </button>
       <button class="tb-btn" onclick="toggleTheme()" id="theme-btn"><svg id="ti-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="ti-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
       <div id="notif-wrap"><button class="tb-btn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></button><span id="notif-dot"></span></div>
     </div>
@@ -1212,19 +1217,40 @@ input,select,textarea{font-size:16px!important;}
 // ═══════════════════════════════════════════════════════
 // API CLIENT — BHD SmartFlow Backend
 // ═══════════════════════════════════════════════════════
-// Deteksi apakah diakses dari localhost atau IP jaringan
-const API_BASE = window.location.protocol === 'file:' || window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
-  ? 'http://127.0.0.1:3001'
-  : (window.location.port ? `http://${window.location.hostname}:3001` : "");
+// Deteksi cerdas: Jika ada di server cloud (Vercel/Render), pakai origin sekarang. Jika di localhost/file, pakai port 3001.
+const API_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' || window.location.protocol === 'file:')
+  ? 'http://127.0.0.1:3001' 
+  : window.location.origin;
 
 let _useAPI = false; // akan di-set true setelah ping berhasil
 
 async function apiPing(){
+  document.getElementById('sync-icon')?.parentElement.classList.add('spinning');
   try{
-    const r = await fetch(API_BASE+'/api/ping',{signal:AbortSignal.timeout(2000)});
+    const r = await fetch(API_BASE+'/api/ping',{signal:AbortSignal.timeout(3000)});
     _useAPI = r.ok;
-  } catch(e){ _useAPI = false; }
+  } catch(e){ 
+    console.warn('Ping server gagal:', e.message);
+    _useAPI = false; 
+  }
+  const badge = document.getElementById('api-status-badge');
+  if(badge){
+    badge.style.display = 'inline-block';
+    badge.textContent = _useAPI ? '🟢 Online' : '🟡 Offline';
+    badge.style.background = _useAPI ? 'rgba(34,197,94,.1)' : 'rgba(234,179,8,.1)';
+    badge.style.color = _useAPI ? '#22C55E' : '#EAB308';
+  }
+  document.getElementById('sync-icon')?.parentElement.classList.remove('spinning');
   return _useAPI;
+}
+
+async function syncAllData(){
+  if(await apiPing()){
+    await _appInit();
+    showToast('Data berhasil disinkronkan 🚀');
+  } else {
+    showToast('⚠️ Gagal terhubung ke server');
+  }
 }
 
 async function apiFetch(path, opts={}){
