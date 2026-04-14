@@ -452,6 +452,189 @@ app.get('/api/summary', async (req, res) => {
 });
 
 // ══════════════════════════════════════
+// ALIAS: /api/fleet → armada (sesuai frontend)
+// ══════════════════════════════════════
+app.get('/api/fleet', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('armada').select('*').order('created_at', { ascending: true });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/fleet', async (req, res) => {
+  try {
+    const body = req.body;
+    if (!body.id) body.id = 'arm-' + Date.now();
+    const { data, error } = await supabase.from('armada').insert([body]).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/fleet/:id', async (req, res) => {
+  try {
+    const body = req.body; delete body.id;
+    const { data, error } = await supabase.from('armada').update(body).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/fleet/:id', async (req, res) => {
+  try {
+    const { error } = await supabase.from('armada').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════
+// ALIAS: /api/inventory → spareparts (sesuai frontend)
+// ══════════════════════════════════════
+app.get('/api/inventory', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('spareparts').select('*').order('name', { ascending: true });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/inventory', async (req, res) => {
+  try {
+    const body = req.body;
+    if (!body.id) body.id = 'sp-' + Date.now();
+    const { data, error } = await supabase.from('spareparts').insert([body]).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/inventory/:id', async (req, res) => {
+  try {
+    const body = req.body; delete body.id;
+    const { data, error } = await supabase.from('spareparts').update(body).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/inventory/:id', async (req, res) => {
+  try {
+    const { error } = await supabase.from('spareparts').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════
+// ALIAS: /api/drivers (sesuai frontend — field nama)
+// ══════════════════════════════════════
+app.get('/api/drivers', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('drivers').select('*').order('name', { ascending: true });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/drivers', async (req, res) => {
+  try {
+    const body = req.body;
+    if (!body.id) body.id = 'drv-' + Date.now();
+    // Frontend kirim field 'nama', kita map ke 'name'
+    if (body.nama && !body.name) body.name = body.nama;
+    const { data, error } = await supabase.from('drivers').insert([body]).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/drivers/:id', async (req, res) => {
+  try {
+    const { error } = await supabase.from('drivers').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════
+// ALIAS: /api/settings (return flat object)
+// ══════════════════════════════════════
+app.get('/api/settings', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('*');
+    if (error) throw error;
+    const obj = {};
+    (data || []).forEach(r => { obj[r.key] = r.value; });
+    res.json(obj);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/settings', async (req, res) => {
+  try {
+    const entries = Object.entries(req.body);
+    for (const [key, value] of entries) {
+      await supabase.from('settings').upsert({ key, value: String(value) }, { onConflict: 'key' });
+    }
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════
+// TRANSACTIONS — return array langsung (sesuai frontend)
+// ══════════════════════════════════════
+app.get('/api/transactions', async (req, res) => {
+  try {
+    const { type, armada, startDate, endDate, limit = 1000 } = req.query;
+    let query = supabase.from('transactions').select('*').order('date', { ascending: false }).limit(Number(limit));
+    if (type) query = query.eq('type', type);
+    if (armada) query = query.eq('armada', armada);
+    if (startDate) query = query.gte('date', startDate);
+    if (endDate) query = query.lte('date', endDate);
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json(data || []);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/transactions', async (req, res) => {
+  try {
+    const body = req.body;
+    if (!body.id) body.id = 'txn-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+    if (!body.date) body.date = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabase.from('transactions').insert([body]).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/transactions/:id', async (req, res) => {
+  try {
+    const body = req.body; delete body.id;
+    const { data, error } = await supabase.from('transactions').update(body).eq('id', req.params.id).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/transactions/:id', async (req, res) => {
+  try {
+    const { error } = await supabase.from('transactions').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/transactions', async (req, res) => {
+  try {
+    const { error } = await supabase.from('transactions').delete().neq('id', '');
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════
 // START SERVER
 // ══════════════════════════════════════
 const PORT = process.env.PORT || 3000;
