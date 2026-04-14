@@ -11,6 +11,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://fwuuhtmwhgisrkbtmasi.s
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+<<<<<<< Updated upstream
 // ══════════════════════════════════════
 // HEALTH CHECK
 // ══════════════════════════════════════
@@ -21,9 +22,20 @@ app.get('/api/health', async (req, res) => {
     res.json({ status: 'ok', db: 'supabase', timestamp: new Date().toISOString() });
   } catch (e) {
     res.status(500).json({ status: 'error', message: e.message });
+=======
+// ════════════════════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════════════════════
+app.post('/api/auth/login', async (req, res) => {
+  const { username, password } = req.body || {};
+  const user = await db.validateAdmin(username, password);
+  if (user) {
+    return res.json({ ok: true, username: user.username, role: user.role });
+>>>>>>> Stashed changes
   }
 });
 
+<<<<<<< Updated upstream
 // PING (alias health check untuk frontend)
 app.get('/api/ping', async (req, res) => {
   try {
@@ -50,6 +62,40 @@ app.get('/api/transactions', async (req, res) => {
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
+=======
+app.post('/api/auth/change-password', async (req, res) => {
+  const { oldPassword, newPassword } = req.body || {};
+  const settings = await db.getSettings();
+  if (oldPassword !== settings.login_password) {
+    return res.status(403).json({ error: 'Password lama tidak cocok' });
+  }
+  await db.updateSetting('login_password', newPassword);
+  res.json({ ok: true });
+});
+
+// ════════════════════════════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════════════════════════════
+app.get('/api/settings', async (_req, res) => {
+  const s = await db.getSettings();
+  delete s.login_password; // jangan kirim password ke frontend
+  res.json(s);
+});
+
+app.put('/api/settings', async (req, res) => {
+  const { key, value } = req.body || {};
+  if (!key) return res.status(400).json({ error: 'key diperlukan' });
+  if (key === 'login_password') return res.status(403).json({ error: 'Gunakan endpoint change-password' });
+  await db.updateSetting(key, String(value));
+  res.json({ ok: true });
+});
+
+// ════════════════════════════════════════════════════════════════
+// TRANSACTIONS
+// ════════════════════════════════════════════════════════════════
+app.get('/api/transactions', async (req, res) => {
+  res.json(await db.getTransactions(req.query));
+>>>>>>> Stashed changes
 });
 
 app.post('/api/transactions', async (req, res) => {
@@ -89,6 +135,7 @@ app.delete('/api/transactions/:id', async (req, res) => {
   }
 });
 
+<<<<<<< Updated upstream
 app.delete('/api/transactions', async (req, res) => {
   try {
     const { error } = await supabase.from('transactions').delete().neq('id', '');
@@ -97,6 +144,13 @@ app.delete('/api/transactions', async (req, res) => {
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
+=======
+// ════════════════════════════════════════════════════════════════
+// FLEET (ARMADA)
+// ════════════════════════════════════════════════════════════════
+app.get('/api/fleet', async (_req, res) => {
+  res.json(await db.getFleet());
+>>>>>>> Stashed changes
 });
 
 // ══════════════════════════════════════
@@ -150,6 +204,7 @@ app.delete('/api/armada/:id', async (req, res) => {
 
 // ══════════════════════════════════════
 // DRIVERS
+<<<<<<< Updated upstream
 // ══════════════════════════════════════
 app.get('/api/drivers', async (req, res) => {
   try {
@@ -170,6 +225,86 @@ app.post('/api/drivers', async (req, res) => {
     res.json({ success: true, data });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
+=======
+// ════════════════════════════════════════════════════════════════
+app.get('/api/drivers', async (_req, res) => {
+  res.json(await db.getDrivers());
+});
+
+app.post('/api/drivers', async (req, res) => {
+  const { nama } = req.body || {};
+  if (!nama) return res.status(400).json({ error: 'Nama diperlukan' });
+  await db.addDriver(nama);
+  res.status(201).json({ ok: true });
+});
+
+app.delete('/api/drivers/:nama', async (req, res) => {
+  await db.deleteDriver(decodeURIComponent(req.params.nama));
+  res.json({ ok: true });
+});
+
+// ════════════════════════════════════════════════════════════════
+// INVENTORY (GUDANG ONDERDIL)
+// ════════════════════════════════════════════════════════════════
+app.get('/api/inventory', async (_req, res) => {
+  res.json(await db.getInventory());
+});
+
+app.post('/api/inventory', async (req, res) => {
+  const sp = req.body;
+  if (!sp.id || !sp.nama) return res.status(400).json({ error: 'id dan nama diperlukan' });
+  await db.addInventory(sp);
+  res.status(201).json({ ok: true });
+});
+
+app.put('/api/inventory/:id', async (req, res) => {
+  const ok = await db.updateInventory(req.params.id, req.body);
+  if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
+  res.json({ ok: true });
+});
+
+app.delete('/api/inventory/:id', async (req, res) => {
+  const ok = await db.deleteInventory(req.params.id);
+  if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
+  res.json({ ok: true });
+});
+
+app.post('/api/inventory/:id/install', async (req, res) => {
+  const result = await db.installInventory(req.params.id, req.body);
+  if (result.error) return res.status(400).json(result);
+  res.status(201).json(result);
+});
+
+app.delete('/api/inventory/:id/install/:installId', async (req, res) => {
+  const ok = await db.uninstallInventory(req.params.id, req.params.installId);
+  if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
+  res.json({ ok: true });
+});
+
+// ════════════════════════════════════════════════════════════════
+// DASHBOARD SUMMARY
+// ════════════════════════════════════════════════════════════════
+app.get('/api/summary', async (req, res) => {
+  const txns = await db.getTransactions(req.query);
+  const inflow  = txns.filter(t=>t.type==='inflow').reduce((s,t)=>s+t.amount,0);
+  const outflow = txns.filter(t=>t.type==='outflow').reduce((s,t)=>s+t.amount,0);
+  const fleet   = await db.getFleet();
+  const statusCount = fleet.reduce((acc,f)=>{ acc[f.status]=(acc[f.status]||0)+1; return acc; },{});
+  res.json({
+    inflow, outflow, net: inflow - outflow,
+    margin: inflow > 0 ? ((inflow-outflow)/inflow*100).toFixed(1) : '0',
+    txnCount: txns.length,
+    fleet: statusCount,
+  });
+});
+
+// ─── CHANGE PASSWORD ENDPOINT (shortcut dari settings) ───────
+app.post('/api/change-password', async (req, res) => {
+  const { oldPassword, newPassword } = req.body || {};
+  const settings = await db.getSettings();
+  if (oldPassword !== settings.login_password) {
+    return res.status(403).json({ error: 'Password lama tidak cocok' });
+>>>>>>> Stashed changes
   }
 });
 

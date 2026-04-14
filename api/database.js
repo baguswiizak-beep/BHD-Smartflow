@@ -1,168 +1,359 @@
-const FIREBASE_URL = 'https://bhd-smartflow-default-rtdb.firebaseio.com';
+const { db: pool } = require('@vercel/postgres');
 
-const DEFAULTS = {
-  transactions: [],
-  fleet: [],
-  drivers: [],
-  inventory: [],
-  settings: {},
-};
+/**
+ * BHD SmartFlow — Database Layer (Postgres SQL)
+ * PT. Bagus Harya Dwiprima
+ */
 
-let _db = null;
+// ─── SQL SCHEMA ──────────────────────────────────────────────
+const SCHEMA = `
+-- Authentication
+CREATE TABLE IF NOT EXISTS admins (
+    id TEXT PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT
+);
+
+-- Transactions
+CREATE TABLE IF NOT EXISTS transactions (
+    id TEXT PRIMARY KEY,
+    type TEXT NOT NULL,
+    amount BIGINT DEFAULT 0,
+    label TEXT,
+    sub TEXT,
+    date TEXT,
+    armada TEXT,
+    driver TEXT,
+    toko TEXT,
+    nota TEXT,
+    kategori TEXT,
+    status TEXT,
+    sparepart_id TEXT
+);
+
+-- Fleet (Armada)
+CREATE TABLE IF NOT EXISTS fleet (
+    id TEXT PRIMARY KEY,
+    nopol TEXT UNIQUE NOT NULL,
+    driver TEXT,
+    status TEXT,
+    pajak TEXT,
+    kir TEXT
+);
+
+-- Drivers
+CREATE TABLE IF NOT EXISTS drivers (
+    nama TEXT PRIMARY KEY
+);
+
+-- Inventory (Gudang)
+CREATE TABLE IF NOT EXISTS inventory (
+    id TEXT PRIMARY KEY,
+    nama TEXT NOT NULL,
+    spek TEXT,
+    kategori TEXT,
+    toko TEXT,
+    nota TEXT,
+    tgl_masuk TEXT,
+    stok_awal INTEGER DEFAULT 0,
+    stok_sisa INTEGER DEFAULT 0,
+    harga_satuan BIGINT DEFAULT 0,
+    catatan TEXT
+);
+
+-- Installed Spareparts tracking
+CREATE TABLE IF NOT EXISTS inventory_installed (
+    id SERIAL PRIMARY KEY,
+    inventory_id TEXT REFERENCES inventory(id) ON DELETE CASCADE,
+    armada TEXT,
+    tgl_pasang TEXT,
+    ritase INTEGER DEFAULT 0,
+    txn_id TEXT
+);
+
+-- Settings
+CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+);
+`;
 
 async function init() {
-  try {
-    const r = await fetch(`${FIREBASE_URL}/.json`);
-    const data = await r.json();
-    _db = data || DEFAULTS;
-    console.log('✅ Berhasil terhubung ke Firebase Realtime Database');
-  } catch (e) {
-    console.error('⚠ Gagal mengambil data dari Firebase:', e.message);
-    _db = DEFAULTS;
-  }
-}
+    try {
+        console.log('⏳ Menghubungkan ke Postgres...');
+        
+        // Buat tabel jika belum ada
+        await pool.query(SCHEMA);
+        console.log('✅ Skema database SQL siap');
 
-async function save() {
-  try {
-    await fetch(`${FIREBASE_URL}/.json`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(_db)
-    });
-  } catch (e) {
-    console.error('⚠ Gagal menyimpan data ke Firebase:', e.message);
-  }
+        // Seed admin jika kosong
+        const adminCheck = await pool.query('SELECT COUNT(*) FROM admins');
+        if (parseInt(adminCheck.rows[0].count) === 0) {
+            console.log('🌱 Seeding default admin...');
+            await pool.query(
+                "INSERT INTO admins (id, username, password, role) VALUES ('admin-1', 'admin', 'bhd2024', 'superadmin')"
+            );
+        }
+
+        // Seed settings jika kosong
+        const settingsCheck = await pool.query('SELECT COUNT(*) FROM settings');
+        if (parseInt(settingsCheck.rows[0].count) === 0) {
+            console.log('🌱 Seeding default settings...');
+            const defaults = [
+                ['company_name', 'PT. BAGUS HARYA DWIPRIMA'],
+                ['fleet_count', '6'],
+                ['login_username', 'admin'],
+                ['login_password', 'bhd2024']
+            ];
+            for (const [key, val] of defaults) {
+                await pool.query('INSERT INTO settings (key, value) VALUES ($1, $2)', [key, val]);
+            }
+        }
+    } catch (e) {
+        console.error('⚠ Gagal inisialisasi SQL:', e.message);
+        throw e;
+    }
 }
 
 const db = {
-  init,
-  // ----- READ -----
-  get: () => _db,
-  getTransactions: (filters = {}) => {
-    let list = [...(_db.transactions || [])];
-    if (filters.from)   list = list.filter(t => t.date >= filters.from);
-    if (filters.to)     list = list.filter(t => t.date <= filters.to);
-    if (filters.type)   list = list.filter(t => t.type === filters.type);
-    if (filters.armada) list = list.filter(t => t.armada === filters.armada);
-    return list.sort((a,b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0));
-  },
+    init,
 
-  // ----- TRANSACTIONS -----
-  addTransaction: async (t) => {
-    _db.transactions = _db.transactions || [];
-    _db.transactions.unshift(t);
-    await save();
-  },
-  updateTransaction: async (id, data) => {
-    _db.transactions = _db.transactions || [];
-    const i = _db.transactions.findIndex(t => t.id === id);
-    if (i === -1) return false;
-    _db.transactions[i] = { ..._db.transactions[i], ...data };
-    await save();
-    return true;
-  },
-  deleteTransaction: async (id) => {
-    _db.transactions = _db.transactions || [];
-    const before = _db.transactions.length;
-    _db.transactions = _db.transactions.filter(t => t.id !== id);
-    await save();
-    return _db.transactions.length < before;
-  },
-  deleteAllTransactions: async () => {
-    _db.transactions = [];
-    await save();
-  },
+    // ----- SETTINGS & AUTH -----
+    getSettings: async () => {
+        const { rows } = await pool.query('SELECT * FROM settings');
+        const settings = {};
+        rows.forEach(r => settings[r.key] = r.value);
+        return settings;
+    },
 
-  // ----- FLEET -----
-  getFleet: () => [...(_db.fleet || [])],
-  addFleet: async (f) => {
-    _db.fleet = _db.fleet || [];
-    _db.fleet.push(f);
-    await save();
-  },
-  updateFleet: async (id, data) => {
-    _db.fleet = _db.fleet || [];
-    const i = _db.fleet.findIndex(f => f.id === id);
-    if (i === -1) return false;
-    _db.fleet[i] = { ..._db.fleet[i], ...data };
-    await save();
-    return true;
-  },
-  deleteFleet: async (id) => {
-    _db.fleet = _db.fleet || [];
-    const before = _db.fleet.length;
-    _db.fleet = _db.fleet.filter(f => f.id !== id);
-    await save();
-    return _db.fleet.length < before;
-  },
+    updateSetting: async (key, value) => {
+        await pool.query(
+            'INSERT INTO settings (key, value) ON CONFLICT (key) DO UPDATE SET value = $2',
+            [key, value]
+        );
+    },
 
-  // ----- DRIVERS -----
-  getDrivers: () => [...(_db.drivers || [])],
-  addDriver: async (nama) => {
-    _db.drivers = _db.drivers || [];
-    if (!_db.drivers.includes(nama)) { _db.drivers.push(nama); await save(); }
-  },
-  deleteDriver: async (nama) => {
-    _db.drivers = _db.drivers || [];
-    _db.drivers = _db.drivers.filter(d => d !== nama);
-    await save();
-  },
+    validateAdmin: async (username, password) => {
+        const { rows } = await pool.query(
+            'SELECT * FROM admins WHERE username = $1 AND password = $2',
+            [username, password]
+        );
+        return rows[0] || null;
+    },
 
-  // ----- INVENTORY -----
-  getInventory: () => (_db.inventory || []).map(sp => ({
-    ...sp,
-    installed: sp.installed || [],
-  })),
-  addInventory: async (sp) => {
-    _db.inventory = _db.inventory || [];
-    _db.inventory.push({ ...sp, installed: sp.installed || [] });
-    await save();
-  },
-  updateInventory: async (id, data) => {
-    _db.inventory = _db.inventory || [];
-    const i = _db.inventory.findIndex(s => s.id === id);
-    if (i === -1) return false;
-    _db.inventory[i] = { ..._db.inventory[i], ...data };
-    await save();
-    return true;
-  },
-  deleteInventory: async (id) => {
-    _db.inventory = _db.inventory || [];
-    const before = _db.inventory.length;
-    _db.inventory = _db.inventory.filter(s => s.id !== id);
-    await save();
-    return _db.inventory.length < before;
-  },
-  installInventory: async (id, installData) => {
-    _db.inventory = _db.inventory || [];
-    const sp = _db.inventory.find(s => s.id === id);
-    if (!sp) return { error: 'Tidak ditemukan' };
-    if ((sp.stokSisa || 0) < (installData.jumlah || 1)) return { error: 'Stok tidak cukup' };
-    sp.installed = sp.installed || [];
-    sp.installed.push(installData);
-    sp.stokSisa = (sp.stokSisa || 0) - (installData.jumlah || 1);
-    await save();
-    return { ok: true };
-  },
-  uninstallInventory: async (id, installId) => {
-    _db.inventory = _db.inventory || [];
-    const sp = _db.inventory.find(s => s.id === id);
-    if (!sp) return false;
-    const inst = (sp.installed || []).find(i => i.id === installId);
-    if (!inst) return false;
-    sp.installed = sp.installed.filter(i => i.id !== installId);
-    sp.stokSisa = (sp.stokSisa || 0) + (inst.jumlah || 1);
-    await save();
-    return true;
-  },
+    // ----- TRANSACTIONS -----
+    getTransactions: async (filters = {}) => {
+        let query = 'SELECT * FROM transactions WHERE 1=1';
+        const params = [];
+        let i = 1;
 
-  // ----- SETTINGS -----
-  getSettings: () => ({ ...(_db.settings || {}) }),
-  updateSetting: async (key, value) => {
-    _db.settings = _db.settings || {};
-    _db.settings[key] = value;
-    await save();
-  },
+        if (filters.from) {
+            query += ` AND date >= $${i++}`;
+            params.push(filters.from);
+        }
+        if (filters.to) {
+            query += ` AND date <= $${i++}`;
+            params.push(filters.to);
+        }
+        if (filters.type) {
+            query += ` AND type = $${i++}`;
+            params.push(filters.type);
+        }
+        if (filters.armada) {
+            query += ` AND armada = $${i++}`;
+            params.push(filters.armada);
+        }
+
+        query += ' ORDER BY date DESC';
+        const { rows } = await pool.query(query, params);
+        return rows.map(r => ({ ...r, amount: parseInt(r.amount) }));
+    },
+
+    addTransaction: async (t) => {
+        await pool.query(
+            `INSERT INTO transactions 
+            (id, type, amount, label, sub, date, armada, driver, toko, nota, kategori, status, sparepart_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+            [t.id, t.type, t.amount, t.label || '', t.sub || '', t.date, t.armada || '', t.driver || '', t.toko || '', t.nota || '', t.kategori || '', t.status || 'lunas', t.sparepart_id || '']
+        );
+    },
+
+    updateTransaction: async (id, data) => {
+        const fields = [];
+        const params = [];
+        let i = 1;
+        for (const [key, val] of Object.entries(data)) {
+            if (key === 'id') continue;
+            fields.push(`${key} = $${i++}`);
+            params.push(val);
+        }
+        params.push(id);
+        const { rowCount } = await pool.query(
+            `UPDATE transactions SET ${fields.join(', ')} WHERE id = $${i}`,
+            params
+        );
+        return rowCount > 0;
+    },
+
+    deleteTransaction: async (id) => {
+        const { rowCount } = await pool.query('DELETE FROM transactions WHERE id = $1', [id]);
+        return rowCount > 0;
+    },
+
+    deleteAllTransactions: async () => {
+        await pool.query('DELETE FROM transactions');
+    },
+
+    // ----- FLEET -----
+    getFleet: async () => {
+        const { rows } = await pool.query('SELECT * FROM fleet');
+        return rows;
+    },
+
+    addFleet: async (f) => {
+        await pool.query(
+            'INSERT INTO fleet (id, nopol, driver, status, pajak, kir) VALUES ($1, $2, $3, $4, $5, $6)',
+            [f.id, f.nopol, f.driver || '', f.status || 'jalan', f.pajak || '', f.kir || '']
+        );
+    },
+
+    updateFleet: async (id, data) => {
+        const fields = [];
+        const params = [];
+        let i = 1;
+        for (const [key, val] of Object.entries(data)) {
+            if (key === 'id') continue;
+            fields.push(`${key} = $${i++}`);
+            params.push(val);
+        }
+        params.push(id);
+        const { rowCount } = await pool.query(
+            `UPDATE fleet SET ${fields.join(', ')} WHERE id = $${i}`,
+            params
+        );
+        return rowCount > 0;
+    },
+
+    deleteFleet: async (id) => {
+        const { rowCount } = await pool.query('DELETE FROM fleet WHERE id = $1', [id]);
+        return rowCount > 0;
+    },
+
+    // ----- DRIVERS -----
+    getDrivers: async () => {
+        const { rows } = await pool.query('SELECT * FROM drivers');
+        return rows.map(r => r.nama);
+    },
+
+    addDriver: async (nama) => {
+        await pool.query('INSERT INTO drivers (nama) VALUES ($1) ON CONFLICT DO NOTHING', [nama]);
+    },
+
+    deleteDriver: async (nama) => {
+        await pool.query('DELETE FROM drivers WHERE nama = $1', [nama]);
+    },
+
+    // ----- INVENTORY -----
+    getInventory: async () => {
+        const { rows: inventory } = await pool.query('SELECT * FROM inventory');
+        const { rows: installed } = await pool.query('SELECT * FROM inventory_installed');
+        
+        return inventory.map(sp => ({
+            ...sp,
+            harga_satuan: parseInt(sp.harga_satuan),
+            installed: installed.filter(i => i.inventory_id === sp.id)
+        }));
+    },
+
+    addInventory: async (sp) => {
+        await pool.query(
+            `INSERT INTO inventory 
+            (id, nama, spek, kategori, toko, nota, tgl_masuk, stok_awal, stok_sisa, harga_satuan, catatan)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+            [sp.id, sp.nama, sp.spek || '', sp.kategori || '', sp.toko || '', sp.nota || '', sp.tgl_masuk, sp.stok_awal, sp.stok_sisa, sp.hargaSatuan || 0, sp.catatan || '']
+        );
+    },
+
+    updateInventory: async (id, data) => {
+        const fields = [];
+        const params = [];
+        let i = 1;
+        for (const [key, val] of Object.entries(data)) {
+            if (key === 'id' || key === 'installed') continue;
+            fields.push(`${key} = $${i++}`);
+            params.push(val);
+        }
+        params.push(id);
+        const { rowCount } = await pool.query(
+            `UPDATE inventory SET ${fields.join(', ')} WHERE id = $${i}`,
+            params
+        );
+        return rowCount > 0;
+    },
+
+    deleteInventory: async (id) => {
+        const { rowCount } = await pool.query('DELETE FROM inventory WHERE id = $1', [id]);
+        return rowCount > 0;
+    },
+
+    installInventory: async (id, installData) => {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            
+            // Cek stok
+            const { rows } = await client.query('SELECT stok_sisa FROM inventory WHERE id = $1', [id]);
+            if (rows.length === 0) throw new Error('Item tidak ditemukan');
+            
+            const jml = installData.jumlah || 1;
+            if (rows[0].stok_sisa < jml) throw new Error('Stok tidak cukup');
+            
+            // Kurangi stok
+            await client.query('UPDATE inventory SET stok_sisa = stok_sisa - $1 WHERE id = $2', [jml, id]);
+            
+            // Tambah catatan terpasang (bisa beberapa jika jml > 1)
+            for (let i = 0; i < jml; i++) {
+                await client.query(
+                    'INSERT INTO inventory_installed (inventory_id, armada, tgl_pasang, ritase, txn_id) VALUES ($1, $2, $3, $4, $5)',
+                    [id, installData.armada, installData.tgl_pasang, 0, installData.txnId]
+                );
+            }
+            
+            await client.query('COMMIT');
+            return { ok: true };
+        } catch (e) {
+            await client.query('ROLLBACK');
+            return { error: e.message };
+        } finally {
+            client.release();
+        }
+    },
+
+    uninstallInventory: async (id, installId) => {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            
+            // Ambil info pemasangan
+            const { rows } = await client.query('SELECT * FROM inventory_installed WHERE id = $1', [installId]);
+            if (rows.length === 0) throw new Error('Data pemasangan tidak ditemukan');
+            
+            // Hapus pemasangan
+            await client.query('DELETE FROM inventory_installed WHERE id = $1', [installId]);
+            
+            // Kembalikan stok (asumsi per baris = 1 unit)
+            await client.query('UPDATE inventory SET stok_sisa = stok_sisa + 1 WHERE id = $1', [id]);
+            
+            await client.query('COMMIT');
+            return true;
+        } catch (e) {
+            await client.query('ROLLBACK');
+            return false;
+        } finally {
+            client.release();
+        }
+    },
 };
 
 module.exports = db;
