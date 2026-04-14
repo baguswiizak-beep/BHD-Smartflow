@@ -73,8 +73,20 @@ CREATE TABLE IF NOT EXISTS inventory (
     tgl_masuk TEXT,
     stok_awal INTEGER DEFAULT 0,
     stok_sisa INTEGER DEFAULT 0,
+    stok_min INTEGER DEFAULT 5,
     harga_satuan BIGINT DEFAULT 0,
     catatan TEXT
+);
+
+-- Fleet Tires Tracking (Phase 2)
+CREATE TABLE IF NOT EXISTS fleet_tires (
+    id SERIAL PRIMARY KEY,
+    fleet_id TEXT REFERENCES fleet(id) ON DELETE CASCADE,
+    position TEXT NOT NULL,
+    serial_number TEXT,
+    brand TEXT,
+    condition TEXT,
+    installed_date TEXT
 );
 
 -- Installed Spareparts tracking
@@ -91,6 +103,20 @@ CREATE TABLE IF NOT EXISTS inventory_installed (
 CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
+);
+
+-- Audit Logs
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id SERIAL PRIMARY KEY,
+    user_id TEXT,
+    user_name TEXT,
+    action TEXT, -- create, update, delete
+    module TEXT, -- dashboard, armada, inventory, finance
+    doc_id TEXT,
+    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    changes_before JSONB,
+    changes_after JSONB,
+    metadata JSONB -- ip, user-agent, etc
 );
 `;
 
@@ -167,6 +193,69 @@ const db = {
             [id, username, password, role]
         );
         return { id, username, role };
+    },
+
+    getAdmins: async () => {
+        const { rows } = await pool.query('SELECT id, username, role FROM admins ORDER BY username ASC');
+        return rows;
+    },
+
+    updateAdmin: async (id, data) => {
+        const fields = [];
+        const params = [];
+        let i = 1;
+        for (const [key, val] of Object.entries(data)) {
+            fields.push(`${key} = $${i++}`);
+            params.push(val);
+        }
+        params.push(id);
+        const { rowCount } = await pool.query(
+            `UPDATE admins SET ${fields.join(', ')} WHERE id = $${i}`,
+            params
+        );
+        return rowCount > 0;
+    },
+
+    deleteAdmin: async (id) => {
+        const { rowCount } = await pool.query('DELETE FROM admins WHERE id = $1', [id]);
+        return rowCount > 0;
+    },
+
+    // ----- AUDIT LOGS -----
+    getAuditLogs: async (filters = {}) => {
+        let query = 'SELECT * FROM audit_logs WHERE 1=1';
+        const params = [];
+        let i = 1;
+
+        if (filters.module) {
+            query += ` AND module = $${i++}`;
+            params.push(filters.module);
+        }
+        if (filters.action) {
+            query += ` AND action = $${i++}`;
+            params.push(filters.action);
+        }
+        if (filters.doc_id) {
+            query += ` AND doc_id = $${i++}`;
+            params.push(filters.doc_id);
+        }
+
+        query += ' ORDER BY timestamp DESC LIMIT 100';
+        const { rows } = await pool.query(query, params);
+        return rows;
+    },
+
+    addAuditLog: async (log) => {
+        await pool.query(
+            `INSERT INTO audit_logs 
+            (user_id, user_name, action, module, doc_id, changes_before, changes_after, metadata)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            [log.user_id, log.user_name, log.action, log.module, log.doc_id, log.changes_before, log.changes_after, log.metadata]
+        );
+    },
+
+    deleteAuditLogs: async () => {
+        await pool.query('DELETE FROM audit_logs');
     },
 
     // ----- TRANSACTIONS -----
@@ -292,6 +381,32 @@ const db = {
         return rowCount > 0;
     },
 
+    // ----- FLEET TIRES -----
+    getFleetTires: async (fleetId) => {
+        const { rows } = await pool.query('SELECT * FROM fleet_tires WHERE fleet_id = $1 ORDER BY position ASC', [fleetId]);
+        return rows;
+    },
+
+    upsertFleetTire: async (tire) => {
+        // Upsert based on fleet_id and position
+        const { rowCount } = await pool.query(
+            `INSERT INTO fleet_tires (fleet_id, position, serial_number, brand, condition, installed_date)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             ON CONFLICT (fleet_id, position) DO UPDATE SET 
+             serial_number = EXCLUDED.serial_number,
+             brand = EXCLUDED.brand,
+             condition = EXCLUDED.condition,
+             installed_date = EXCLUDED.installed_date`,
+            [tire.fleet_id, tire.position, tire.serial_number, tire.brand, tire.condition, tire.installed_date]
+        );
+        return rowCount > 0;
+    },
+
+    deleteFleetTire: async (id) => {
+        const { rowCount } = await pool.query('DELETE FROM fleet_tires WHERE id = $1', [id]);
+        return rowCount > 0;
+    },
+
     // ----- DRIVERS -----
     getDrivers: async () => {
         const { rows } = await pool.query('SELECT * FROM drivers');
@@ -321,9 +436,9 @@ const db = {
     addInventory: async (sp) => {
         await pool.query(
             `INSERT INTO inventory 
-            (id, nama, spek, kategori, toko, nota, tgl_masuk, stok_awal, stok_sisa, harga_satuan, catatan)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-            [sp.id, sp.nama, sp.spek || '', sp.kategori || '', sp.toko || '', sp.nota || '', sp.tgl_masuk, sp.stok_awal, sp.stok_sisa, sp.hargaSatuan || 0, sp.catatan || '']
+            (id, nama, spek, kategori, toko, nota, tgl_masuk, stok_awal, stok_sisa, stok_min, harga_satuan, catatan)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            [sp.id, sp.nama, sp.spek || '', sp.kategori || '', sp.toko || '', sp.nota || '', sp.tgl_masuk, sp.stok_awal, sp.stok_sisa, sp.stok_min || 5, sp.hargaSatuan || 0, sp.catatan || '']
         );
     },
 

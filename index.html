@@ -762,6 +762,70 @@ input,select,textarea{font-size:16px!important;}
   .dp-stats{grid-template-columns:1fr 1fr 1fr!important;}
 }
 
+/* ══════════════════════════════════════
+   ADMIN SELECTOR & SYNC INDICATOR
+   (FASE 1 PREMIUM)
+══════════════════════════════════════ */
+.admin-selector{
+  margin-left:auto;margin-right:12px;
+  background:var(--bg3);border:1.5px solid var(--card-b);
+  border-radius:12px;padding:5px 10px;
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;transition:all .15s;
+  position:relative;
+}
+.admin-selector:hover{background:var(--bg4);border-color:var(--green-bd);}
+.as-av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#5FA00D,#A8F040);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#1A3300;}
+.as-info{display:flex;flex-direction:column;line-height:1.1;}
+.as-name{font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;}
+.as-role{font-size:8.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+
+.sync-indicator{
+  display:flex;align-items:center;gap:6px;
+  font-size:9px;font-weight:700;color:var(--text3);
+  padding:4px 10px;border-radius:20px;
+  background:var(--bg3);margin-right:10px;
+  transition:all .3s;
+}
+.sync-indicator.syncing{color:var(--green2);background:var(--green-bg);border:1px solid var(--green-bd);}
+.sync-dot{width:5px;height:5px;border-radius:50%;background:var(--text4);}
+.syncing .sync-dot{background:var(--green);animation:ap 1s infinite;}
+
+/* Audit Log Table */
+.audit-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px;}
+.audit-table th{text-align:left;padding:10px;border-bottom:2px solid var(--card-b);color:var(--text3);font-size:9.5px;text-transform:uppercase;}
+.audit-table td{padding:12px 10px;border-bottom:1px solid var(--card-b);vertical-align:top;}
+.al-badge{font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:20px;}
+.al-create{background:var(--green-bg);color:var(--green2);}
+.al-update{background:var(--orange-bg);color:var(--orange);}
+.al-delete{background:rgba(224,48,48,.1);color:var(--danger);}
+
+/* Smooth Scroll Optimizations */
+.txn-list, .fleet-rows, .sp-grid {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Tire Layout (Phase 2) */
+.tire-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;padding:15px;background:var(--bg3);border-radius:16px;margin-top:10px;justify-items:center;}
+.tire-col{display:flex;flex-direction:column;gap:12px;}
+.tire-item{width:40px;height:65px;background:var(--bg2);border:2px solid var(--card-b);border-radius:8px;position:relative;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;}
+.tire-item:hover{border-color:var(--green);background:var(--bg3);transform:scale(1.05);}
+.tire-item.active{border-color:var(--green);background:var(--green-bg);}
+.tire-item.empty{border-style:dashed;opacity:.6;}
+.tire-label{font-size:7px;font-weight:800;text-transform:uppercase;color:var(--text3);position:absolute;top:-10px;background:var(--card);padding:0 3px;border-radius:4px;white-space:nowrap;}
+.tire-sn{font-size:8px;font-weight:700;color:var(--text);margin-top:2px;max-width:32px;overflow:hidden;text-overflow:ellipsis;}
+.tire-cond{width:6px;height:6px;border-radius:50%;margin-top:4px;}
+.cond-baru{background:var(--green);}
+.cond-vulkanisir{background:var(--orange);}
+.cond-tipis{background:var(--danger);}
+
+/* Stock Highlights */
+.critical-stock{background:rgba(224,48,48,.08)!important;border-color:rgba(224,48,48,.3)!important;}
+.critical-text{color:var(--danger)!important;font-weight:800;}
+.min-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:var(--bg3);color:var(--text3);border:1px solid var(--card-b);margin-left:5px;}
+
 </style>
 </head>
 <body>
@@ -837,6 +901,7 @@ input,select,textarea{font-size:16px!important;}
     <div class="nav-item" id="sb-laporan" onclick="showPage('laporan',this,'bn-laporan')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/></svg>Laporan</div>
     <div class="nav-lbl">Sistem</div>
     <div class="nav-item" id="sb-settings" onclick="showPage('settings',this,'bn-settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06-.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Pengaturan</div>
+    <div class="nav-item" id="sb-audit" onclick="showPage('audit-logs',this)"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>Riwayat Audit</div>
   </div>
   <div class="sb-foot"><div class="user-chip"><div class="user-av">BH</div><div><div class="user-name">Admin BHD</div><div class="user-role">Superadmin</div></div></div></div>
 </div>
@@ -846,12 +911,23 @@ input,select,textarea{font-size:16px!important;}
   <!-- TOPBAR -->
   <div id="topbar">
     <button class="tb-menu" onclick="openSb()"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-    <div class="tb-brand"><div class="tb-lm">BHD</div><span class="tb-name">BHD Smart Flow</span></div>
-    <div class="tb-clock" id="tb-clock">00:00:00</div>
-    <span id="api-status-badge" title="Status koneksi server" style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--text3);border:1px solid var(--card-b);letter-spacing:.03em;cursor:default;display:none;">🟡 Offline</span>
+    <div class="tb-brand"><div class="tb-lm">BHD</div><span class="tb-name">Smart Flow</span></div>
+    
+    <div class="sync-indicator" id="sync-top">
+      <div class="sync-dot"></div>
+      <span id="sync-text">Updated</span>
+    </div>
+
+    <div class="admin-selector" id="admin-sel-top" onclick="showAdminList()">
+      <div class="as-av" id="as-av-top">AD</div>
+      <div class="as-info">
+        <span class="as-name" id="as-name-top">Admin</span>
+        <span class="as-role" id="as-role-top">Superadmin</span>
+      </div>
+    </div>
+
     <div class="tb-acts">
-      <button class="tb-btn" onclick="toggleTheme()" id="theme-btn"><svg id="ti-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="ti-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
-      <div id="notif-wrap"><button class="tb-btn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></button><span id="notif-dot"></span></div>
+      <button class="tb-btn" onclick="toggleTheme()" id="theme-btn"><svg id="ti-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="ti-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y2="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
     </div>
   </div>
 
@@ -920,6 +996,13 @@ input,select,textarea{font-size:16px!important;}
               <div class="dl-item"><div class="dl-dot" style="background:var(--success)"></div><div class="dl-info"><div class="dl-label">Inflow</div><div class="dl-val" id="dl-in">—</div><div class="dl-pct" id="dl-in-pct">—%</div></div></div>
               <div class="dl-item"><div class="dl-dot" style="background:var(--danger)"></div><div class="dl-info"><div class="dl-label">Outflow</div><div class="dl-val" id="dl-out">—</div><div class="dl-pct" id="dl-out-pct">—%</div></div></div>
             </div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div class="cw-hdr"><span class="cw-title">Kategori Pengeluaran</span></div>
+          <div class="donut-wrap">
+            <div class="donut-canvas"><canvas id="catChart" width="85" height="85"></canvas></div>
+            <div id="cat-legend" class="donut-legend" style="gap:5px;"></div>
           </div>
         </div>
         <div class="chart-wrap">
@@ -1006,10 +1089,12 @@ input,select,textarea{font-size:16px!important;}
       <div class="tab-bar">
         <button class="tab-btn active" onclick="showTab('perjalanan',this)">Perjalanan</button>
         <button class="tab-btn" onclick="showTab('biaya',this)">Biaya</button>
+        <button class="tab-btn" onclick="showTab('ban',this)">Ban</button>
         <button class="tab-btn" onclick="showTab('dokumen',this)">Dokumen</button>
       </div>
       <div id="tab-perjalanan"></div>
       <div id="tab-biaya" style="display:none;"></div>
+      <div id="tab-ban" style="display:none;"></div>
       <div id="tab-dokumen" style="display:none;"></div>
     </div>
   </div>
@@ -1054,7 +1139,13 @@ input,select,textarea{font-size:16px!important;}
     <div class="dash-hero" style="margin-bottom:14px;">
       <div class="dh-top"><div class="dh-left"><div class="dh-logo">BHD</div><div><div class="dh-greeting">Export &amp;</div><div class="dh-company">Laporan</div></div></div></div>
     </div>
-    <div class="sec-title">Filter Periode</div>
+    <div class="sec-title" style="display:flex; justify-content:space-between; align-items:center;">
+      <span>Filter Periode</span>
+      <button onclick="generateFleetRekapPDF()" class="sm-btn" style="background:var(--orange); color:white; font-size:11px; padding:6px 12px; border:none; border-radius:6px; display:flex; align-items:center; gap:5px;">
+        <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Cetak Rekap PDF
+      </button>
+    </div>
     <div class="filter-row" id="laporan-filters">
       <button class="filter-chip active" onclick="setLapFilter('bulan-ini',this)">Bulan Ini</button>
       <button class="filter-chip" onclick="setLapFilter('bulan-lalu',this)">Bulan Lalu</button>
@@ -1174,9 +1265,33 @@ input,select,textarea{font-size:16px!important;}
     <div class="settings-card">
       <div class="settings-title">Info Perusahaan</div>
       <div class="settings-row">
-        <input class="form-input" type="text" value="PT. BAGUS HARYA DWIPRIMA" placeholder="Nama Perusahaan"/>
+        <label class="form-label">Nama Perusahaan</label>
+        <input class="form-input" type="text" id="company-name-input" value="PT. BAGUS HARYA DWIPRIMA" placeholder="Nama Perusahaan"/>
+        <label class="form-label">Alamat Perusahaan</label>
+        <textarea class="form-input" id="company-address-input" rows="2" placeholder="Alamat lengkap..."></textarea>
+        <label class="form-label">Logo Perusahaan (URL)</label>
+        <input class="form-input" type="text" id="company-logo-input" placeholder="https://example.com/logo.png"/>
+        <label class="form-label">Jumlah Armada Aktif</label>
         <input class="form-input" type="number" id="fleet-count-input" value="6" min="1" placeholder="Jumlah Armada" oninput="updateFleetCount(this.value)"/>
+        <button onclick="saveCompanyProfile()" class="sm-btn orange" style="margin-top:5px;">Simpan Profil</button>
       </div>
+    </div>
+
+    <div id="admin-management-section" style="display:none;">
+      <div class="settings-card">
+        <div class="settings-title">Manajemen Admin (Superadmin Only)</div>
+        <div id="admin-list-container" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+        <button onclick="openAddAdminModal()" class="sm-btn" style="background:var(--bg3); color:var(--text); border:1px solid var(--card-b);">Tambah Admin Baru</button>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-title">Backup & Ekspor Data</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <button onclick="exportTransactionsCSV()" class="sm-btn" style="background:var(--green-bg); color:var(--green2); border:1px solid var(--green); font-size:11px;">Ekspor Transaksi</button>
+        <button onclick="exportAuditLogsCSV()" class="sm-btn" style="background:var(--green-bg); color:var(--green2); border:1px solid var(--green); font-size:11px;">Ekspor Log Audit</button>
+      </div>
+      <div style="font-size:10px; color:var(--text3); margin-top:8px;">💡 Ekspor dalam format CSV untuk pembukuan eksternal.</div>
     </div>
     <div class="settings-card">
       <div class="settings-title">Latar Belakang Aplikasi</div>
@@ -1193,6 +1308,44 @@ input,select,textarea{font-size:16px!important;}
     <div class="settings-card">
       <div class="settings-title" style="color:var(--danger);">Zona Berbahaya</div>
       <button onclick="confirmReset()" class="form-btn warn">Hapus Semua Transaksi</button>
+    </div>
+  </div>
+
+  <!-- PAGE: AUDIT LOGS (FASE 1) -->
+  <div class="page" id="page-audit-logs">
+    <div class="ah-top" style="margin-bottom:12px;">
+      <div>
+        <h2 style="font-size:18px;font-weight:800;">Riwayat Perubahan</h2>
+        <p style="font-size:11px;color:var(--text3);">Audit Trail & Aktivitas Sistem</p>
+      </div>
+      <button class="ah-btn" onclick="fetchAuditLogs()" style="border-radius:12px;">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke-linecap="round"/></svg>
+        Refresh
+      </button>
+    </div>
+
+    <div class="card" style="padding:0; overflow-x:auto;">
+      <table class="audit-table" id="audit-table">
+        <thead>
+          <tr>
+            <th style="padding-left:15px">Waktu</th>
+            <th>Admin</th>
+            <th>Aksi</th>
+            <th>Modul</th>
+            <th style="padding-right:15px">Info</th>
+          </tr>
+        </thead>
+        <tbody id="audit-table-body">
+          <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text3);">Memuat data audit...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="audit-super-actions" style="margin-top:20px; display:none; padding-bottom:20px;">
+      <button class="form-btn warn" onclick="confirmDeleteAuditLogs()">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;margin-right:6px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        Hapus Semua Riwayat Audit
+      </button>
     </div>
   </div>
 </div><!-- /main -->
@@ -1235,6 +1388,47 @@ input,select,textarea{font-size:16px!important;}
 
 <script>
 // ═══════════════════════════════════════════════════════
+// GLOBAL STATE & AUTH (FASE 1)
+// ═══════════════════════════════════════════════════════
+window.activeAdmin = JSON.parse(localStorage.getItem('bhd_active_admin')) || { id: 'admin-1', name: 'Admin', role: 'superadmin' };
+
+function updateAdminUI() {
+  const nameEls = document.querySelectorAll('.as-name, .user-name');
+  const roleEls = document.querySelectorAll('.as-role, .user-role');
+  const avEls = document.querySelectorAll('.as-av, .user-av');
+  
+  nameEls.forEach(el => el.textContent = activeAdmin.name);
+  roleEls.forEach(el => el.textContent = activeAdmin.role);
+  avEls.forEach(el => el.textContent = activeAdmin.name.substring(0, 2).toUpperCase());
+  
+  // Tampilkan tombol hapus log hanya untuk superadmin
+  const superActions = document.getElementById('audit-super-actions');
+  if (superActions) superActions.style.display = activeAdmin.role === 'superadmin' ? 'block' : 'none';
+
+  const admSec = document.getElementById('admin-management-section');
+  if (admSec) {
+    admSec.style.display = activeAdmin.role === 'superadmin' ? 'block' : 'none';
+    if (activeAdmin.role === 'superadmin' && typeof renderAdminSettings === 'function') renderAdminSettings();
+  }
+}
+
+function setSystemStatus(status, text) {
+  const dot = document.querySelector('.sync-dot');
+  const txt = document.getElementById('sync-text');
+  const indicator = document.querySelector('.sync-indicator');
+  
+  if (!indicator) return;
+  
+  if (status === 'syncing') {
+    indicator.classList.add('syncing');
+    txt.textContent = 'Syncing...';
+  } else {
+    indicator.classList.remove('syncing');
+    txt.textContent = text || 'Online';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
 // API CLIENT — BHD SmartFlow Backend
 // ═══════════════════════════════════════════════════════
 // Deteksi apakah diakses dari localhost atau IP jaringan
@@ -1253,13 +1447,114 @@ async function apiPing(){
 }
 
 async function apiFetch(path, opts={}){
+  const headers = {
+    'Content-Type':'application/json'
+  };
+  
+  // Kirim info admin untuk audit trail jika sudah login
+  if (window.activeAdmin) {
+    headers['X-Admin-ID'] = activeAdmin.id || 'system';
+    headers['X-Admin-Name'] = activeAdmin.name || 'System';
+    headers['X-Admin-Role'] = activeAdmin.role || 'admin';
+  }
+
   const r = await fetch(API_BASE + path, {
-    headers: {'Content-Type':'application/json'},
+    headers: headers,
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
   if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||r.statusText); }
   return r.json();
+}
+
+// ═══════════════════════════════════════════════════════
+// AUDIT LOGS & ADMIN MANAGEMENT (FASE 1)
+// ═══════════════════════════════════════════════════════
+async function fetchAuditLogs() {
+  if (!_useAPI) return;
+  const tbody = document.getElementById('audit-table-body');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text3);">Memuat data audit...</td></tr>';
+  
+  try {
+    const logs = await apiFetch('/api/audit-logs');
+    renderAuditLogs(logs);
+  } catch (e) {
+    console.error(e);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--danger);">Gagal memuat: ${e.message}</td></tr>`;
+  }
+}
+
+function renderAuditLogs(logs) {
+  const tbody = document.getElementById('audit-table-body');
+  if (!tbody) return;
+  if (logs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text3);">Belum ada riwayat aktivitas.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = logs.map(l => {
+    const ts = new Date(l.timestamp).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+    const badgeClass = l.action === 'create' ? 'al-create' : (l.action === 'update' ? 'al-update' : 'al-delete');
+    return `
+      <tr>
+        <td style="padding-left:15px; font-weight:500;">${ts}</td>
+        <td>
+          <div style="font-weight:700;">${l.user_name}</div>
+          <div style="font-size:9px; color:var(--text3);">${l.user_id}</div>
+        </td>
+        <td><span class="al-badge ${badgeClass}">${l.action.toUpperCase()}</span></td>
+        <td><span class="al-badge" style="background:var(--bg3); color:var(--text2);">${l.module.toUpperCase()}</span></td>
+        <td style="padding-right:15px; font-size:10px; color:var(--text2);">${l.doc_id}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function confirmDeleteAuditLogs() {
+  if (confirm('Hapus semua riwayat audit? Tindakan ini tidak bisa dibatalkan.')) {
+    try {
+      await apiFetch('/api/audit-logs', { method: 'DELETE' });
+      showToast('Riwayat audit berhasil dibersihkan');
+      fetchAuditLogs();
+    } catch (e) {
+      alert('Gagal: ' + e.message);
+    }
+  }
+}
+
+async function showAdminList() {
+  if (!_useAPI) return alert('Server offline. Fitur ini memerlukan koneksi backend.');
+  
+  try {
+    const admins = await apiFetch('/api/admins');
+    let html = `
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <p style="font-size:11px; color:var(--text3); margin-bottom:4px;">Pilih Admin Aktif untuk Audit Trail:</p>
+        ${admins.map(a => `
+          <div class="fleet-row" onclick="selectAdmin('${a.id}', '${a.username}', '${a.role}')" style="padding:12px; border:1px solid ${activeAdmin.id === a.id ? 'var(--green-bd)' : 'transparent'}; background:${activeAdmin.id === a.id ? 'var(--green-bg)' : 'var(--bg3)'};">
+            <div class="as-av" style="background:${activeAdmin.id === a.id ? 'var(--green)' : 'var(--text4)'}; color:#fff; width:30px; height:30px;">${a.username.substring(0,2).toUpperCase()}</div>
+            <div style="flex:1;">
+              <div style="font-weight:700; color:var(--text);">${a.username} ${activeAdmin.id === a.id ? '✅' : ''}</div>
+              <div style="font-size:10px; color:var(--text3); text-transform:uppercase;">${a.role}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    openSm('Pilih Admin', html);
+  } catch (e) {
+    alert('Gagal memuat daftar admin: ' + e.message);
+  }
+}
+
+function selectAdmin(id, name, role) {
+  window.activeAdmin = { id, name, role };
+  localStorage.setItem('bhd_active_admin', JSON.stringify(activeAdmin));
+  updateAdminUI();
+  closeSm();
+  showToast(`Sesi aktif: ${name}`);
+  // Force sync untuk memastikan audit mencatat admin yang baru
+  syncDataSilent();
 }
 
 // Kredensial fallback (hanya dipakai jika server offline)
@@ -1482,13 +1777,13 @@ function renderGudang(){
         +(freeze?'<span class="ritase-freeze">❄ FREEZE</span>':'<span class="ritase-freeze" style="color:'+getRitaseStatusColor(i.ritase,sp.kategori)+';background:rgba(0,0,0,.05);">'+i.ritase+' / '+getRitaseThreshold(sp.kategori)+' ritase'+(i.ritase>=getRitaseThreshold(sp.kategori)?' ⚠️':'')+'</span>')
         +'</div>';
     }).join('');
-    return '<div class="sp-card '+st+'">'
+    return '<div class="sp-card '+(st==='critical'?'critical-stock ':'')+st+'">'
       +'<div class="sp-header"><div class="sp-icon-wrap '+st+'">'+ico+'</div>'+spStatusLabel(sp)+'</div>'
-      +'<div class="sp-name">'+sp.nama+'</div>'
+      +'<div class="sp-name">'+sp.nama+' <span class="min-badge">Min: '+(sp.stok_min||5)+'</span></div>'
       +'<div class="sp-spec">🏷️ '+sp.spek+' · 🏪 '+sp.toko+'</div>'
       +(instList?'<div style="margin-bottom:8px;">'+instList+'</div>':'')
       +'<div class="sp-meta-grid">'
-      +'<div class="sp-meta-item"><div class="sp-meta-label">📦 Sisa/Total</div><div class="sp-meta-val" style="color:'+(st==='fresh'?'var(--success)':st==='warn'?'var(--warning)':'var(--danger)')+';">'+sp.stokSisa+' / '+sp.stokAwal+'</div></div>'
+      +'<div class="sp-meta-item"><div class="sp-meta-label">📦 Sisa/Total</div><div class="sp-meta-val '+(st==='critical'?'critical-text':'')+'" style="color:'+(st==='fresh'?'var(--success)':st==='warn'?'var(--warning)':'var(--danger)')+';">'+sp.stokSisa+' / '+sp.stokAwal+'</div></div>'
       +'<div class="sp-meta-item"><div class="sp-meta-label">💰 Harga/unit</div><div class="sp-meta-val">'+fmt(sp.hargaSatuan)+'</div></div>'
       +'<div class="sp-meta-item"><div class="sp-meta-label">💵 Nilai Sisa</div><div class="sp-meta-val" style="color:var(--info);">'+fmt(nilaiSisa)+'</div></div>'
       +'<div class="sp-meta-item"><div class="sp-meta-label">📅 Tgl Masuk</div><div class="sp-meta-val">'+fmtDate(sp.tglMasuk)+'</div></div>'
@@ -1520,10 +1815,11 @@ function openAddStockModal(editId){
     +'<div><label class="form-label">🏪 Toko</label><input class="form-input" id="sp-toko" value="'+(sp?sp.toko:'')+'" placeholder="Nama toko..."/></div>'
     +'<div><label class="form-label">No. Nota</label><input class="form-input" id="sp-nota" value="'+(sp?sp.nota:'')+'" placeholder="SP-001"/></div>'
     +'<div><label class="form-label">📅 Tgl Masuk</label><input type="date" class="form-input" id="sp-tgl" value="'+(sp?sp.tglMasuk:today())+'"/></div>'
-    +'<div><label class="form-label">Jumlah</label><input class="form-input" id="sp-jml" type="number" value="'+(sp?sp.stokAwal:'')+'" placeholder="Qty"/></div>'
-    +'<div><label class="form-label">Harga/unit (Rp)</label><input class="form-input" id="sp-harga" value="'+(sp?new Intl.NumberFormat('id-ID').format(sp.hargaSatuan):'')+'" placeholder="0" inputmode="numeric"/></div>'
+    +'<div><label class="form-label">Stok Awal</label><input class="form-input" id="sp-jml" type="number" value="'+(sp?sp.stokAwal:'')+'" placeholder="Qty"/></div>'
+    +'<div><label class="form-label">Stok Minimum ⚠️</label><input class="form-input" id="sp-min" type="number" value="'+(sp?sp.stok_min:5)+'" placeholder="5"/></div>'
+    +'<div style="grid-column:1/-1;"><label class="form-label">Harga per Unit (Rp)</label><input class="form-input" id="sp-harga" value="'+(sp?new Intl.NumberFormat('id-ID').format(sp.hargaSatuan):'')+'" placeholder="0" inputmode="numeric"/></div>'
     +'</div>'
-    +'<div style="font-size:10.5px;color:var(--text3);background:var(--bg3);border-radius:10px;padding:9px 11px;line-height:1.6;">💡 Stok masuk tanpa potong kas — sistem tempo.</div>'
+    +'<div style="font-size:10.5px;color:var(--text3);background:var(--bg3);border-radius:10px;padding:9px 11px;line-height:1.6;">💡 Stok kritis akan ditandai Merah saat sisa stok <= minimum.</div>'
     +'<button class="sm-btn orange" onclick="saveSparepart(\''+(editId||'')+'\')">'+(sp?'Simpan':'Tambah Stok')+'</button>'
     +(sp?'<button class="sm-btn danger" onclick="deleteSparepart(\''+sp.id+'\');closeSm()">Hapus Item</button>':'');
   setupCurrencyInput('sp-harga');
@@ -2005,6 +2301,7 @@ function renderDashboard(){
   renderTxnCards('txn-dash',filtered.slice(0,4),false);
   applyTxnFilters();
   renderDonut(inf,out);
+  renderCatChart(filtered.filter(t=>t.type==='outflow'));
   renderMiniLine();
   renderBarChart(currentBarFilter);
   renderFleetUnits();
@@ -2175,39 +2472,59 @@ async function saveRevisedTxn(id){
 }
 
 // ════════════════════════════════════════════════════════
-// SILENT AUTO-SYNC (Mobile & Laptop)
+// SMART SYNC ENGINE (Dashboard ↔ Keuangan)
 // ════════════════════════════════════════════════════════
+let _lastSyncTxn = null;
+
 async function syncDataSilent(){
   if(!_useAPI) return;
+  setSystemStatus('syncing');
+  
   try {
-    // Sync Transaksi
-    const txns = await apiFetch('/api/transactions');
+    // 1. Cek Summary dulu untuk efisiensi
+    const summary = await apiFetch('/api/sync/summary');
+    
+    // Jika tidak ada perubahan transaksi baru, jangan tarik data besar
+    if (_lastSyncTxn === summary.lastTxn && _lastSyncTxn !== null) {
+      console.log('☁? Data sudah up-to-date (No changes)');
+      setTimeout(() => setSystemStatus('online'), 1000);
+      return;
+    }
+    
+    _lastSyncTxn = summary.lastTxn;
+
+    // 2. Sync Full Data jika ada perubahan
+    const [txns, inv, fleet] = await Promise.all([
+      apiFetch('/api/transactions'),
+      apiFetch('/api/inventory'),
+      apiFetch('/api/fleet')
+    ]);
+
     transactions = txns.map(t=>({...t, id:t.id, amount:Number(t.amount)}));
     
-    // Sync Gudang
-    const inv = await apiFetch('/api/inventory');
     sparepartStock.length=0;
     inv.forEach(sp=>sparepartStock.push({...sp,installed:sp.installed||[]}));
     
-    // Sync Armada
-    const fleet = await apiFetch('/api/fleet');
     fleetData.length=0;
     fleet.forEach(f=>fleetData.push({id:f.id,nopol:f.nopol,driver:f.driver,status:f.status,pajak:f.pajak||'',kir:f.kir||''}));
     FLEET_COUNT=fleetData.length;
     
-    // Refresh UI tanpa mengganggu user
+    // Refresh UI
     renderDashboard();
     renderGudang();
     renderLaporanTable();
     checkDocWarnings();
-    console.log('? Background sync berhasil');
+    
+    console.log('? Smart Sync berhasil (Data updated)');
+    setTimeout(() => setSystemStatus('online', 'Updated'), 1000);
   } catch(e) {
     console.warn('Silent sync failed:', e);
+    setSystemStatus('online', 'Offline?');
   }
 }
 
-// Jalankan sync setiap 20 detik
-setInterval(syncDataSilent, 20000);
+// Jalankan sync setiap 30 detik (Optimal untuk Fase 1)
+setInterval(syncDataSilent, 30000);
 
 // Jalankan sync saat tab kembali difokuskan
 window.addEventListener('focus', () => {
@@ -2248,6 +2565,25 @@ function renderDonut(inf,out){
   if(donutChart)donutChart.destroy();
   donutChart=new Chart(ctx,{type:'doughnut',data:{datasets:[{data:[inf||1,out||1],backgroundColor:[dark?'rgba(10,168,96,.7)':'rgba(10,168,96,.85)',dark?'rgba(224,48,48,.65)':'rgba(224,48,48,.8)'],borderColor:[dark?'rgba(10,168,96,.4)':'rgba(10,168,96,.3)',dark?'rgba(224,48,48,.4)':'rgba(224,48,48,.3)'],borderWidth:2,hoverOffset:4}]},
   options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtFull(c.raw)},backgroundColor:dark?'rgba(22,30,46,.95)':'rgba(255,255,255,.95)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#7DCE13':'#12A060',borderColor:'rgba(125,206,19,.2)',borderWidth:1,padding:9,cornerRadius:9}},animation:{animateRotate:true,duration:800}}});
+}
+
+function renderCatChart(outflows){
+  const ctx=document.getElementById('catChart');if(!ctx)return;
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const cats=outflows.reduce((acc,t)=>{acc[t.kategori]=(acc[t.kategori]||0)+t.amount;return acc;},{});
+  const labels=Object.keys(cats),data=Object.values(cats);
+  const colors={'Onderdil':'#FF6700','Tunai':'#2EB85C','UMUM':'#636E72'};
+  const bg=[...labels.map(l=>colors[l]||'#888')];
+  
+  const leg=document.getElementById('cat-legend');
+  if(leg)leg.innerHTML=labels.map((l,i)=>`<div class="dl-item"><div class="dl-dot" style="background:${bg[i]}"></div><div class="dl-info"><div class="dl-label">${l}</div><div class="dl-val" style="font-size:9px;">${fmt(data[i])}</div></div></div>`).join('');
+
+  if(typeof catChart!=='undefined' && catChart) catChart.destroy();
+  window.catChart=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:bg,borderWidth:0,hoverOffset:4}]},
+    options:{plugins:{legend:{display:false}},cutout:'65%'}
+  });
 }
 
 function setBarFilter(f,btn){
@@ -2742,6 +3078,9 @@ function openUnitDetail(id){
   const uIn=transactions.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
   const uOutTunai=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
   const uOutOnderdil=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+  // Life-to-date Repair (accumulated outflow onderdil/service)
+  const uOutLTD=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&(t.kategori==='Onderdil'||t.label.toLowerCase().includes('servis'))).reduce((s,t)=>s+t.amount,0);
+  
   const beban=transactions.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount/FLEET_COUNT,0);
   const net=uIn-(uOutTunai+uOutOnderdil+beban);
   const pD=daysUntil(f.pajak),kD=daysUntil(f.kir);
@@ -2755,11 +3094,12 @@ function openUnitDetail(id){
     </div>
     <div class="dp-stats" style="position:relative;z-index:1;">
       <div class="dp-stat"><div class="dp-stat-l">Total Inflow</div><div class="dp-stat-v gr">${fmt(uIn)}</div></div>
-      <div class="dp-stat"><div class="dp-stat-l">Out Tunai</div><div class="dp-stat-v rd">${fmt(uOutTunai)}</div></div>
-      <div class="dp-stat"><div class="dp-stat-l">Out Onderdil</div><div class="dp-stat-v rd">${fmt(uOutOnderdil)}</div></div>
       <div class="dp-stat"><div class="dp-stat-l">Beban Umum</div><div class="dp-stat-v rd">${fmt(beban)}</div></div>
-      <div class="dp-stat"><div class="dp-stat-l">Laba Bersih</div><div class="dp-stat-v nt" style="font-size:14px;">${fmt(net)}</div></div>
+      <div class="dp-stat"><div class="dp-stat-l">Repair LTD</div><div class="dp-stat-v rd" style="font-weight:700;">${fmt(uOutLTD)}</div></div>
       <div class="dp-stat"><div class="dp-stat-l">Onderdil Aktif</div><div class="dp-stat-v" style="color:var(--warning);">${activeParts.length} item</div></div>
+      <div class="dp-stat" style="grid-column:1/-1;border-top:1px solid var(--card-b);padding-top:8px;margin-top:4px;">
+        <div class="dp-stat-l">Laba Bersih (Nett)</div><div class="dp-stat-v nt" style="font-size:16px;font-weight:900;">${fmt(net)}</div>
+      </div>
     </div>
     <div class="dp-docs" style="position:relative;z-index:1;">
       <div class="dp-doc"><div class="dp-doc-lbl">Pajak</div><div class="dp-doc-val ${pD<=7?'near':pD<=30?'warn':''}">${fmtDate(f.pajak)} ${pD<=30?'('+pD+'h)':''}</div></div>
@@ -2778,8 +3118,9 @@ function backToArmadaList(){
 function showTab(name,btnEl){
   if(btnEl){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btnEl.classList.add('active');}
   else document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
-  ['perjalanan','biaya','dokumen'].forEach(t=>{const e=document.getElementById('tab-'+t);if(e)e.style.display=t===name?'block':'none';});
+  ['perjalanan','biaya','ban','dokumen'].forEach(t=>{const e=document.getElementById('tab-'+t);if(e)e.style.display=t===name?'block':'none';});
   if(!currentDetailUnit)return;const f=currentDetailUnit;
+  if(name==='ban'){renderFleetTires(f.id);}
   if(name==='perjalanan'){
     const trips=transactions.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).sort((a,b)=>b.date.localeCompare(a.date));
     const parts=getActivePartsForArmada(f.nopol);
@@ -3150,6 +3491,7 @@ function showPage(name,sbEl,bnId){
   if(name==='keuangan'){renderDashboard();applyTxnFilters();}
   if(name==='laporan'){renderLaporanTable();_buildAndShowWAPreview();}
   if(name==='armada'){renderFleetUnits();renderDashboard();}
+  if(name==='audit-logs'){fetchAuditLogs();}
 }
 function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open');}
 function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
@@ -3224,6 +3566,7 @@ async function _appInit(){
       }
     }
     renderGudangFilterChips();
+    updateAdminUI();
     renderDashboard();
     applyTxnFilters();
     renderLaporanTable();
@@ -3231,6 +3574,339 @@ async function _appInit(){
   }catch(e){console.error('Init error:',e);}
 }
 // App init is triggered by login — do NOT auto-call here
+
+// ═══════════════════════════════ TIRE TRACKING (PHASE 2) ═════════
+async function renderFleetTires(fleetId){
+  const el=document.getElementById('tab-ban');if(!el)return;
+  el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px;">Memuat data ban...</div>';
+  
+  try {
+    const tires = _useAPI ? await apiFetch('/api/fleet/'+fleetId+'/tires') : [];
+    const positions = [
+      ['F-L', 'F-R'],
+      ['B1-L-O', 'B1-L-I', 'B1-R-I', 'B1-R-O', 'B2-L-O', 'B2-L-I', 'B2-R-I', 'B2-R-O']
+    ];
+
+    let html = '<div class="tire-grid">';
+    
+    // Front Axle
+    html += '<div class="tire-col">' + renderTire('F-L', tires) + '</div>';
+    html += '<div style="width:40px;height:65px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);font-weight:700;border:1.5px dashed var(--card-b);border-radius:8px;">CAB</div>';
+    html += '<div class="tire-col">' + renderTire('F-R', tires) + '</div>';
+
+    // Bogie 1
+    html += '<div class="tire-col">' + renderTire('B1-L-O', tires) + renderTire('B1-L-I', tires) + '</div>';
+    html += '<div style="width:40px;height:140px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);font-weight:700;border-left:2px solid var(--bg2);border-right:2px solid var(--bg2);">BOGIE 1</div>';
+    html += '<div class="tire-col">' + renderTire('B1-R-I', tires) + renderTire('B1-R-O', tires) + '</div>';
+
+    // Bogie 2
+    html += '<div class="tire-col">' + renderTire('B2-L-O', tires) + renderTire('B2-L-I', tires) + '</div>';
+    html += '<div style="width:40px;height:140px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);font-weight:700;border-left:2px solid var(--bg2);border-right:2px solid var(--bg2);">BOGIE 2</div>';
+    html += '<div class="tire-col">' + renderTire('B2-R-I', tires) + renderTire('B2-R-O', tires) + '</div>';
+
+    html += '</div>';
+    html += '<div style="font-size:10px;color:var(--text3);margin-top:12px;padding:0 10px;line-height:1.4;">💡 Klik pada gambar ban untuk memperbarui Serial Number atau mencatat penggantian ban.</div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--danger);">Gagal memuat ban: '+e.message+'</div>';
+  }
+}
+
+function renderTire(pos, tires){
+  const t = tires.find(x=>x.position===pos) || {position:pos, serial_number:'', brand:'', condition:''};
+  const cClass = t.condition ? 'cond-'+t.condition : '';
+  const dataStr = JSON.stringify(t).replace(/"/g, '&quot;');
+  return `<div class="tire-item ${t.serial_number?'':'empty'}" onclick="openTireEditModal('${currentDetailUnit.id}', '${pos}', ${dataStr})">
+    <div class="tire-label">${pos}</div>
+    <div class="tire-sn">${t.serial_number || 'EMPTY'}</div>
+    ${t.condition ? `<div class="tire-cond ${cClass}"></div>` : ''}
+  </div>`;
+}
+
+function openTireEditModal(fleetId, pos, data){
+  const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
+  tEl.textContent = 'Manajemen Ban - ' + pos;
+  body.innerHTML = \`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="grid-column:1/-1;">
+        <label class="form-label">Serial Number</label>
+        <input class="form-input" id="t-sn" value="\${data.serial_number||''}" placeholder="SN..."/>
+      </div>
+      <div style="grid-column:1/-1;">
+        <label class="form-label">Merek</label>
+        <input class="form-input" id="t-brand" value="\${data.brand||''}" placeholder="Merek ban..."/>
+      </div>
+      <div>
+        <label class="form-label">Kondisi</label>
+        <select class="form-select" id="t-cond">
+          <option value="baru" \${data.condition==='baru'?'selected':''}>🟢 Baru</option>
+          <option value="vulkanisir" \${data.condition==='vulkanisir'?'selected':''}>🟡 Vulkanisir</option>
+          <option value="tipis" \${data.condition==='tipis'?'selected':''}>🔴 Tipis / Perlu Ganti</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Tgl Pasang</label>
+        <input type="date" class="form-input" id="t-date" value="\${data.installed_date || today()}"/>
+      </div>
+    </div>
+    <button class="sm-btn orange" onclick="saveFleetTire('\${fleetId}', '\${pos}')">Simpan Perubahan</button>
+  \`;
+  openSm();
+}
+
+async function renderAdminSettings(){
+  const cont=document.getElementById('admin-list-container');if(!cont)return;
+  try{
+    const admins=await apiFetch('/api/admins');
+    cont.innerHTML=admins.map(a=>`
+      <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg2); padding:10px; border-radius:10px; border:1px solid var(--card-b);">
+        <div><div style="font-weight:700; font-size:13px;">${a.name}</div><div style="font-size:10px; color:var(--text3);">${a.id} · ${a.role}</div></div>
+        ${a.id==='admin'?'':`<button onclick="deleteAdmin('${a.id}')" style="color:var(--danger); background:none; border:none; font-size:18px; cursor:pointer;">&times;</button>`}
+      </div>
+    `).join('');
+  }catch(e){console.error(e);}
+}
+
+function openAddAdminModal(){
+  const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
+  tEl.textContent = 'Tambah Admin Baru';
+  body.innerHTML = `
+    <div style="display:grid; gap:12px;">
+      <div><label class="form-label">ID / Username</label><input class="form-input" id="ad-id" placeholder="Ex: admin2"/></div>
+      <div><label class="form-label">Nama Lengkap</label><input class="form-input" id="ad-name" placeholder="Ex: Budi Setiawan"/></div>
+      <div><label class="form-label">Password</label><input class="form-input" id="ad-pass" type="password" placeholder="******"/></div>
+      <div><label class="form-label">Role</label>
+        <select class="form-select" id="ad-role">
+          <option value="admin">Admin Operasional</option>
+          <option value="superadmin">Superadmin</option>
+        </select>
+      </div>
+      <button class="sm-btn orange" onclick="saveAdmin()">Simpan Admin</button>
+    </div>
+  `;
+  openSm();
+}
+
+async function saveAdmin(){
+  const id=document.getElementById('ad-id').value, name=document.getElementById('ad-name').value, 
+        pass=document.getElementById('ad-pass').value, role=document.getElementById('ad-role').value;
+  if(!id||!name||!pass) return alert('Data belum lengkap');
+  try{
+    await apiFetch('/api/admins', {method:'POST', body:{id, name, password:pass, role}});
+    showToast('Admin berhasil ditambahkan');
+    closeSm();
+    renderAdminSettings();
+  }catch(e){alert(e.message);}
+}
+
+async function deleteAdmin(id){
+  if(!confirm('Hapus admin ini?')) return;
+  try{
+    await apiFetch('/api/admins/'+id, {method:'DELETE'});
+    showToast('Admin dihapus');
+    renderAdminSettings();
+  }catch(e){alert(e.message);}
+}
+
+function saveCompanyProfile(){
+  const name=document.getElementById('company-name-input').value;
+  const addr=document.getElementById('company-address-input').value;
+  const logo=document.getElementById('company-logo-input').value;
+  localStorage.setItem('bhd_company_name', name);
+  localStorage.setItem('bhd_company_address', addr);
+  localStorage.setItem('bhd_company_logo', logo);
+  showToast('Profil perusahaan disimpan secara lokal');
+  renderDashboard();
+}
+
+// ═══════════════════════════════ EXPORT CSV ═══════════════════════
+function exportTransactionsCSV(){
+  const headers = ['ID','Tanggal','Label','Armada','Amount','Type','Kategori','Status','Toko','Nota'];
+  let csv = headers.join(',') + '\\n';
+  transactions.forEach(t=>{
+    const row = [t.id, t.date, t.label.replace(/,/g,''), t.armada, t.amount, t.type, t.kategori, t.status, (t.toko||'').replace(/,/g,''), t.nota];
+    csv += row.join(',') + '\\n';
+  });
+  downloadCSV('bhd_transactions_export.csv', csv);
+}
+
+async function exportAuditLogsCSV(){
+  try{
+    const logs = await apiFetch('/api/audit-logs');
+    const headers = ['ID','Timestamp','User','Action','Module','DocID'];
+    let csv = headers.join(',') + '\\n';
+    logs.forEach(l=>{
+      const row = [l.id, l.timestamp, l.user_name, l.action, l.module, l.doc_id];
+      csv += row.join(',') + '\\n';
+    });
+    downloadCSV('bhd_audit_logs_export.csv', csv);
+  }catch(e){showToast('Gagal ekspor: '+e.message);}
+}
+
+function downloadCSV(filename, csv){
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// ═══════════════════════════════ PDF REPORT ══════════════════════
+function generateFleetRekapPDF(){
+  const list = getLapTxns();
+  const cName = localStorage.getItem('bhd_company_name') || 'PT. BAGUS HARYA DWIPRIMA';
+  const cAddr = localStorage.getItem('bhd_company_address') || 'Jakarta, Indonesia';
+  const cLogo = localStorage.getItem('bhd_company_logo') || '';
+  
+  // Calculate Data
+  const umum=list.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount,0);
+  const bebanPerUnit=FLEET_COUNT>0?umum/FLEET_COUNT:0;
+  
+  let rows = fleetData.map(f=>{
+    const inf = list.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
+    const ot = list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
+    const oo = list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+    const ou = bebanPerUnit;
+    const nt = inf - (ot + oo + ou);
+    return { nopol: f.nopol, driver: f.driver, inf, ot, oo, ou, nt };
+  });
+
+  const totInf = rows.reduce((s,r)=>s+r.inf,0);
+  const totOut = rows.reduce((s,r)=>s+(r.ot+r.oo+r.ou),0);
+  const totNt = totInf - totOut;
+  const avg = rows.length > 0 ? totNt / rows.length : 0;
+  const best = [...rows].sort((a,b)=>b.nt-a.nt)[0];
+  const worst = [...rows].sort((a,b)=>a.nt-b.nt)[0];
+
+  // Get Period Label
+  let pRange = document.getElementById('rekap-date-range')?.textContent || 'Periode: —';
+  const dateStr = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+  const timeStr = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+
+  const html = `
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>BHD SmartFlow - Rekap Per Armada</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',Tahoma,sans-serif; background:#fff; padding:20px; color:#333; font-size:12px; }
+        @page { size: A4 landscape; margin: 15mm; }
+        .pdf-container { width:100%; max-width:1100px; margin:0 auto; padding:20px; border:1px solid #eee; }
+        .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; border-bottom:3px solid #2ecc71; padding-bottom:15px; }
+        .header-left { display:flex; gap:15px; align-items:center; }
+        .logo-box { width:55px; height:55px; background:linear-gradient(135deg,#2ecc71,#27ae60); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:22px; flex-shrink:0; overflow:hidden; }
+        .logo-img { width:100%; height:100%; object-fit:contain; }
+        .header-info h1 { font-size:24px; color:#2ecc71; margin-bottom:2px; font-weight:700; }
+        .header-right { text-align:right; font-size:11px; color:#666; }
+        .company-info { background:#f8f9fa; padding:12px; border-left:4px solid #2ecc71; margin-bottom:15px; }
+        .company-info h3 { color:#2ecc71; margin-bottom:4px; font-size:14px; }
+        .table-wrapper { margin-bottom:20px; }
+        table { width:100%; border-collapse:collapse; font-size:11px; }
+        th { background:#2ecc71; color:white; padding:10px; border:1px solid #27ae60; text-align:left; }
+        td { padding:10px; border:1px solid #ddd; }
+        tr:nth-child(even) { background:#f9f9f9; }
+        .currency { text-align:right; font-family:monospace; }
+        .pos { color:#27ae60; } .neg { color:#e74c3c; }
+        .total-row { background:#e8f8f5; font-weight:bold; border-top:2px solid #2ecc71; }
+        .summary-section { margin:20px 0; padding:15px; background:#f0fdf4; border:1px solid #2ecc71; border-radius:8px; }
+        .summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; }
+        .summary-item { display:flex; flex-direction:column; gap:2px; }
+        .summary-item label { font-weight:600; color:#555; font-size:10px; }
+        .summary-item .value { font-weight:700; color:#2ecc71; font-size:13px; }
+        .footer { margin-top:30px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; font-size:10px; color:#999; }
+        @media print { .no-print { display:none; } .pdf-container { border:none; padding:0; } }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align:center; margin-bottom:20px;">
+        <button onclick="window.print()" style="padding:10px 25px; background:#2ecc71; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">📄 KLIK UNTUK CETAK PDF</button>
+    </div>
+    <div class="pdf-container">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-box">
+                    ${cLogo ? `<img src="${cLogo}" class="logo-img" onerror="this.style.display='none'; this.parentElement.innerText='BHD'"/>` : 'BHD'}
+                </div>
+                <div class="header-info">
+                    <h1>${cName}</h1>
+                    <p>Rekap Keuangan Per Armada</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <p><strong>Dicetak:</strong> ${dateStr}</p>
+                <p><strong>Waktu:</strong> ${timeStr}</p>
+            </div>
+        </div>
+        <div class="company-info">
+            <h3>INFO LAPORAN</h3>
+            <p>${cAddr}</p>
+            <p style="margin-top:5px; font-weight:bold;">${pRange}</p>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No. Pol</th>
+                        <th>Nama Driver</th>
+                        <th style="text-align:right">Inflow (Rp)</th>
+                        <th style="text-align:right">Out Tunai (Rp)</th>
+                        <th style="text-align:right">Out Onderdil (Rp)</th>
+                        <th style="text-align:right">Out Umum (Rp)</th>
+                        <th style="text-align:right">Nett (Rp)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map(r=>`
+                        <tr>
+                            <td style="font-weight:bold">${r.nopol}</td>
+                            <td>${r.driver}</td>
+                            <td class="currency pos">${fmtFull(r.inf)}</td>
+                            <td class="currency neg">${r.ot > 0 ? '-' + fmtFull(r.ot) : '—'}</td>
+                            <td class="currency neg">${r.oo > 0 ? '-' + fmtFull(r.oo) : '—'}</td>
+                            <td class="currency neg">${r.ou > 0 ? '-' + fmtFull(r.ou) : '—'}</td>
+                            <td class="currency" style="font-weight:bold; background:${r.nt >= 0 ? '#d5f4e6' : '#fadbd8'}; color:${r.nt >= 0 ? '#27ae60' : '#c0392b'}">${fmtFull(r.nt)}</td>
+                        </tr>
+                    `).join('')}
+                    <tr class="total-row">
+                        <td colspan="2">TOTAL KESELURUHAN</td>
+                        <td class="currency pos">${fmtFull(totInf)}</td>
+                        <td class="currency neg">${fmtFull(rows.reduce((s,r)=>s+r.ot,0))}</td>
+                        <td class="currency neg">${fmtFull(rows.reduce((s,r)=>s+r.oo,0))}</td>
+                        <td class="currency neg">${fmtFull(rows.reduce((s,r)=>s+r.ou,0))}</td>
+                        <td class="currency" style="color:${totNt >= 0 ? '#27ae60' : '#c0392b'}">${fmtFull(totNt)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="summary-section">
+            <div class="summary-grid">
+                <div class="summary-item"><label>TOTAL INFLOW</label><span class="value">${fmtFull(totInf)}</span></div>
+                <div class="summary-item"><label>TOTAL OUTFLOW</label><span class="value">${fmtFull(totOut)}</span></div>
+                <div class="summary-item"><label>TOTAL PROFIT (NETT)</label><span class="value" style="font-size:16px;">${fmtFull(totNt)}</span></div>
+                <div class="summary-item"><label>RATA-RATA PROFIT/UNIT</label><span class="value">${fmtFull(avg)}</span></div>
+                <div class="summary-item"><label>🏆 BEST PERFORMER</label><span class="value">${best ? best.nopol + ' (' + best.driver + ')' : '—'}</span></div>
+                <div class="summary-item"><label>⚠️ WORST PERFORMER</label><span class="value">${worst ? worst.nopol + ' (' + worst.driver + ')' : '—'}</span></div>
+            </div>
+        </div>
+        <div class="footer">
+            <div>BHD SmartFlow v1.0 | Data Terverifikasi Sistem</div>
+            <div>Halaman 1 dari 1</div>
+        </div>
+    </div>
+    <script>setTimeout(() => { window.print(); }, 500);</script>
+</body>
+</html>`;
+
+  const win = window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+}
 
 </script>
 </body>
