@@ -12,7 +12,6 @@ app.use(express.json());
 // ── HEALTH CHECK ─────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {
   try {
-    const settings = await db.getSettings();
     res.json({ status: 'ok', db: 'postgres', timestamp: new Date().toISOString() });
   } catch (e) {
     res.status(500).json({ status: 'error', message: e.message });
@@ -97,19 +96,19 @@ app.post('/api/transactions', async (req, res) => {
   }
 });
 
-app.delete('/api/transactions/:id', async (req, res) => {
+app.put('/api/transactions/:id', async (req, res) => {
   try {
-    await db.deleteTransaction(req.params.id);
-    res.json({ ok: true });
+    const ok = await db.updateTransaction(req.params.id, req.body);
+    res.json({ ok });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-app.put('/api/transactions/:id', async (req, res) => {
+app.delete('/api/transactions/:id', async (req, res) => {
   try {
-    const ok = await db.updateTransaction(req.params.id, req.body);
-    res.json({ ok });
+    await db.deleteTransaction(req.params.id);
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
