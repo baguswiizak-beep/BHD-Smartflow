@@ -1,4 +1,5 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+// Fix: Explicitly using 'pg' for Supabase connectivity (replacing accidental @vercel/postgres)
 const { Pool } = require('pg');
 
 /**
