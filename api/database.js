@@ -1,9 +1,23 @@
-const { db: pool } = require('@vercel/postgres');
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+const { Pool } = require('pg');
 
 /**
  * BHD SmartFlow — Database Layer (Postgres SQL)
  * PT. Bagus Harya Dwiprima
  */
+
+// Parsing connection string manual (untuk menghindari error karakter spesial di username)
+const dbUrl = new URL(process.env.POSTGRES_URL);
+const pool = new Pool({
+    user: decodeURIComponent(dbUrl.username),
+    password: decodeURIComponent(dbUrl.password),
+    host: dbUrl.hostname,
+    port: dbUrl.port || 5432,
+    database: dbUrl.pathname.split('/')[1] || 'postgres',
+    ssl: {
+        rejectUnauthorized: false
+    }
+});
 
 // ─── SQL SCHEMA ──────────────────────────────────────────────
 const SCHEMA = `
@@ -81,7 +95,10 @@ CREATE TABLE IF NOT EXISTS settings (
 
 async function init() {
     try {
-        console.log('⏳ Menghubungkan ke Postgres...');
+        console.log('⏳ Menghubungkan ke Postgres (via pg)...');
+        
+        // Cek koneksi
+        await pool.query('SELECT NOW()');
         
         // Buat tabel jika belum ada
         await pool.query(SCHEMA);
@@ -142,6 +159,15 @@ const db = {
         return rows[0] || null;
     },
 
+    registerAdmin: async (username, password, role = 'admin') => {
+        const id = 'admin-' + Date.now();
+        await pool.query(
+            'INSERT INTO admins (id, username, password, role) VALUES ($1, $2, $3, $4)',
+            [id, username, password, role]
+        );
+        return { id, username, role };
+    },
+
     // ----- TRANSACTIONS -----
     getTransactions: async (filters = {}) => {
         let query = 'SELECT * FROM transactions WHERE 1=1';
@@ -197,8 +223,33 @@ const db = {
     },
 
     deleteTransaction: async (id) => {
-        const { rowCount } = await pool.query('DELETE FROM transactions WHERE id = $1', [id]);
-        return rowCount > 0;
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            
+            // Ambil info transaksi sebelum dihapus
+            const { rows } = await client.query('SELECT * FROM transactions WHERE id = $1', [id]);
+            if (rows.length > 0) {
+                const t = rows[0];
+                // Jika ini adalah outflow onderdil yang terhubung ke stok
+                if (t.type === 'outflow' && t.kategori === 'Onderdil' && t.sparepart_id) {
+                    // Kembalikan stok
+                    await client.query('UPDATE inventory SET stok_sisa = stok_sisa + 1 WHERE id = $1', [t.sparepart_id]);
+                    // Hapus entry di inventory_installed yang sesuai
+                    await client.query('DELETE FROM inventory_installed WHERE txn_id = $1 OR (inventory_id = $2 AND armada = $3 AND tgl_pasang = $4 LIMIT 1)', 
+                        [t.id, t.sparepart_id, t.armada, t.date]);
+                }
+            }
+
+            const { rowCount } = await client.query('DELETE FROM transactions WHERE id = $1', [id]);
+            await client.query('COMMIT');
+            return rowCount > 0;
+        } catch (e) {
+            await client.query('ROLLBACK');
+            throw e;
+        } finally {
+            client.release();
+        }
     },
 
     deleteAllTransactions: async () => {

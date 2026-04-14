@@ -1,0 +1,1000 @@
+﻿function setTxnFilter(key,val,btn){
+  if(key==='tipe'){txnFilterTipe=val;document.querySelectorAll('.fs-chip').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');}
+  txnPage=5;applyTxnFilters();
+}
+function applyTxnFilters(){
+  txnSearch=document.getElementById('txn-search')?.value?.toLowerCase()||'';
+  txnSort=document.getElementById('txn-sort')?.value||'newest';
+  let list=[...transactions];
+  if(txnFilterTipe!=='all')list=list.filter(t=>t.type===txnFilterTipe);
+  if(txnSearch)list=list.filter(t=>t.label.toLowerCase().includes(txnSearch)||t.sub.toLowerCase().includes(txnSearch)||(t.armada||'').toLowerCase().includes(txnSearch)||(t.driver||'').toLowerCase().includes(txnSearch));
+  if(txnSort==='oldest')list.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  else if(txnSort==='biggest')list.sort((a,b)=>b.amount-a.amount);
+  else if(txnSort==='smallest')list.sort((a,b)=>a.amount-b.amount);
+  else list.sort((a,b)=>b.id-a.id);
+  renderTxnCards('txn-full',list.slice(0,txnPage),true);
+  const lm=document.getElementById('load-more-btn');
+  if(lm)lm.style.display=list.length>txnPage?'block':'none';
+}
+function loadMoreTxn(){txnPage+=5;applyTxnFilters();}
+
+// ═══════════════════════════════ CHARTS ══════════════════════════
+function renderDonut(inf,out){
+  if(typeof Chart==='undefined')return;
+  const ctx=document.getElementById('donutChart');if(!ctx)return;
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  if(donutChart)donutChart.destroy();
+  donutChart=new Chart(ctx,{type:'doughnut',data:{datasets:[{data:[inf||1,out||1],backgroundColor:[dark?'rgba(10,168,96,.7)':'rgba(10,168,96,.85)',dark?'rgba(224,48,48,.65)':'rgba(224,48,48,.8)'],borderColor:[dark?'rgba(10,168,96,.4)':'rgba(10,168,96,.3)',dark?'rgba(224,48,48,.4)':'rgba(224,48,48,.3)'],borderWidth:2,hoverOffset:4}]},
+  options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtFull(c.raw)},backgroundColor:dark?'rgba(22,30,46,.95)':'rgba(255,255,255,.95)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#7DCE13':'#12A060',borderColor:'rgba(125,206,19,.2)',borderWidth:1,padding:9,cornerRadius:9}},animation:{animateRotate:true,duration:800}}});
+}
+
+function setBarFilter(f,btn){
+  currentBarFilter=f;
+  document.querySelectorAll('.cf-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderBarChart(f);
+}
+
+// Build real monthly data from transactions array
+function buildMonthlyData(numMonths){
+  if(typeof Chart==='undefined')return;
+  const now=new Date();
+  const labels=[],inflowData=[],outflowData=[];
+  for(let i=numMonths-1;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const yr=d.getFullYear(),mo=d.getMonth();
+    labels.push(d.toLocaleDateString('id-ID',{month:'short'}));
+    const monthTxns=transactions.filter(t=>{
+      const td=new Date(t.date+'T00:00:00');
+      return td.getFullYear()===yr&&td.getMonth()===mo;
+    });
+    inflowData.push(totalInflow(monthTxns));
+    outflowData.push(totalOutflow(monthTxns));
+  }
+  return{labels,inflow:inflowData,outflow:outflowData};
+}
+
+function renderBarChart(f){
+  if(typeof Chart==='undefined')return;
+  const ctx=document.getElementById('barChart');if(!ctx)return;
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const gc=dark?'rgba(255,255,255,.04)':'rgba(0,0,0,.03)';
+  const tc=dark?'#3A4D64':'#8494AA';
+  const numMonths=f==='12m'?12:6;
+  const d=buildMonthlyData(numMonths);
+  if(barChart)barChart.destroy();
+  barChart=new Chart(ctx,{type:'bar',data:{labels:d.labels,datasets:[
+    {label:'Inflow',data:d.inflow,backgroundColor:dark?'rgba(10,168,96,.55)':'rgba(10,168,96,.72)',borderRadius:5,borderSkipped:false},
+    {label:'Outflow',data:d.outflow,backgroundColor:dark?'rgba(224,48,48,.5)':'rgba(224,48,48,.65)',borderRadius:5,borderSkipped:false}
+  ]},options:{responsive:true,plugins:{legend:{display:true,labels:{font:{family:'DM Sans',size:10},color:tc,boxWidth:10,boxHeight:10}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtFull(c.raw)},backgroundColor:dark?'rgba(16,22,36,.97)':'rgba(255,255,255,.97)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#7DCE13':'#12A060',borderColor:'rgba(125,206,19,.2)',borderWidth:1,padding:9,cornerRadius:9}},
+  scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:10},color:tc}},y:{grid:{color:gc,drawBorder:false},ticks:{font:{family:'DM Sans',size:10},color:tc,callback:v=>{const abs=Math.abs(v);if(abs>=1e9)return(v/1e9).toFixed(1)+'M';if(abs>=1e6)return(v/1e6).toFixed(1)+'Jt';if(abs>=1e3)return(v/1e3).toFixed(0)+'Rb';return v;}}}},barPercentage:0.65,categoryPercentage:0.7}});
+}
+
+// ═══════════════════════════════ CASH FLOW TREND ═════════════════
+let currentTrendFilter='7d',trendCustomFrom=null,trendCustomTo=null;
+
+function setTrendFilter(f,btn){
+  currentTrendFilter=f;
+  // Hanya ubah tombol di dalam #trend-filter-btns agar tidak bentrok dengan bar chart
+  const trendBtns=document.getElementById('trend-filter-btns');
+  if(trendBtns)trendBtns.querySelectorAll('.cf-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const cr=document.getElementById('trend-custom-range');
+  if(cr)cr.style.display=f==='custom'?'flex':'none';
+  if(f!=='custom') renderMiniLine();
+}
+
+function applyTrendCustom(){
+  const fr=document.getElementById('trend-from')?.value;
+  const to=document.getElementById('trend-to')?.value;
+  if(!fr||!to){showToast('Pilih rentang tanggal terlebih dahulu');return;}
+  if(fr>to){showToast('Tanggal awal harus sebelum tanggal akhir');return;}
+  trendCustomFrom=fr;trendCustomTo=to;
+  renderMiniLine();
+}
+
+function renderMiniLine(){
+  if(typeof Chart==='undefined')return;
+  const ctx=document.getElementById('miniLineChart');if(!ctx)return;
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const gc=dark?'rgba(255,255,255,.05)':'rgba(0,0,0,.04)';
+  const tc=dark?'#3A4D64':'#8494AA';
+  const labels=[],profits=[],inflowArr=[],outflowArr=[];
+
+  if(currentTrendFilter==='custom'){
+    // Mode custom: build per-day dari trendCustomFrom ke trendCustomTo
+    if(!trendCustomFrom||!trendCustomTo){
+      // Belum ada range, render kosong saja
+      _buildMiniLineChart(ctx,dark,gc,tc,[],[],[],[]);return;
+    }
+    const start=new Date(trendCustomFrom+'T00:00:00');
+    const end=new Date(trendCustomTo+'T00:00:00');
+    const totalDays=Math.round((end-start)/86400000)+1;
+    const limitDays=Math.min(totalDays,60);
+    for(let i=0;i<limitDays;i++){
+      const d=new Date(start.getTime());d.setDate(start.getDate()+i);
+      const ds=_ds(d);
+      labels.push(d.toLocaleDateString('id-ID',{day:'numeric',month:'short'}));
+      const dayTxns=transactions.filter(t=>t.date===ds);
+      const inf=totalInflow(dayTxns),out=totalOutflow(dayTxns);
+      inflowArr.push(inf);outflowArr.push(out);profits.push(inf-out);
+    }
+  } else {
+    // Mode 7d / 30d: N hari terakhir dari hari ini
+    const days=currentTrendFilter==='30d'?30:7;
+    for(let i=days-1;i>=0;i--){
+      const d=new Date();d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
+      const ds=_ds(d);
+      const fmt7=days<=7
+        ?d.toLocaleDateString('id-ID',{weekday:'short',day:'numeric'})
+        :d.toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+      labels.push(fmt7);
+      const dayTxns=transactions.filter(t=>t.date===ds);
+      const inf=totalInflow(dayTxns),out=totalOutflow(dayTxns);
+      inflowArr.push(inf);outflowArr.push(out);profits.push(inf-out);
+    }
+  }
+  _buildMiniLineChart(ctx,dark,gc,tc,labels,profits,inflowArr,outflowArr);
+}
+
+function _buildMiniLineChart(ctx,dark,gc,tc,labels,profits,inflowArr,outflowArr){
+  if(miniChart){miniChart.destroy();miniChart=null;}
+  const hasAnyData=profits.some(v=>v!==0)||inflowArr.some(v=>v!==0);
+  const maxTicks=labels.length>14?Math.ceil(labels.length/6):labels.length;
+  miniChart=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[
+      {
+        label:'Net Profit',
+        data:profits,
+        borderColor:'#7DCE13',
+        backgroundColor:(ctx2)=>{
+          const c=ctx2.chart.ctx;
+          const g=c.createLinearGradient(0,0,0,ctx2.chart.height);
+          g.addColorStop(0,'rgba(125,206,19,.18)');g.addColorStop(1,'rgba(125,206,19,.01)');return g;
+        },
+        borderWidth:2.5,
+        pointBackgroundColor:profits.map(v=>v>=0?'#7DCE13':'#E03030'),
+        pointBorderColor:dark?'#131921':'#fff',
+        pointBorderWidth:2,
+        pointRadius:hasAnyData?(labels.length>20?0:3):0,
+        pointHoverRadius:5,
+        tension:0.4,
+        fill:true,
+        order:1
+      },
+      {
+        label:'Inflow',
+        data:inflowArr,
+        borderColor:'rgba(10,168,96,.8)',
+        backgroundColor:'transparent',
+        borderWidth:1.5,
+        borderDash:[5,4],
+        pointRadius:0,
+        pointHoverRadius:4,
+        tension:0.4,
+        fill:false,
+        order:2
+      },
+      {
+        label:'Outflow',
+        data:outflowArr,
+        borderColor:'rgba(224,48,48,.75)',
+        backgroundColor:'transparent',
+        borderWidth:1.5,
+        borderDash:[5,4],
+        pointRadius:0,
+        pointHoverRadius:4,
+        tension:0.4,
+        fill:false,
+        order:3
+      }
+    ]},
+    options:{
+      responsive:true,
+      maintainAspectRatio:true,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{
+          display:true,
+          labels:{font:{family:'DM Sans',size:9},color:tc,boxWidth:8,boxHeight:8,padding:8}
+        },
+        tooltip:{
+          callbacks:{
+            title:items=>items[0].label,
+            label:c=>' '+c.dataset.label+': '+fmtFull(c.raw)
+          },
+          backgroundColor:dark?'rgba(16,22,36,.97)':'rgba(255,255,255,.97)',
+          titleColor:dark?'#DDE6F5':'#0B1220',
+          bodyColor:dark?'#A8F040':'#12A060',
+          borderColor:'rgba(125,206,19,.25)',
+          borderWidth:1,padding:9,cornerRadius:9,
+          titleFont:{family:'DM Sans',size:10,weight:'700'},
+          bodyFont:{family:'DM Mono',size:10}
+        }
+      },
+      scales:{
+        x:{
+          grid:{display:false},
+          ticks:{font:{family:'DM Sans',size:9},color:tc,maxRotation:0,maxTicksLimit:maxTicks,autoSkip:true}
+        },
+        y:{
+          grid:{color:gc,drawBorder:false},
+          ticks:{font:{family:'DM Mono',size:9},color:tc,
+            callback:v=>{
+              const abs=Math.abs(v);
+              if(abs>=1e9)return(v/1e9).toFixed(1)+'M';
+              if(abs>=1e6)return(v/1e6).toFixed(1)+'Jt';
+              if(abs>=1e3)return(v/1e3).toFixed(0)+'Rb';
+              return v===0?'0':v;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════ ARMADA PERF CHART ═══════════════
+let armadaPerfChart=null;
+function renderArmadaPerfChart(txns){
+  if(typeof Chart==='undefined')return;
+  const ctx=document.getElementById('armadaPerfChart');if(!ctx)return;
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const tc=dark?'#3A4D64':'#8494AA';
+  const gc=dark?'rgba(255,255,255,.04)':'rgba(0,0,0,.03)';
+  const umum=txns.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount,0);
+  const bebanPerUnit=FLEET_COUNT>0?umum/FLEET_COUNT:0;
+  const periodEl=document.getElementById('lap-armada-period');
+  if(periodEl)periodEl.textContent=lapFilter==='bulan-ini'?'Bulan Ini':lapFilter==='bulan-lalu'?'Bulan Lalu':'Custom';
+
+  const labels=[],netData=[],ritaseData=[];
+  fleetData.forEach(f=>{
+    const inflow=txns.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
+    const outTunai=txns.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
+    const outOnderdil=txns.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+    const nett=inflow-(outTunai+outOnderdil+bebanPerUnit);
+    const ritase=txns.filter(t=>t.type==='inflow'&&t.armada===f.nopol).length;
+    labels.push(f.nopol);netData.push(nett);ritaseData.push(ritase);
+  });
+  if(armadaPerfChart)armadaPerfChart.destroy();
+  armadaPerfChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[
+    {label:'Net Income',data:netData,backgroundColor:netData.map(v=>v>=0?'rgba(10,168,96,.72)':'rgba(224,48,48,.65)'),borderRadius:6,yAxisID:'yNet'},
+    {label:'Ritase',data:ritaseData,backgroundColor:'rgba(255,103,0,.55)',borderRadius:6,type:'bar',yAxisID:'yRit'}
+  ]},options:{responsive:true,plugins:{legend:{display:true,labels:{font:{family:'DM Sans',size:10},color:tc,boxWidth:10,boxHeight:10}},
+    tooltip:{callbacks:{label:c=>{if(c.dataset.label==='Ritase')return 'Ritase: '+c.raw+' trip';return c.dataset.label+': '+fmtFull(c.raw);}},
+    backgroundColor:dark?'rgba(16,22,36,.97)':'rgba(255,255,255,.97)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#A8F040':'#12A060',borderColor:'rgba(125,206,19,.2)',borderWidth:1,padding:9,cornerRadius:9}},
+  scales:{
+    x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:10},color:tc}},
+    yNet:{position:'left',grid:{color:gc,drawBorder:false},ticks:{font:{family:'DM Sans',size:9},color:tc,callback:v=>{const abs=Math.abs(v);if(abs>=1e6)return(v/1e6).toFixed(1)+'Jt';if(abs>=1e3)return(v/1e3).toFixed(0)+'Rb';return v;}}},
+    yRit:{position:'right',grid:{display:false},ticks:{font:{family:'DM Sans',size:9},color:'rgba(255,103,0,.7)'},title:{display:true,text:'Ritase',color:'rgba(255,103,0,.7)',font:{size:9}}}
+  },barPercentage:0.65,categoryPercentage:0.7}});
+}
+
+// ═══════════════════════════════ LAPORAN ═════════════════════════
+function setLapFilter(f,btn){
+  lapFilter=f;document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');
+  const cr=document.getElementById('lap-custom-range');if(cr)cr.style.display=f==='custom'?'flex':'none';
+  if(f!=='custom')renderLaporanTable();
+}
+function getLapTxns(){
+  const now=new Date();
+  return transactions.filter(t=>{
+    const d=new Date(t.date+'T00:00:00');
+    if(lapFilter==='bulan-ini') return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
+    if(lapFilter==='bulan-lalu'){const lm=new Date(now.getFullYear(),now.getMonth()-1,1);return d.getMonth()===lm.getMonth()&&d.getFullYear()===lm.getFullYear();}
+    if(lapFilter==='custom'){
+      const fr=document.getElementById('lap-from')?.value;
+      const to=document.getElementById('lap-to')?.value;
+      if(!fr||!to) return true;
+      return t.date>=fr&&t.date<=to;
+    }
+    return true;
+  });
+}
+let rekapSortCol='nopol', rekapSortDir=1;
+function sortRekap(col){
+  if(rekapSortCol===col){rekapSortDir*=-1;}else{rekapSortCol=col;rekapSortDir=1;}
+  renderLaporanTable();
+}
+function renderLaporanTable(){
+  const list=getLapTxns();
+  const tbody=document.getElementById('lap-tbody');
+  const tfoot=document.getElementById('lap-tfoot');
+  const periodBadge=document.getElementById('rekap-period-badge');
+  if(!tbody)return;
+  // Compute human-readable period label + date range
+  const _now=new Date();
+  let _periodLabel='',_rangeLabel='';
+  if(lapFilter==='bulan-ini'){
+    _periodLabel='Bulan Ini';
+    const _first=new Date(_now.getFullYear(),_now.getMonth(),1);
+    const _last=new Date(_now.getFullYear(),_now.getMonth()+1,0);
+    _rangeLabel=_first.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'})+' s/d '+_last.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
+  } else if(lapFilter==='bulan-lalu'){
+    _periodLabel='Bulan Lalu';
+    const _first=new Date(_now.getFullYear(),_now.getMonth()-1,1);
+    const _last=new Date(_now.getFullYear(),_now.getMonth(),0);
+    _rangeLabel=_first.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'})+' s/d '+_last.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
+  } else if(lapFilter==='custom'){
+    _periodLabel='Custom';
+    const _fr=document.getElementById('lap-from')?.value;
+    const _to=document.getElementById('lap-to')?.value;
+    if(_fr&&_to){
+      _rangeLabel=new Date(_fr+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'})+' s/d '+new Date(_to+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'});
+    }
+  }
+  if(periodBadge)periodBadge.textContent=_periodLabel;
+  // Update date range label
+  const _rangeEl=document.getElementById('rekap-date-range');
+  if(_rangeEl)_rangeEl.textContent=_rangeLabel?'Periode: '+_rangeLabel:'';
+  const umum=list.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount,0);
+  const bebanPerUnit=FLEET_COUNT>0?umum/FLEET_COUNT:0;
+  // Build per-armada rows
+  let rows=fleetData.map(f=>{
+    const inflow=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
+    const outTunai=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
+    const outOnderdil=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+    const outUmum=bebanPerUnit;
+    const nett=inflow-(outTunai+outOnderdil+outUmum);
+    return{nopol:f.nopol,driver:f.driver,status:f.status,inflow,outTunai,outOnderdil,outUmum,nett};
+  });
+  // Sort
+  rows.sort((a,b)=>{
+    let va=a[rekapSortCol],vb=b[rekapSortCol];
+    if(typeof va==='string')return va.localeCompare(vb)*rekapSortDir;
+    return(va-vb)*rekapSortDir;
+  });
+  // Update sort arrows
+  ['nopol','driver','inflow','outTunai','outOnderdil','outUmum','nett'].forEach(col=>{
+    const th=document.querySelector('#rekap-table th[data-col="'+col+'"]');
+    const ar=document.getElementById('sa-'+col);
+    if(th){th.classList.remove('sort-asc','sort-desc');if(col===rekapSortCol)th.classList.add(rekapSortDir===1?'sort-asc':'sort-desc');}
+    if(ar){
+      if(col!==rekapSortCol)ar.textContent='⇅';
+      else ar.textContent=rekapSortDir===1?'↑':'↓';
+    }
+  });
+  tbody.innerHTML=rows.map(r=>`<tr>
+    <td><div class="ar-nopol">${r.nopol}</div><span class="ar-badge ${r.status}">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</span></td>
+    <td style="font-size:12px;color:var(--text2);">${r.driver}</td>
+    <td class="ar-num ${r.inflow>0?'pos':'zero'}">${fmt(r.inflow)}</td>
+    <td class="ar-num ${r.outTunai>0?'neg':'zero'}">${r.outTunai>0?'-'+fmt(r.outTunai):'—'}</td>
+    <td class="ar-num ${r.outOnderdil>0?'neg':'zero'}">${r.outOnderdil>0?'-'+fmt(r.outOnderdil):'—'}</td>
+    <td class="ar-num ${r.outUmum>0?'neg':'zero'}">${r.outUmum>0?'-'+fmt(r.outUmum):'—'}</td>
+    <td class="ar-num ${r.nett>=0?'net-pos':'net-neg'}" style="font-weight:800;">${fmt(r.nett)}</td>
+  </tr>`).join('');
+  // Footer totals
+  const totInf=rows.reduce((s,r)=>s+r.inflow,0);
+  const totTunai=rows.reduce((s,r)=>s+r.outTunai,0);
+  const totOnderdil=rows.reduce((s,r)=>s+r.outOnderdil,0);
+  const totNett=rows.reduce((s,r)=>s+r.nett,0);
+  if(tfoot)tfoot.innerHTML=`<tr>
+    <td colspan="2" style="font-weight:800;color:var(--text);">TOTAL PERIODE</td>
+    <td style="text-align:right;color:var(--success);font-weight:800;">${fmt(totInf)}</td>
+    <td style="text-align:right;color:var(--danger);font-weight:800;">-${fmt(totTunai)}</td>
+    <td style="text-align:right;color:var(--danger);font-weight:800;">-${fmt(totOnderdil)}</td>
+    <td style="text-align:right;color:var(--danger);font-weight:800;">-${fmt(umum)}</td>
+    <td style="text-align:right;color:var(--info);font-weight:800;">${fmt(totNett)}</td>
+  </tr>`;
+  const s=document.getElementById('lap-sum');if(s)s.innerHTML=`<span class="rs-lbl">Net Profit Periode</span><span class="rs-val">${fmt(totNett)}</span>`;
+  // Also refresh the Armada Performance Chart
+  renderArmadaPerfChart(list);
+}
+function exportCSV(){
+  const list=getLapTxns();
+  const umum=list.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount,0);
+  const bebanPerUnit=FLEET_COUNT>0?umum/FLEET_COUNT:0;
+  const rows=fleetData.map(f=>{
+    const inflow=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
+    const outTunai=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
+    const outOnderdil=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+    const outUmum=bebanPerUnit;
+    const nett=inflow-(outTunai+outOnderdil+outUmum);
+    return`"${f.nopol}","${f.driver}",${inflow},${outTunai},${outOnderdil},${Math.round(outUmum)},${Math.round(nett)}`;
+  });
+  const header='No. Pol,Nama Driver,Inflow,Out Tunai,Out Onderdil,Out Umum,Nett';
+  const blob=new Blob([header+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='BHD_Rekap_Armada.csv';a.click();
+  showToast('File CSV berhasil diunduh');vibrate(30);
+}
+function exportPDF(){
+  const list=getLapTxns();
+  const umum=list.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount,0);
+  const bebanPerUnit=FLEET_COUNT>0?umum/FLEET_COUNT:0;
+  const dataRows=fleetData.map(f=>{
+    const inflow=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
+    const outTunai=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
+    const outOnderdil=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+    const outUmum=bebanPerUnit;
+    const nett=inflow-(outTunai+outOnderdil+outUmum);
+    return{nopol:f.nopol,driver:f.driver,inflow,outTunai,outOnderdil,outUmum,nett};
+  });
+  const totInf=dataRows.reduce((s,r)=>s+r.inflow,0);
+  const totTunai=dataRows.reduce((s,r)=>s+r.outTunai,0);
+  const totOnderdil=dataRows.reduce((s,r)=>s+r.outOnderdil,0);
+  const totNett=dataRows.reduce((s,r)=>s+r.nett,0);
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>BHD Rekap Armada</title><style>
+    body{font-family:Arial,sans-serif;padding:30px;color:#111;}
+    h1{color:#5FA00D;margin-bottom:4px;}
+    p{color:#666;font-size:12px;margin-bottom:18px;}
+    table{width:100%;border-collapse:collapse;font-size:12px;}
+    th{background:#f0f0f0;padding:9px 10px;border:1px solid #ddd;font-weight:700;text-align:left;}
+    td{padding:8px 10px;border:1px solid #ddd;}
+    .num{text-align:right;} .pos{color:#12A060;font-weight:700;} .neg{color:#E03030;font-weight:700;}
+    .nett-pos{color:#2563EB;font-weight:800;} .nett-neg{color:#E03030;font-weight:800;}
+    tfoot td{background:#f8f8f8;font-weight:800;border-top:2px solid #999;}
+  </style></head><body>
+  <h1>BHD Smart Flow — Rekap Per Armada</h1>
+  <p>PT. BAGUS HARYA DWIPRIMA · Periode: ${lapFilter==='bulan-ini'?'Bulan Ini':lapFilter==='bulan-lalu'?'Bulan Lalu':'Custom'} · Dicetak: ${new Date().toLocaleDateString('id-ID')}</p>
+  <table><thead><tr><th>No. Pol</th><th>Nama Driver</th><th class="num" style="color:#12A060;">Inflow</th><th class="num">Out Tunai</th><th class="num">Out Onderdil</th><th class="num">Out Umum</th><th class="num" style="color:#2563EB;">Nett</th></tr></thead>
+  <tbody>${dataRows.map(r=>`<tr>
+    <td><b>${r.nopol}</b></td><td>${r.driver}</td>
+    <td class="num pos">${fmtFull(r.inflow)}</td>
+    <td class="num neg">${r.outTunai>0?'-'+fmtFull(r.outTunai):'—'}</td>
+    <td class="num neg">${r.outOnderdil>0?'-'+fmtFull(r.outOnderdil):'—'}</td>
+    <td class="num neg">${r.outUmum>0?'-'+fmtFull(r.outUmum):'—'}</td>
+    <td class="num ${r.nett>=0?'nett-pos':'nett-neg'}">${fmtFull(r.nett)}</td>
+  </tr>`).join('')}</tbody>
+  <tfoot><tr><td colspan="2">TOTAL PERIODE</td><td class="num pos">${fmtFull(totInf)}</td><td class="num neg">-${fmtFull(totTunai)}</td><td class="num neg">-${fmtFull(totOnderdil)}</td><td class="num neg">-${fmtFull(umum)}</td><td class="num nett-pos">${fmtFull(totNett)}</td></tr></tfoot>
+  </table></body></html>`);
+  w.document.close();w.print();showToast('Laporan PDF siap cetak');
+}
+
+// ═══════════════════════════════ ARMADA MANAGEMENT ═══════════════
+function switchArmadaTab(tab,btn){
+  document.getElementById('tab-unit-view').style.display=tab==='unit'?'block':'none';
+  document.getElementById('tab-driver-view').style.display=tab==='driver'?'block':'none';
+  document.querySelectorAll('.at-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(tab==='driver')renderDriverList();
+}
+
+function renderFleetUnits(){
+  const el=document.getElementById('fleet-unit-list');if(!el)return;
+  if(fleetData.length===0){
+    el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px;">Belum ada armada. Tambah unit baru di atas.</div>';
+    return;
+  }
+  el.innerHTML=fleetData.map(f=>{
+    const pW=daysUntil(f.pajak)<=7,kW=daysUntil(f.kir)<=7,aW=pW||kW;
+    const status=f.status||'jalan';
+    const initials=(f.nopol||'??').replace(/\s/g,'').slice(-4);
+    const sl={jalan:'chip-green',bengkel:'chip-orange',antre:'chip-gray'};
+    return `<div class="fleet-card-unit">
+      <div class="fcu-av ${status}" onclick="openUnitDetail('${f.id}')">${initials}</div>
+      <div class="fcu-info" onclick="openUnitDetail('${f.id}')">
+        <div class="fcu-nopol">${f.nopol||'—'}</div>
+        <div class="fcu-driver"><svg viewBox="0 0 24 24" width="10" height="10" style="fill:none;stroke:var(--text3);stroke-width:2;stroke-linecap:round;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${f.driver||'—'}</div>
+      </div>
+      <div class="fcu-right">
+        ${status==='antre'?'<span class="antre-pulse"><span class="ap-dot"></span>Antre</span>':`<span class="chip ${sl[status]||'chip-gray'}">${sIcoFn(status)} ${status.charAt(0).toUpperCase()+status.slice(1)}</span>`}
+        ${aW?'<span class="doc-warn">⚠ Dokumen</span>':''}
+        <button class="fcu-edit-btn" onclick="openSmModal('unit','${f.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderDriverList(){
+  const el=document.getElementById('driver-list-view');if(!el)return;
+  const all=[...new Set([...driverList,...fleetData.map(f=>f.driver)])];
+  el.innerHTML=all.map(d=>{
+    const init=d.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const unit=fleetData.find(f=>f.driver===d);
+    return `<div class="driver-card">
+      <div class="drv-av">${init}</div>
+      <div class="drv-info"><div class="drv-name">${d}</div><div class="drv-meta">${unit?'🚛 '+unit.nopol:'Tidak ada unit tetap'}</div></div>
+      <div class="drv-actions">
+        <button class="drv-btn edit" onclick="openSmModal('driver','${d}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="drv-btn del" onclick="deleteDriver('${d}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════ UNIT DETAIL ═════════════════════
+function openUnitDetail(id){
+  const f=fleetData.find(x=>x.id===id);if(!f)return;
+  currentDetailUnit=f;
+  document.getElementById('armada-list').style.display='none';
+  document.getElementById('detail-panel').classList.add('active');
+  // Use ALL transactions (no period filter) for unit detail
+  const uIn=transactions.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
+  const uOutTunai=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
+  const uOutOnderdil=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+  const beban=transactions.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount/FLEET_COUNT,0);
+  const net=uIn-(uOutTunai+uOutOnderdil+beban);
+  const pD=daysUntil(f.pajak),kD=daysUntil(f.kir);
+  // Active sparepart count
+  const activeParts=sparepartStock.filter(sp=>sp.installed.some(i=>i.armada===f.nopol));
+  document.getElementById('dp-hero').innerHTML=`
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px;position:relative;z-index:1;">
+      <div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#CC5200,#FF6700,#FF9A40);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;">${f.nopol.replace(/\s/g,'').slice(-4)}</div>
+      <div><div class="dp-nopol">${f.nopol}</div><div class="dp-driver">${f.driver}</div></div>
+      <div style="margin-left:auto;">${f.status==='antre'?'<span class="antre-pulse"><span class="ap-dot"></span>Antre</span>':`<span class="chip ${f.status==='jalan'?'chip-green':'chip-orange'}">${sIcoFn(f.status)} ${f.status.charAt(0).toUpperCase()+f.status.slice(1)}</span>`}</div>
+    </div>
+    <div class="dp-stats" style="position:relative;z-index:1;">
+      <div class="dp-stat"><div class="dp-stat-l">Total Inflow</div><div class="dp-stat-v gr">${fmt(uIn)}</div></div>
+      <div class="dp-stat"><div class="dp-stat-l">Out Tunai</div><div class="dp-stat-v rd">${fmt(uOutTunai)}</div></div>
+      <div class="dp-stat"><div class="dp-stat-l">Out Onderdil</div><div class="dp-stat-v rd">${fmt(uOutOnderdil)}</div></div>
+      <div class="dp-stat"><div class="dp-stat-l">Beban Umum</div><div class="dp-stat-v rd">${fmt(beban)}</div></div>
+      <div class="dp-stat"><div class="dp-stat-l">Laba Bersih</div><div class="dp-stat-v nt" style="font-size:14px;">${fmt(net)}</div></div>
+      <div class="dp-stat"><div class="dp-stat-l">Onderdil Aktif</div><div class="dp-stat-v" style="color:var(--warning);">${activeParts.length} item</div></div>
+    </div>
+    <div class="dp-docs" style="position:relative;z-index:1;">
+      <div class="dp-doc"><div class="dp-doc-lbl">Pajak</div><div class="dp-doc-val ${pD<=7?'near':pD<=30?'warn':''}">${fmtDate(f.pajak)} ${pD<=30?'('+pD+'h)':''}</div></div>
+      <div class="dp-doc"><div class="dp-doc-lbl">KIR</div><div class="dp-doc-val ${kD<=7?'near':kD<=30?'warn':''}">${fmtDate(f.kir)} ${kD<=30?'('+kD+'h)':''}</div></div>
+    </div>`;
+  showTab('perjalanan',null);
+}
+
+
+function backToArmadaList(){
+  document.getElementById('armada-list').style.display='block';
+  document.getElementById('detail-panel').classList.remove('active');
+  currentDetailUnit=null;
+}
+
+function showTab(name,btnEl){
+  if(btnEl){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btnEl.classList.add('active');}
+  else document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  ['perjalanan','biaya','dokumen'].forEach(t=>{const e=document.getElementById('tab-'+t);if(e)e.style.display=t===name?'block':'none';});
+  if(!currentDetailUnit)return;const f=currentDetailUnit;
+  if(name==='perjalanan'){
+    const trips=transactions.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).sort((a,b)=>b.date.localeCompare(a.date));
+    const parts=getActivePartsForArmada(f.nopol);
+    const tripsHTML=trips.length
+      ?trips.map(t=>`<div class="hist-item"><div class="hist-dot trip"></div><div class="txn-body"><div class="hist-main">${t.muat} → ${t.bongkar}</div><div class="hist-sub">${fmtDate(t.date)} · ${t.driver}</div></div><div class="hist-amt in">+${fmt(t.amount)}</div></div>`).join('')
+      :'<div style="text-align:center;padding:24px;color:var(--text3);">Belum ada perjalanan tercatat</div>';
+    const partsHTML=parts.length
+      ?'<div class="sec-title" style="margin-top:14px;margin-bottom:8px;">🔧 Onderdil Aktif ('+parts.length+' item)</div>'
+        +parts.map(p=>`<div class="ritase-row">
+          <div style="font-size:18px;">${getSpCatIcon(p.kategori)||'🔧'}</div>
+          <div class="ritase-info">
+            <div class="ritase-label">${p.nama}</div>
+            <div class="ritase-meta">${p.spek} · Dipasang: ${fmtDate(p.tglPasang)} (${p.daysSince} hari)</div>
+            ${p.freeze?'<div class="ritase-freeze">❄ FREEZE — Armada di Bengkel</div>':''}
+          </div>
+          <div style="text-align:right;"><div class="ritase-count">${p.ritase}</div><div style="font-size:9px;color:var(--text3);">ritase</div></div>
+        </div>`).join('')
+      :'<div style="text-align:center;padding:14px;color:var(--text3);font-size:12px;">Tidak ada onderdil terpasang</div>';
+    document.getElementById('tab-perjalanan').innerHTML=tripsHTML+partsHTML;
+  }
+  if(name==='biaya'){
+    const unitCosts=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol).sort((a,b)=>b.date.localeCompare(a.date));
+    const umumCosts=transactions.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').sort((a,b)=>b.date.localeCompare(a.date));
+    const chipColor={Tunai:'chip-green',Onderdil:'chip-orange',UMUM:'chip-gray'};
+    const renderItem=t=>`<div class="hist-item">
+      <div class="hist-dot out"></div>
+      <div class="txn-body">
+        <div class="hist-main">${t.label} <span class="chip ${chipColor[t.kategori]||'chip-gray'}" style="font-size:8px;">${t.kategori}</span></div>
+        <div class="hist-sub">${t.nota||'—'} · ${t.toko||'—'} · ${fmtDate(t.date)}</div>
+      </div>
+      <div class="hist-amt out">-${fmt(t.kategori==='UMUM'?t.amount/FLEET_COUNT:t.amount)}</div>
+    </div>`;
+    let html='';
+    if(unitCosts.length){html+='<div class="sec-title" style="font-size:10px;margin-bottom:6px;">Biaya Unit Ini</div>'+unitCosts.map(renderItem).join('');}
+    if(umumCosts.length){html+='<div class="sec-title" style="font-size:10px;margin-top:10px;margin-bottom:6px;">Beban Umum (porsi unit ini)</div>'+umumCosts.map(renderItem).join('');}
+    if(!html)html='<div style="text-align:center;padding:30px;color:var(--text3);font-size:12.5px;">Belum ada biaya tercatat</div>';
+    document.getElementById('tab-biaya').innerHTML=html;
+  }
+  if(name==='dokumen'){
+    const pD=daysUntil(f.pajak),kD=daysUntil(f.kir);
+    document.getElementById('tab-dokumen').innerHTML=`
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-hdr" style="margin-bottom:8px;"><span class="card-title">Edit Dokumen</span></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Tgl Pajak</label><input type="date" class="form-input" id="edit-pajak" value="${f.pajak||''}"/></div>
+          <div class="form-group"><label class="form-label">Tgl KIR</label><input type="date" class="form-input" id="edit-kir" value="${f.kir||''}"/></div>
+        </div>
+        <button onclick="saveDocs('${f.id}')" class="form-btn inflow">Simpan Dokumen</button>
+      </div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg3);border-radius:10px;">
+            <span style="font-size:12px;font-weight:600;color:var(--text);">Pajak Kendaraan</span>
+            <span class="chip ${pD<=7?'chip-danger':pD<=30?'chip-orange':'chip-green'}">${fmtDate(f.pajak)} (${pD}h)</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg3);border-radius:10px;">
+            <span style="font-size:12px;font-weight:600;color:var(--text);">KIR</span>
+            <span class="chip ${kD<=7?'chip-danger':kD<=30?'chip-orange':'chip-green'}">${fmtDate(f.kir)} (${kD}h)</span>
+          </div>
+        </div>
+      </div>`;
+  }
+}
+
+function saveDocs(id){
+  const f=fleetData.find(x=>x.id===id);if(!f)return;
+  f.pajak=document.getElementById('edit-pajak')?.value||f.pajak;
+  f.kir=document.getElementById('edit-kir')?.value||f.kir;
+  if(_useAPI) apiFetch('/api/fleet/'+id,{method:'PUT',body:{nopol:f.nopol,driver:f.driver,status:f.status,pajak:f.pajak,kir:f.kir}}).catch(e=>console.warn('Sync docs gagal:',e));
+  showToast('Dokumen berhasil disimpan');openUnitDetail(id);checkDocWarnings();
+}
+
+// ═══════════════════════════════ SM MODAL (CRUD) ══════════════════
+function openSmModal(type,val){
+  closeFab();
+  const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
+  if(type==='driver'){
+    const isEdit=!!val;tEl.textContent=isEdit?'Edit Supir':'Tambah Supir Baru';
+    body.innerHTML=`
+      <div><label class="form-label">Nama Lengkap Supir</label><input class="form-input" id="sm-driver-name" value="${isEdit?val:''}" placeholder="Nama supir..."/></div>
+      <button class="sm-btn orange" onclick="saveDriver('${val}')">${isEdit?'Simpan':'Tambah Supir'}</button>
+      ${isEdit?`<button class="sm-btn danger" onclick="deleteDriver('${val}');closeSm()">Hapus Supir</button>`:''}`;
+  } else {
+    const isEdit=!!val;const u=isEdit?fleetData.find(f=>f.id===val):null;
+    tEl.textContent=isEdit?'Edit Unit Armada':'Tambah Unit Baru';
+    body.innerHTML=`
+      <div><label class="form-label">No. Plat</label><input class="form-input" id="sm-nopol" value="${u?u.nopol:''}" placeholder="B 1234 XX"/></div>
+      <div><label class="form-label">Supir Tetap</label><select class="form-select" id="sm-unit-driver">${getDriverOpts(u?u.driver:'')}</select></div>
+      <div><label class="form-label">Status</label><select class="form-select" id="sm-status"><option value="jalan"${u?.status==='jalan'?' selected':''}>🟢 Jalan</option><option value="antre"${u?.status==='antre'?' selected':''}>🟡 Antre</option><option value="bengkel"${u?.status==='bengkel'?' selected':''}>🔴 Bengkel</option></select></div>
+      <div class="form-row">
+        <div><label class="form-label">Tgl Pajak</label><input type="date" class="form-input" id="sm-pajak" value="${u?u.pajak:''}"/></div>
+        <div><label class="form-label">Tgl KIR</label><input type="date" class="form-input" id="sm-kir" value="${u?u.kir:''}"/></div>
+      </div>
+      <button class="sm-btn orange" onclick="saveUnit('${val}')">${isEdit?'Simpan':'Tambah Unit'}</button>
+      ${isEdit?`<button class="sm-btn danger" onclick="deleteUnit('${val}');closeSm()">Hapus Unit</button>`:''}`;
+  }
+  document.getElementById('sm-overlay').classList.add('open');
+}
+function closeSm(){document.getElementById('sm-overlay').classList.remove('open');}
+function closeSmOuter(e){if(e.target===document.getElementById('sm-overlay'))closeSm();}
+
+function saveDriver(old){
+  const name=document.getElementById('sm-driver-name')?.value?.trim();
+  if(!name){showToast('Nama tidak boleh kosong');return;}
+  if(old&&old!==name){const i=driverList.indexOf(old);if(i>-1)driverList[i]=name;else driverList.push(name);fleetData.forEach(f=>{if(f.driver===old)f.driver=name;});}
+  else if(!old&&!driverList.includes(name))driverList.push(name);
+  if(_useAPI) apiFetch('/api/drivers',{method:'POST',body:{nama:name}}).catch(e=>console.warn('Sync driver gagal:',e));
+  closeSm();renderDriverList();renderDashboard();showToast(old?'Supir diperbarui':'Supir ditambahkan');vibrate(30);
+}
+function deleteDriver(name){
+  if(fleetData.some(f=>f.driver===name)){showToast('Supir sedang bertugas');return;}
+  driverList=driverList.filter(d=>d!==name);renderDriverList();showToast('Supir dihapus');vibrate(40);
+}
+function saveUnit(existId){
+  const nopol=(document.getElementById('sm-nopol')?.value||'').trim().toUpperCase();
+  const driver=document.getElementById('sm-unit-driver')?.value||'';
+  const status=document.getElementById('sm-status')?.value||'jalan';
+  const pajak=document.getElementById('sm-pajak')?.value||'';
+  const kir=document.getElementById('sm-kir')?.value||'';
+  if(!nopol){showToast('No. plat tidak boleh kosong');return;}
+  const dupCheck=fleetData.find(f=>f.nopol===nopol&&f.id!==existId);
+  if(dupCheck){showToast('No. plat sudah terdaftar');return;}
+  if(existId){
+    const u=fleetData.find(f=>f.id===existId);
+    if(u){u.nopol=nopol;u.driver=driver;u.status=status;u.pajak=pajak;u.kir=kir;}
+    if(_useAPI) apiFetch('/api/fleet/'+existId,{method:'PUT',body:{nopol,driver,status,pajak,kir}}).catch(e=>console.warn('Sync fleet gagal:',e));
+  } else {
+    const newId='f'+Date.now();
+    fleetData.push({id:newId,nopol,driver,status,pajak,kir});
+    if(_useAPI) apiFetch('/api/fleet',{method:'POST',body:{id:newId,nopol,driver,status,pajak,kir}}).catch(e=>console.warn('Sync fleet gagal:',e));
+  }
+  FLEET_COUNT=fleetData.length;
+  const fi=document.getElementById('fleet-count-input');if(fi)fi.value=FLEET_COUNT;
+  closeSm();renderFleetUnits();renderDashboard();renderLaporanTable();checkDocWarnings();
+  showToast(existId?'Unit diperbarui':'Unit '+nopol+' ditambahkan');vibrate(30);
+}
+function deleteUnit(id){
+  const u=fleetData.find(f=>f.id===id);
+  const i=fleetData.findIndex(f=>f.id===id);if(i>-1)fleetData.splice(i,1);
+  if(_useAPI) apiFetch('/api/fleet/'+id,{method:'DELETE'}).catch(e=>console.warn('Sync fleet delete gagal:',e));
+  FLEET_COUNT=fleetData.length;
+  const fi=document.getElementById('fleet-count-input');if(fi)fi.value=FLEET_COUNT;
+  renderFleetUnits();renderDashboard();renderLaporanTable();checkDocWarnings();
+  showToast(u?'Unit '+u.nopol+' dihapus':'Unit dihapus');vibrate(40);
+}
+
+// ═══════════════════════════════ INPUT MODAL ══════════════════════
+function buildGudangOpts(){
+  // Group stok gudang by kategori
+  if(sparepartStock.length===0) return '<option value="">— Stok kosong —</option>';
+  const grouped={};
+  sparepartStock.filter(sp=>sp.stokSisa>0).forEach(sp=>{
+    if(!grouped[sp.kategori]) grouped[sp.kategori]=[];
+    grouped[sp.kategori].push(sp);
+  });
+  let html='<option value="">— Pilih dari Gudang —</option>';
+  Object.keys(grouped).forEach(kat=>{
+    html+=`<optgroup label="${kat}">`;
+    grouped[kat].forEach(sp=>{
+      html+=`<option value="${sp.id}">[${sp.stokSisa}/${sp.stokAwal}] ${sp.nama} · ${sp.spek}</option>`;
+    });
+    html+='</optgroup>';
+  });
+  return html;
+}
+
+function openModal(type){
+  closeFab();
+  document.getElementById('mt-dot').className='mt-dot '+type;
+  const title=document.getElementById('mt-text'),body=document.getElementById('modal-body');
+  if(type==='inflow'){
+    title.textContent='+ Input Inflow';
+    body.innerHTML=`
+      <div class="form-group"><label class="form-label">No. Plat Armada</label><select class="form-select" id="inf-armada" onchange="syncDriverFromArmada()">${getArmadaOpts()}</select></div>
+      <div class="form-group"><label class="form-label">Nama Supir</label><select class="form-select" id="inf-driver">${getDriverOpts()}</select></div>
+      <div class="form-group"><label class="form-label">Titik Muat</label><input class="form-input" id="inf-muat" placeholder="Pelabuhan / Gudang Asal"/></div>
+      <div class="form-group"><label class="form-label">Titik Bongkar</label><input class="form-input" id="inf-bongkar" placeholder="Gudang / Kota Tujuan"/></div>
+      <div class="form-group"><label class="form-label">Jumlah Setoran Netto (Rp)</label><input class="form-input" id="inf-amount" placeholder="0" inputmode="numeric"/></div>
+      <div class="form-group"><label class="form-label">Tanggal</label><input type="date" class="form-input" id="inf-date" value="${today()}"/></div>
+      <div class="form-group"><label class="form-label">Update Status Armada</label><select class="form-select" id="inf-antre" onchange="document.getElementById('inf-antre-hint').style.display=this.value==='antre'?'block':'none'"><option value="jalan">🟢 Jalan — Aktif beroperasi</option><option value="antre">🟡 Antre — Menunggu bongkar</option><option value="bengkel">🔴 Bengkel — Dalam perbaikan</option></select></div>
+      <div id="inf-antre-hint" style="display:none;font-size:10.5px;color:var(--text3);background:var(--bg3);padding:8px 10px;border-radius:10px;margin-bottom:8px;">💡 Status Antre bisa disimpan tanpa isi nominal uang.</div>
+      <button class="form-btn inflow" onclick="submitInflow()">Simpan Inflow</button>`;
+    setupCurrencyInput('inf-amount');syncDriverFromArmada();
+  } else {
+    title.textContent='- Input Outflow';
+    body.innerHTML=`
+      <div class="form-group"><label class="form-label">Tipe Pengeluaran</label>
+        <select class="form-select" id="out-cat" onchange="onOutCatChange()">
+          <option value="UMUM">🏢 UMUM — Beban Operasional</option>
+          <option value="Onderdil">🔧 Onderdil — Suku Cadang</option>
+          <option value="Tunai">💵 Tunai — Pengeluaran Tunai</option>
+        </select>
+      </div>
+      <div id="out-onderdil-wrap" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">📦 Pilih dari Stok Gudang</label>
+          <select class="form-select" id="out-sp-select" onchange="onGudangItemSelect()">
+            ${buildGudangOpts()}
+          </select>
+        </div>
+        <div id="out-sp-info" style="display:none;background:var(--bg3);border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:11px;color:var(--text2);"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Keterangan</label>
+        <input class="form-input" id="out-label" placeholder="BBM, Ganti Oli, Retribusi..."/>
+      </div>
+      <div class="form-group"><label class="form-label">Nama Toko / Vendor</label>
+        <input class="form-input" id="out-toko" placeholder="Nama toko"/>
+      </div>
+      <div class="form-group"><label class="form-label">No. Nota</label>
+        <input class="form-input" id="out-nota" placeholder="INV-001"/>
+      </div>
+      <div id="out-armada-wrap" style="display:none;">
+        <div class="form-group"><label class="form-label">No. Plat Armada</label>
+          <select class="form-select" id="out-armada" onchange="syncOutDriver()">${getArmadaOpts()}</select>
+        </div>
+        <div class="form-group"><label class="form-label">Nama Supir</label>
+          <select class="form-select" id="out-driver">${getDriverOpts()}</select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Jumlah (Rp)</label>
+        <input class="form-input" id="out-amount" placeholder="0" inputmode="numeric"/>
+      </div>
+      <div class="form-group"><label class="form-label">Tanggal</label>
+        <input type="date" class="form-input" id="out-date" value="${today()}"/>
+      </div>
+      <button class="form-btn outflow" onclick="submitOutflow()">Simpan Outflow</button>`;
+    setupCurrencyInput('out-amount');
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function onOutCatChange(){
+  const cat=document.getElementById('out-cat')?.value;
+  const onderdilWrap=document.getElementById('out-onderdil-wrap');
+  const armadaWrap=document.getElementById('out-armada-wrap');
+  if(onderdilWrap) onderdilWrap.style.display=cat==='Onderdil'?'block':'none';
+  if(armadaWrap) armadaWrap.style.display=(cat==='Onderdil'||cat==='Tunai')?'block':'none';
+  // Reset gudang selection when switching away
+  if(cat!=='Onderdil'){
+    const sel=document.getElementById('out-sp-select');
+    if(sel) sel.value='';
+    const info=document.getElementById('out-sp-info');
+    if(info) info.style.display='none';
+  }
+}
+
+function onGudangItemSelect(){
+  const sel=document.getElementById('out-sp-select');
+  const spId=sel?.value;
+  const info=document.getElementById('out-sp-info');
+  if(!spId){
+    if(info) info.style.display='none';
+    return;
+  }
+  const sp=sparepartStock.find(s=>s.id===spId);
+  if(!sp){if(info) info.style.display='none';return;}
+  // Auto-fill fields
+  const labelEl=document.getElementById('out-label');
+  const tokoEl=document.getElementById('out-toko');
+  const notaEl=document.getElementById('out-nota');
+  const amtEl=document.getElementById('out-amount');
+  if(labelEl&&!labelEl.value) labelEl.value=sp.nama+' ('+sp.spek+')';
+  if(tokoEl&&!tokoEl.value) tokoEl.value=sp.toko;
+  if(notaEl&&!notaEl.value) notaEl.value=sp.nota;
+  if(amtEl){
+    amtEl.value=new Intl.NumberFormat('id-ID').format(sp.hargaSatuan);
+  }
+  // Show info badge
+  if(info){
+    const threshold=getRitaseThreshold(sp.kategori);
+    info.style.display='block';
+    info.innerHTML='<b>'+sp.nama+'</b> · Sisa stok: <b style="color:var(--'+(sp.stokSisa>0?'success':'danger')+')">'+sp.stokSisa+' unit</b>'
+      +' · Harga: '+fmt(sp.hargaSatuan)
+      +'<br>🔄 Ritase akan mulai dihitung dari 0 setelah dipasang ke armada (threshold: '+threshold+' trip)';
+  }
+}
+
+function toggleArmadaField(){
+  // Legacy compatibility — now handled by onOutCatChange
+  onOutCatChange();
+}
+function syncDriverFromArmada(){const a=document.getElementById('inf-armada')?.value;const f=fleetData.find(x=>x.nopol===a);const dd=document.getElementById('inf-driver');if(f&&dd)dd.value=f.driver;}
+function syncOutDriver(){const a=document.getElementById('out-armada')?.value;const f=fleetData.find(x=>x.nopol===a);const dd=document.getElementById('out-driver');if(f&&dd)dd.value=f.driver;}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function closeModalOuter(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+
+function submitInflow(){
+  const armada=document.getElementById('inf-armada')?.value;
+  const driver=document.getElementById('inf-driver')?.value||'';
+  const amount=getRaw('inf-amount');
+  const muat=document.getElementById('inf-muat')?.value||'—';
+  const bongkar=document.getElementById('inf-bongkar')?.value||'—';
+  const date=document.getElementById('inf-date')?.value;
+  const antre=document.getElementById('inf-antre')?.value;
+  if(antre!=='antre' && (!amount||amount<=0)){showToast('Masukkan jumlah yang valid');return;}
+  // Ambil status armada SEBELUM diupdate — untuk logika ritase
+  const fUnit=fleetData.find(x=>x.nopol===armada);
+  const statusSebelum=fUnit?fUnit.status:'jalan';
+  const txnId = 'txn_'+Date.now();
+  const txnLabel = (amount > 0) ? 'Setoran ' + armada : 'Antrean ' + armada;
+  const newTxn={id:txnId,type:'inflow',label:txnLabel,sub:driver+' · Netto',amount,date,armada,muat:muat||'',bongkar:bongkar||'',driver,nota:'',toko:'',kategori:'Inflow',status:'lunas'};
+  transactions.unshift(newTxn);
+  if(fUnit){fUnit.status=antre;fUnit.driver=driver;}
+  incrementRitaseForArmada(armada, statusSebelum);
+  // Simpan ke server jika online
+  if(_useAPI){
+    apiFetch('/api/transactions',{method:'POST',body:newTxn}).catch(e=>console.warn('Sync inflow gagal:',e));
+    apiFetch('/api/fleet/'+fUnit?.id,{method:'PUT',body:{nopol:armada,driver,status:antre,pajak:fUnit?.pajak||'',kir:fUnit?.kir||''}}).catch(e=>console.warn('Sync fleet gagal:',e));
+  }
+  closeModal();renderDashboard();applyTxnFilters();renderLaporanTable();
+  showToast(amount > 0 ? 'Inflow ' + fmt(amount) + ' berhasil disimpan' : 'Status armada '+armada+' diperbarui ke Antre');vibrate(30);
+}
+function submitOutflow(){
+  const nota=document.getElementById('out-nota')?.value||'—';
+  const toko=document.getElementById('out-toko')?.value||'—';
+  const label=document.getElementById('out-label')?.value?.trim();
+  const cat=document.getElementById('out-cat')?.value;
+  const amount=getRaw('out-amount');
+  const date=document.getElementById('out-date')?.value;
+  const isUnit=cat==='Onderdil'||cat==='Tunai';
+  const armada=isUnit?document.getElementById('out-armada')?.value:'UMUM';
+  const driver=isUnit?document.getElementById('out-driver')?.value:'';
+  if(!label){showToast('Masukkan keterangan pengeluaran');return;}
+  if(!amount||amount<=0){showToast('Masukkan jumlah yang valid');return;}
+  // Handle gudang item selection (Onderdil from stok)
+  let spId=null;
+  if(cat==='Onderdil'){
+    const spSel=document.getElementById('out-sp-select');
+    spId=spSel?.value||null;
+    if(spId){
+      const sp=sparepartStock.find(s=>s.id===spId);
+      if(sp){
+        if(sp.stokSisa<=0){showToast('Stok '+sp.nama+' sudah habis!');return;}
+        sp.stokSisa--;
+        // Tambah ke installed[] — ritase mulai dari 0
+        sp.installed.push({
+          armada:armada||'UMUM',
+          tglPasang:date,
+          ritase:0,
+          txnId:Date.now()
+        });
+        showToast('✅ '+sp.nama+' dipasang ke '+armada+' — ritase mulai dihitung');
+      }
+    }
+  }
+  const txnLabel=label||(spId?sparepartStock.find(s=>s.id===spId)?.nama||'Onderdil':'Pengeluaran');
+  const outId='txn_'+Date.now();
+  const newOut={id:outId,type:'outflow',label:txnLabel,sub:`No.Nota: ${nota} · ${toko}${driver?' · '+driver:''}`,amount,date,armada,nota,toko,kategori:cat,driver,status:'lunas',sparepartId:spId||null};
+  transactions.unshift(newOut);
+  if(_useAPI){
+    apiFetch('/api/transactions',{method:'POST',body:newOut}).catch(e=>console.warn('Sync outflow gagal:',e));
+  }
+  closeModal();renderDashboard();applyTxnFilters();renderGudang();renderLaporanTable();
+  if(!spId) showToast('Outflow '+fmt(amount)+' disimpan');
+  vibrate(30);
+}
+
+// ═══════════════════════════════ NAV ══════════════════════════════
+function showPage(name,sbEl,bnId){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg=document.getElementById('page-'+name);if(pg)pg.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  if(sbEl)sbEl.classList.add('active');else{const s=document.getElementById('sb-'+name);if(s)s.classList.add('active');}
+  document.querySelectorAll('.bn-item').forEach(i=>i.classList.remove('active'));
+  if(bnId){const b=document.getElementById(bnId);if(b)b.classList.add('active');}
+  closeSb();closeFab();
+  if(name==='dashboard'){showSkeleton();renderDashboard();}
+  if(name==='keuangan'){renderDashboard();applyTxnFilters();}
+  if(name==='laporan'){renderLaporanTable();_buildAndShowWAPreview();}
+  if(name==='armada'){renderFleetUnits();renderDashboard();}
+}
+function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open');}
+function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
+
+// ═══════════════════════════════ FAB ══════════════════════════════
+function toggleFab(){fabOpen=!fabOpen;document.getElementById('fab-popup').classList.toggle('open',fabOpen);document.getElementById('fab-circle').classList.toggle('open',fabOpen);if(fabOpen)vibrate(20);}
+function closeFab(){fabOpen=false;document.getElementById('fab-popup').classList.remove('open');document.getElementById('fab-circle').classList.remove('open');}
+document.addEventListener('click',e=>{if(fabOpen&&!e.target.closest('#fab-btn')&&!e.target.closest('#fab-popup'))closeFab();});
+
+// ═══════════════════════════════ THEME ═══════════════════════════
+function setTheme(t){
+  isDark=t==='dark';document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('ti-sun').style.display=isDark?'block':'none';
+  document.getElementById('ti-moon').style.display=isDark?'none':'block';
+  const bl=document.getElementById('btn-light'),bd=document.getElementById('btn-dark');
+  if(bl){bl.style.borderColor=isDark?'var(--card-b)':'var(--green)';bl.style.background=isDark?'var(--bg3)':'var(--green-bg)';bl.style.color=isDark?'var(--text2)':'var(--green2)';}
+  if(bd){bd.style.borderColor=isDark?'var(--green)':'var(--card-b)';bd.style.background=isDark?'var(--green-bg)':'var(--bg3)';bd.style.color=isDark?'var(--green2)':'var(--text2)';}
+  setTimeout(()=>{renderDonut(totalInflow(transactions),totalOutflow(transactions));renderMiniLine();renderBarChart(currentBarFilter);},50);
+}
+function toggleTheme(){setTheme(isDark?'light':'dark');}
+
+// ═══════════════════════════════ OTHER ═══════════════════════════
+function updateFleetCount(v){const n=parseInt(v);if(n>0){FLEET_COUNT=n;renderDashboard();}}
+function confirmReset(){if(confirm('Yakin hapus SEMUA transaksi?')){transactions=[];renderDashboard();applyTxnFilters();renderLaporanTable();showToast('Semua transaksi dihapus');}}
+
+document.getElementById('bg-upload').addEventListener('change',function(e){
+  const r=new FileReader();r.onload=ev=>{document.getElementById('bg-layer').style.backgroundImage=`url(${ev.target.result})`;applyBg();};r.readAsDataURL(e.target.files[0]);
+});
+function applyBg(){const bl=document.getElementById('blur-range').value,ov=document.getElementById('overlay-range').value;document.getElementById('bg-overlay').style.cssText=`backdrop-filter:blur(${bl}px);-webkit-backdrop-filter:blur(${bl}px);background:rgba(10,14,28,${ov/100})`;}
+document.getElementById('blur-range').addEventListener('input',applyBg);
+document.getElementById('overlay-range').addEventListener('input',applyBg);
+function resetBg(){document.getElementById('bg-layer').style.backgroundImage='';document.getElementById('bg-overlay').style.cssText='';document.getElementById('blur-range').value=10;document.getElementById('overlay-range').value=50;document.getElementById('bg-upload').value='';}
+
+// ═══════════════════════════════ PTR ══════════════════════════════
+let ptrStartY=0,ptrActive=false;
+document.getElementById('main').addEventListener('touchstart',e=>{if(document.getElementById('main').scrollTop===0)ptrStartY=e.touches[0].clientY;});
+document.getElementById('main').addEventListener('touchmove',e=>{const dy=e.touches[0].clientY-ptrStartY;if(dy>60&&!ptrActive){ptrActive=true;document.getElementById('ptr-indicator').classList.add('show');vibrate(15);}});
+document.getElementById('main').addEventListener('touchend',()=>{if(ptrActive){ptrActive=false;setTimeout(()=>{document.getElementById('ptr-indicator').classList.remove('show');showSkeleton();renderDashboard();showToast('Data diperbarui');},600);}ptrStartY=0;});
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ═══════════════════════════════ INIT ════════════════════════════
+async function _appInit(){
+  try{
+    // Jika server aktif, load semua data dari backend
+    if(_useAPI){
+      showToast('⏳ Memuat data dari server...');
+      try{
+        // Load transaksi
+        const txns = await apiFetch('/api/transactions');
+        transactions = txns.map(t=>({...t, id:t.id, amount:Number(t.amount)}));
+        // Load armada
+        const fleet = await apiFetch('/api/fleet');
+        fleetData.length=0;
+        fleet.forEach(f=>fleetData.push({id:f.id,nopol:f.nopol,driver:f.driver,status:f.status,pajak:f.pajak||'',kir:f.kir||''}));
+        FLEET_COUNT=fleetData.length;
+        const fi=document.getElementById('fleet-count-input');if(fi)fi.value=FLEET_COUNT;
+        // Load drivers
+        const drv = await apiFetch('/api/drivers');
+        driverList=[...drv];
+        // Load inventory
+        const inv = await apiFetch('/api/inventory');
+        sparepartStock.length=0;
+        inv.forEach(sp=>sparepartStock.push({...sp,installed:sp.installed||[]}));
+        // Load settings
+        const st = await apiFetch('/api/settings');
+        if(st.gudang_kategori) gudangKategori=JSON.parse(st.gudang_kategori);
+        showToast('✅ Data berhasil dimuat dari server');
+      } catch(e){
+        console.warn('Gagal load dari server, pakai data lokal:',e);
+        showToast('⚠️ Gagal terhubung server – mode offline');
+      }
+    }
+    renderGudangFilterChips();
+    renderDashboard();
+    applyTxnFilters();
+    renderLaporanTable();
+    checkDocWarnings();
+  }catch(e){console.error('Init error:',e);}
+}
+// App init is triggered by login — do NOT auto-call here
+
+</script>
+</body>
+</html>
+

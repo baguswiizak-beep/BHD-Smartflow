@@ -124,9 +124,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .tb-acts{display:flex;gap:6px;}
 .tb-btn{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;}
 .tb-btn:hover{background:var(--bg4);}
-@keyframes spin { 100% { transform:rotate(360deg); } }
-.spinning { animation: spin 1s linear infinite; }
-.tb-btn svg { transition: transform 0.2s; }
+.tb-btn svg{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:2;}
 #notif-wrap{position:relative;}
 #notif-dot{position:absolute;top:5px;right:5px;width:6px;height:6px;background:var(--danger);border-radius:50%;border:1.5px solid var(--card);}
 
@@ -770,19 +768,43 @@ input,select,textarea{font-size:16px!important;}
 <div id="login-overlay">
   <div class="login-box">
     <div class="login-logo">BHD</div>
-    <div class="login-title">BHD Smart Flow</div>
-    <div class="login-sub">PT. Bagus Harya Dwiprima<br>⛏️ Sistem Manajemen Tambang Pasir · v10</div>
-    <div class="login-field">
-      <label class="login-label">Username</label>
-      <input class="login-input" id="login-user" type="text" placeholder="Masukkan username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
+    <div class="login-title" id="login-title">BHD Smart Flow</div>
+    <div class="login-sub" id="login-sub">PT. Bagus Harya Dwiprima<br>⛏️ Sistem Manajemen Tambang Pasir · v12</div>
+    
+    <!-- Login Mode -->
+    <div id="login-fields">
+      <div class="login-field">
+        <label class="login-label">Username</label>
+        <input class="login-input" id="login-user" type="text" placeholder="Username admin" autocomplete="username"/>
+      </div>
+      <div class="login-field">
+        <label class="login-label">Password</label>
+        <input class="login-input" id="login-pass" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="login-btn" onclick="doLogin()">Masuk ke Dashboard ⛏️</button>
+      <div style="text-align:center;margin-top:16px;">
+        <a href="#" onclick="setLoginMode('register')" style="color:rgba(212,168,67,.8);font-size:11px;text-decoration:none;font-weight:600;">Belum punya akun? Daftar Admin</a>
+      </div>
     </div>
-    <div class="login-field">
-      <label class="login-label">Password</label>
-      <input class="login-input" id="login-pass" type="password" placeholder="Masukkan password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+
+    <!-- Register Mode -->
+    <div id="register-fields" style="display:none;">
+      <div class="login-field">
+        <label class="login-label">Username Baru</label>
+        <input class="login-input" id="reg-user" type="text" placeholder="Buat username"/>
+      </div>
+      <div class="login-field">
+        <label class="login-label">Password Baru</label>
+        <input class="login-input" id="reg-pass" type="password" placeholder="Buat password"/>
+      </div>
+      <button class="login-btn" onclick="doRegister()" style="background:linear-gradient(135deg,#CC5200,#FF6700);">Daftar Admin Baru 🚛</button>
+      <div style="text-align:center;margin-top:16px;">
+        <a href="#" onclick="setLoginMode('login')" style="color:rgba(255,255,255,.4);font-size:11px;text-decoration:none;">Sudah punya akun? Login</a>
+      </div>
     </div>
-    <button class="login-btn" onclick="doLogin()">Masuk ke Dashboard ⛏️</button>
+
     <div class="login-err" id="login-err"></div>
-    <div class="login-ver">🚛 BHD Smart Flow v10 · Tambang Pasir Management</div>
+    <div class="login-ver">🚛 BHD Smart Flow v12.0 · Premium Restoration</div>
   </div>
 </div>
 
@@ -826,9 +848,6 @@ input,select,textarea{font-size:16px!important;}
     <div class="tb-clock" id="tb-clock">00:00:00</div>
     <span id="api-status-badge" title="Status koneksi server" style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--text3);border:1px solid var(--card-b);letter-spacing:.03em;cursor:default;display:none;">🟡 Offline</span>
     <div class="tb-acts">
-      <button class="tb-btn" onclick="syncAllData()" title="Sinkronkan data sekarang" id="sync-btn">
-        <svg id="sync-icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-      </button>
       <button class="tb-btn" onclick="toggleTheme()" id="theme-btn"><svg id="ti-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="ti-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
       <div id="notif-wrap"><button class="tb-btn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></button><span id="notif-dot"></span></div>
     </div>
@@ -889,36 +908,35 @@ input,select,textarea{font-size:16px!important;}
         </div>
       </div>
 
-      <!-- Donut + Line Chart row -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-        <div class="chart-wrap" style="margin-bottom:0;">
-          <div class="cw-hdr"><span class="cw-title">Rasio</span></div>
+      <!-- Donut + Line Chart row (Mobile Optimized) -->
+      <div class="chart-grid-slide">
+        <div class="chart-wrap">
+          <div class="cw-hdr"><span class="cw-title">Rasio Kas</span></div>
           <div class="donut-wrap">
-            <div class="donut-canvas"><canvas id="donutChart" width="90" height="90"></canvas></div>
+            <div class="donut-canvas"><canvas id="donutChart" width="85" height="85"></canvas></div>
             <div class="donut-legend">
               <div class="dl-item"><div class="dl-dot" style="background:var(--success)"></div><div class="dl-info"><div class="dl-label">Inflow</div><div class="dl-val" id="dl-in">—</div><div class="dl-pct" id="dl-in-pct">—%</div></div></div>
               <div class="dl-item"><div class="dl-dot" style="background:var(--danger)"></div><div class="dl-info"><div class="dl-label">Outflow</div><div class="dl-val" id="dl-out">—</div><div class="dl-pct" id="dl-out-pct">—%</div></div></div>
             </div>
           </div>
         </div>
-        <div class="chart-wrap" style="margin-bottom:0;">
+        <div class="chart-wrap">
           <div class="cw-hdr" style="flex-direction:column;align-items:flex-start;gap:7px;">
             <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
               <span class="cw-title">Cash Flow Trend</span>
               <div class="cw-filters" id="trend-filter-btns">
-                <button class="cf-btn active" id="trend-btn-7d" onclick="setTrendFilter('7d',this)">7 Hr</button>
-                <button class="cf-btn" id="trend-btn-30d" onclick="setTrendFilter('30d',this)">30 Hr</button>
-                <button class="cf-btn" id="trend-btn-custom" onclick="setTrendFilter('custom',this)">Custom</button>
+                <button class="cf-btn active" onclick="setTrendFilter('7d',this)">7 Hr</button>
+                <button class="cf-btn" onclick="setTrendFilter('30d',this)">30 Hr</button>
+                <button class="cf-btn" onclick="setTrendFilter('custom',this)">...</button>
               </div>
             </div>
             <div id="trend-custom-range" style="display:none;gap:5px;width:100%;flex-wrap:wrap;align-items:center;">
-              <input type="date" id="trend-from" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
-              <span style="font-size:10px;color:var(--text3);">s/d</span>
-              <input type="date" id="trend-to" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
-              <button onclick="applyTrendCustom()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--green-bd);background:var(--green-bg);color:var(--green2);font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;white-space:nowrap;">Terapkan</button>
+              <input type="date" id="trend-from" style="flex:1;min-width:90px;padding:4px 6px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:10px;outline:none;"/>
+              <input type="date" id="trend-to" style="flex:1;min-width:90px;padding:4px 6px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:10px;outline:none;"/>
+              <button onclick="applyTrendCustom()" style="padding:4px 9px;border-radius:8px;background:var(--green-bg);color:var(--green2);font-size:10px;font-weight:700;">OK</button>
             </div>
           </div>
-          <canvas id="miniLineChart" style="max-height:130px;"></canvas>
+          <canvas id="miniLineChart" style="max-height:115px;"></canvas>
         </div>
       </div>
 
@@ -1217,46 +1235,23 @@ input,select,textarea{font-size:16px!important;}
 // ═══════════════════════════════════════════════════════
 // API CLIENT — BHD SmartFlow Backend
 // ═══════════════════════════════════════════════════════
-// Deteksi cerdas: Jika ada di server cloud (Vercel/Render), pakai origin sekarang. Jika di localhost/file, pakai port 3001.
-const API_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' || window.location.protocol === 'file:')
-  ? 'http://127.0.0.1:3001' 
-  : window.location.origin;
+// Deteksi apakah diakses dari localhost atau IP jaringan
+const API_BASE = window.location.protocol === 'file:' || window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+  ? 'http://127.0.0.1:3001'
+  : (window.location.port ? `http://${window.location.hostname}:3001` : "");
 
 let _useAPI = false; // akan di-set true setelah ping berhasil
 
 async function apiPing(){
-  document.getElementById('sync-icon')?.parentElement.classList.add('spinning');
   try{
-    const r = await fetch(API_BASE+'/api/ping',{signal:AbortSignal.timeout(3000)});
+    const r = await fetch(API_BASE+'/api/ping',{signal:AbortSignal.timeout(2000)});
     _useAPI = r.ok;
-  } catch(e){ 
-    console.warn('Ping server gagal:', e.message);
-    _useAPI = false; 
-  }
-  const badge = document.getElementById('api-status-badge');
-  if(badge){
-    badge.style.display = 'inline-block';
-    badge.textContent = _useAPI ? '🟢 Online' : '🟡 Offline';
-    badge.style.background = _useAPI ? 'rgba(34,197,94,.1)' : 'rgba(234,179,8,.1)';
-    badge.style.color = _useAPI ? '#22C55E' : '#EAB308';
-  }
-  document.getElementById('sync-icon')?.parentElement.classList.remove('spinning');
+  } catch(e){ _useAPI = false; }
   return _useAPI;
 }
 
-async function syncAllData(){
-  if(await apiPing()){
-    await _appInit();
-    showToast('Data berhasil disinkronkan 🚀');
-  } else {
-    showToast('⚠️ Gagal terhubung ke server');
-  }
-}
-
 async function apiFetch(path, opts={}){
-  const sep = path.includes('?') ? '&' : '?';
-  const finalPath = opts.method ? path : path + sep + '_t=' + Date.now();
-  const r = await fetch(API_BASE + finalPath, {
+  const r = await fetch(API_BASE + path, {
     headers: {'Content-Type':'application/json'},
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
@@ -1352,8 +1347,18 @@ function spStatusLabel(sp){
              critical:'<span class="sp-status-badge critical">Kritis</span>'};
   return map[s];
 }
-const spCatIconDefault={Ban:'🔵',Oli:'🟡',Filter:'🟠',Spare:'🔧'};
-function getSpCatIcon(kat){return spCatIconDefault[kat]||'📦';}
+const spCatIconDefault = {
+  'Ban': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle></svg>',
+  'Oli': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 3m-6 0l3-3M6 7l12 0M6 17l12 0M12 7l0 10"></path></svg>',
+  'Aki': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M6 7V4h4v3M14 7V4h4v3M6 11h4M14 11h4v4M14 13h4"></path></svg>',
+  'Filter': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>',
+  'Lampu': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="9" r="6"></circle><path d="M9 15h6M10 18h4M12 21h0"></path></svg>',
+  'Baut': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 2h10l-2 4h-6zM12 6v16M9 9h6M9 13h6M9 17h6"></path></svg>',
+  'Spare': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"></path></svg>',
+  'Rem': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18M3 12h18"></path></svg>',
+  'Per': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 16h18M3 8h18M3 4h18M3 20h18"></path></svg>'
+};
+function getSpCatIcon(kat){ return spCatIconDefault[kat] || '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>'; }
 
 function setGudangFilter(f,btn){
   gudangFilter=f;
@@ -2077,15 +2082,139 @@ function toggleTxn(id){
   vibrate(15);
 }
 function deleteTxn(id){
+  const t = transactions.find(x=>x.id===id);
+  if(!t)return;
+  
+  // Logic Otomatis: Kembalikan Stok jika ini transaksi Onderdil
+  if(t.kategori==='Onderdil' && t.sparepartId){
+    const sp = sparepartStock.find(s=>s.id===t.sparepartId);
+    if(sp){
+      // 1. Tambah kembali stokSisa
+      const jmlStr = t.label.match(/\((\d+)\sunit\)/); 
+      const jml = jmlStr ? parseInt(jmlStr[1]) : 1;
+      sp.stokSisa += jml;
+      
+      // 2. Hapus dari history installed armada (paling baru)
+      if(sp.installed && t.armada){
+        // Cari entry terakhir di armada yang sama dan hapus
+        const idx = [...sp.installed].reverse().findIndex(i=>i.armada===t.armada);
+        if(idx!==-1){
+          const realIdx = sp.installed.length - 1 - idx;
+          sp.installed.splice(realIdx, 1);
+        }
+      }
+      
+      if(_useAPI) apiFetch('/api/inventory/'+sp.id, {method:'PUT', body:sp}).catch(e=>console.warn('Sync stock return gagal:',e));
+      showToast('Stok '+sp.nama+' dikembalikan (+'+jml+')');
+    }
+  }
+
   transactions=transactions.filter(t=>t.id!==id);
   if(_useAPI) apiFetch('/api/transactions/'+id,{method:'DELETE'}).catch(e=>console.warn('Sync delete txn gagal:',e));
   renderDashboard();applyTxnFilters();renderLaporanTable();showToast('Transaksi dihapus');vibrate(40);
 }
-function editTxn(id){
-  const t=transactions.find(x=>x.id===id);
-  if(!t)return;
-  showToast('Fitur edit transaksi akan segera hadir');
+
+function setLoginMode(m){
+  document.getElementById('login-fields').style.display=m==='login'?'block':'none';
+  document.getElementById('register-fields').style.display=m==='register'?'block':'none';
+  document.getElementById('login-title').textContent=m==='login'?'BHD Smart Flow':'Daftar Admin';
+  document.getElementById('login-err').textContent='';
 }
+
+async function doRegister(){
+  const user = document.getElementById('reg-user').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const err = document.getElementById('login-err');
+  if(!user || !pass){ err.textContent='Isi semua bidang!'; return; }
+  try {
+    await apiFetch('/api/auth/register', {method:'POST', body:{username:user, password:pass}});
+    showToast('Pendaftaran Berhasil! Silakan Login');
+    setLoginMode('login');
+  } catch(e){ err.textContent=e.message; }
+}
+
+function editTxn(id){
+  const t = transactions.find(x=>x.id===id);
+  if(!t)return;
+  openEditTxnModal(t);
+}
+
+function openEditTxnModal(t){
+  // Gunakan sm-modal untuk edit transaksi
+  const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
+  tEl.textContent='Revisi Transaksi';
+  body.innerHTML=`
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">ID: ${t.id} · ${t.type.toUpperCase()}</div>
+    <div class="form-group"><label class="form-label">Keterangan / Label</label><input class="form-input" id="rev-label" value="${t.label}"/></div>
+    <div class="form-group"><label class="form-label">Amount (Rp)</label><input class="form-input" id="rev-amount" value="${new Intl.NumberFormat('id-ID').format(t.amount)}" inputmode="numeric"/></div>
+    <div class="form-group"><label class="form-label">Tanggal</label><input type="date" class="form-input" id="rev-date" value="${t.date}"/></div>
+    <button class="sm-btn orange" onclick="saveRevisedTxn('${t.id}')">Simpan Perubahan</button>
+  `;
+  setupCurrencyInput('rev-amount');
+  document.getElementById('sm-overlay').classList.add('open');
+}
+
+async function saveRevisedTxn(id){
+  const t = transactions.find(x=>x.id===id);
+  if(!t)return;
+  const newLabel = document.getElementById('rev-label').value;
+  const newAmt = getRaw('rev-amount');
+  const newDate = document.getElementById('rev-date').value;
+  
+  t.label = newLabel;
+  t.amount = newAmt;
+  t.date = newDate;
+  
+  if(_useAPI) await apiFetch('/api/transactions/'+id, {method:'PUT', body:t}).catch(e=>console.warn(e));
+  
+  closeSm();
+  renderDashboard(); applyTxnFilters(); renderLaporanTable();
+  showToast('Transaksi diperbarui');
+}
+
+// ════════════════════════════════════════════════════════
+// SILENT AUTO-SYNC (Mobile & Laptop)
+// ════════════════════════════════════════════════════════
+async function syncDataSilent(){
+  if(!_useAPI) return;
+  try {
+    // Sync Transaksi
+    const txns = await apiFetch('/api/transactions');
+    transactions = txns.map(t=>({...t, id:t.id, amount:Number(t.amount)}));
+    
+    // Sync Gudang
+    const inv = await apiFetch('/api/inventory');
+    sparepartStock.length=0;
+    inv.forEach(sp=>sparepartStock.push({...sp,installed:sp.installed||[]}));
+    
+    // Sync Armada
+    const fleet = await apiFetch('/api/fleet');
+    fleetData.length=0;
+    fleet.forEach(f=>fleetData.push({id:f.id,nopol:f.nopol,driver:f.driver,status:f.status,pajak:f.pajak||'',kir:f.kir||''}));
+    FLEET_COUNT=fleetData.length;
+    
+    // Refresh UI tanpa mengganggu user
+    renderDashboard();
+    renderGudang();
+    renderLaporanTable();
+    checkDocWarnings();
+    console.log('? Background sync berhasil');
+  } catch(e) {
+    console.warn('Silent sync failed:', e);
+  }
+}
+
+// Jalankan sync setiap 20 detik
+setInterval(syncDataSilent, 20000);
+
+// Jalankan sync saat tab kembali difokuskan
+window.addEventListener('focus', () => {
+  console.log('? Tab focused, triggering fast sync...');
+  syncDataSilent();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') syncDataSilent();
+});
 
 // ═══════════════════════════════ FILTER & SEARCH ═════════════════
 let txnFilterGroup='all';
@@ -2516,6 +2645,22 @@ function exportPDF(){
     .num{text-align:right;} .pos{color:#12A060;font-weight:700;} .neg{color:#E03030;font-weight:700;}
     .nett-pos{color:#2563EB;font-weight:800;} .nett-neg{color:#E03030;font-weight:800;}
     tfoot td{background:#f8f8f8;font-weight:800;border-top:2px solid #999;}
+  /* Dashboard Chart Slider */
+  .chart-grid-slide {
+    display: flex; gap: 10px; overflow-x: auto; 
+    scroll-snap-type: x mandatory; scrollbar-width: none;
+    margin-bottom: 14px; padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chart-grid-slide::-webkit-scrollbar { display:none; }
+  .chart-grid-slide > div { 
+    flex: 0 0 85%; scroll-snap-align: center; margin-bottom: 0 !important;
+  }
+  @media(min-width: 769px) {
+    .chart-grid-slide { display: grid; grid-template-columns: 1fr 1fr; }
+    .chart-grid-slide > div { flex: none; }
+  }
+
   </style></head><body>
   <h1>BHD Smart Flow — Rekap Per Armada</h1>
   <p>PT. BAGUS HARYA DWIPRIMA · Periode: ${lapFilter==='bulan-ini'?'Bulan Ini':lapFilter==='bulan-lalu'?'Bulan Lalu':'Custom'} · Dicetak: ${new Date().toLocaleDateString('id-ID')}</p>
@@ -3088,3 +3233,4 @@ async function _appInit(){
 </script>
 </body>
 </html>
+

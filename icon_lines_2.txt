@@ -1,0 +1,10 @@
+﻿             warn:'<span class="sp-status-badge warn">Menipis</span>',
+             critical:'<span class="sp-status-badge critical">Kritis</span>'};
+  return map[s];
+}
+const spCatIconDefault={Ban:'🔵',Oli:'🟡',Filter:'🟠',Spare:'🔧'};
+function getSpCatIcon(kat){return spCatIconDefault[kat]||'📦';}
+
+function setGudangFilter(f,btn){
+  gudangFilter=f;
+  document.querySelectorAll('#page-gudang .fs-chip').forEach(b=>b.classList.remove('active'));
