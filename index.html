@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
 <title>BHD SmartFlow System</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -1464,6 +1465,9 @@ input,select,textarea{font-size:16px!important;}
 // GLOBAL ERROR HANDLER (DEKLARASI PERTAMA)
 // ═══════════════════════════════════════════════════════
 window.onerror = function(msg, url, line, col, error) {
+  var errStr = 'SYSTEM ERROR: ' + msg + '\nLine: ' + line + '\nURL: ' + url;
+  console.error(errStr);
+  alert(errStr); // Munculkan popup agar user bisa lapor ke kita
   var dbg = document.getElementById('login-debug');
   if (dbg) {
     dbg.innerHTML = '<div style="color:#FF3B30; padding:10px; border:1px solid #FF3B30; margin-top:10px;">' +
@@ -1472,10 +1476,10 @@ window.onerror = function(msg, url, line, col, error) {
   }
   return false;
 };
+window.jsReady = true; 
 
 // State Awal
 window.activeAdmin = { id: 'admin-1', name: 'Admin', role: 'superadmin' };
-var jsReady = false;
 
 // Auto-Login logic at startup
 (function() {
@@ -1569,6 +1573,22 @@ console.log('📡 API Path:', API_BASE || '(Same Origin)');
 window.apiInitialized = true;
 var badge = document.getElementById('js-init-badge');
 if (badge) badge.textContent = 'JS Ready (' + (API_BASE ? 'API' : 'Local') + ')';
+
+// ═══════════════════════════════════════════════════════
+// SUPABASE CONFIG — Ganti dengan credential project Anda
+// Dapatkan dari: Supabase Dashboard → Settings → API
+// ═══════════════════════════════════════════════════════
+const SB_URL = 'https://fwuuhtmwhgisrkbtmasi.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3dXVodG13aGdpc3JrYnRtYXNpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjE1MTA1MywiZXhwIjoyMDkxNzI3MDUzfQ.6fQEKUdUtepUsykCWlTMDRQRCqcIugwYr0kWPt3A5FU';
+let _sb = null;
+try {
+  if (SB_URL.startsWith('https://') && SB_KEY.length > 20) {
+    _sb = window.supabase.createClient(SB_URL, SB_KEY);
+    console.log('✅ Supabase client ready');
+  } else {
+    console.warn('⚠️ Supabase belum dikonfigurasi. Isi SB_URL dan SB_KEY di kode.');
+  }
+} catch(e) { console.error('Supabase init error:', e); }
 
 let _useAPI = false;
 let loginMode = 'masuk', loginAvatarBase64 = '';
@@ -1709,91 +1729,88 @@ function previewLoginAvatar(input){
 }
 
 async function doLogin(isAuto = false) {
+  console.log("doLogin triggered", {isAuto});
   const userEl = document.getElementById('login-user');
   const passEl = document.getElementById('login-pass');
-  const err = document.getElementById('login-err');
-  
+  const err    = document.getElementById('login-err');
+
   if (!userEl || !passEl) return;
 
   const username = isAuto ? activeAdmin.name : userEl.value.trim();
-  const password = isAuto ? '******' : passEl.value;
+  const password = isAuto ? null : passEl.value;
 
   if (!isAuto && (!username || !password)) {
-    if (err) err.textContent = 'Masukkan username & password';
+    if (err) { err.textContent = 'Masukkan username & password'; err.style.color = '#ff4444'; }
     return;
   }
 
+  const btn = document.querySelector('.login-btn');
   try {
-    const btn = document.querySelector('.login-btn');
     if (btn) btn.disabled = true;
-    if (err) {
-        err.textContent = isAuto ? 'Auto-logging in...' : 'Mengecek kredensial...';
-        err.style.color = "var(--orange)";
-    }
+    if (err) { err.textContent = isAuto ? 'Memuat sesi...' : 'Mengecek kredensial...'; err.style.color = 'var(--orange)'; }
 
-    let result;
+    let adminData;
+
     if (isAuto) {
-      result = activeAdmin;
+      // Auto-login: gunakan data sesi yang sudah tersimpan
+      adminData = activeAdmin;
     } else {
-      console.log("Attempting login to:", API_BASE + '/api/auth/login');
-      try {
-          const resp = await fetch(API_BASE + '/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-          });
-          
-          if (!resp.ok) {
-              const errorData = await resp.json().catch(() => ({}));
-              const msg = errorData.error || errorData.message || `Error ${resp.status}: ${resp.statusText}`;
-              throw new Error(msg);
-          }
-          result = await resp.json();
-      } catch (fetchErr) {
-          console.error("Fetch error:", fetchErr);
-          if (fetchErr.message.includes("Failed to fetch")) {
-              throw new Error("Gagal terhubung ke Server. Pastikan internet aktif dan server menyala.");
-          }
-          throw fetchErr;
+      if (!_sb) {
+        // Fallback ke kredensial lokal jika Supabase belum dikonfigurasi
+        if (username === LOGIN_USERNAME && password === LOGIN_PASSWORD) {
+          adminData = { id: 'admin-local', name: username, role: 'superadmin' };
+        } else {
+          throw new Error('Supabase belum dikonfigurasi. Isi SB_URL & SB_KEY, atau gunakan kredensial lokal.');
+        }
+      } else {
+        // Query langsung ke Supabase — tabel: admins
+        const { data, error } = await _sb
+          .from('admins')
+          .select('id, username, password, role')
+          .eq('username', username)
+          .limit(1);
+
+        if (error) {
+          throw new Error('DB error: ' + error.message + ' (code: ' + error.code + ')');
+        }
+
+        if (!data || data.length === 0) {
+          throw new Error('Username tidak ditemukan.');
+        }
+
+        const admin = data[0];
+
+        // Cek password (plaintext)
+        if (admin.password !== password) {
+          throw new Error('Password salah.');
+        }
+
+        adminData = { id: admin.id, name: admin.username, role: admin.role };
       }
     }
 
-    if (result && result.ok) {
-      const adminData = {
-          id: result.id,
-          name: result.username,
-          role: result.role
-      };
-      window.activeAdmin = adminData;
-      localStorage.setItem('bhd_active_admin', JSON.stringify(adminData));
-      
-      if (err) {
-          err.textContent = "Berhasil! Memuat Dashboard...";
-          err.style.color = "var(--green)";
-      }
+    // Simpan sesi
+    window.activeAdmin = adminData;
+    currentAdmin = adminData;
+    localStorage.setItem('bhd_active_admin', JSON.stringify(adminData));
 
-      document.getElementById('login-overlay').classList.add('hidden');
-      setTimeout(() => {
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        updateAdminUI();
-        _appInit();
-      }, 400);
-    } else {
-        throw new Error("Respon server tidak valid");
-    }
+    if (err) { err.textContent = 'Berhasil! Memuat Dashboard...'; err.style.color = 'var(--green)'; }
+
+    const overlay = document.getElementById('login-overlay');
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.35s';
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      updateAdminUI();
+      _appInit();
+    }, 380);
+
   } catch (e) {
-    console.error("Login catch:", e);
-    if (err) {
-        err.textContent = e.message;
-        err.style.color = "#ff4444";
-        // Tambahkan info teknis kecil untuk debugging
-        const dbg = document.getElementById('login-debug');
-        if (dbg) dbg.innerHTML += `<div style="font-size:10px; color:rgba(255,255,255,0.3)">Technical detail: ${e.message}</div>`;
-    }
+    console.error("Login error:", e);
+    if (err) { err.textContent = e.message; err.style.color = '#ff4444'; }
     if (!isAuto) localStorage.removeItem('bhd_active_admin');
   } finally {
-    const btn = document.querySelector('.login-btn');
     if (btn) btn.disabled = false;
   }
 }
@@ -2112,46 +2129,6 @@ function editTxn(id){
       setupCurrencyInput('out-amount');
     }, 150);
   }
-}
-
-function setLoginMode(m){
-  document.getElementById('login-fields').style.display=m==='login'?'block':'none';
-  document.getElementById('register-fields').style.display=m==='register'?'block':'none';
-  document.getElementById('login-title').textContent=m==='login'?'BHD Smart Flow':'Daftar Admin';
-  document.getElementById('login-err').textContent='';
-}
-
-async function doRegister(){
-  const user = document.getElementById('reg-user').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  const err = document.getElementById('login-err');
-  if(!user || !pass){ err.textContent='Isi semua bidang!'; return; }
-  try {
-    await apiFetch('/api/auth/register', {method:'POST', body:{username:user, password:pass}});
-    showToast('Pendaftaran Berhasil! Silakan Login');
-    setLoginMode('login');
-  } catch(e){ err.textContent=e.message; }
-}
-
-function editTxn(id){
-  const t = transactions.find(x=>x.id===id);
-  if(!t)return;
-  openEditTxnModal(t);
-}
-
-function openEditTxnModal(t){
-  // Gunakan sm-modal untuk edit transaksi
-  const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
-  tEl.textContent='Revisi Transaksi';
-  body.innerHTML=`
-    <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">ID: ${t.id} · ${t.type.toUpperCase()}</div>
-    <div class="form-group"><label class="form-label">Keterangan / Label</label><input class="form-input" id="rev-label" value="${t.label}"/></div>
-    <div class="form-group"><label class="form-label">Amount (Rp)</label><input class="form-input" id="rev-amount" value="${new Intl.NumberFormat('id-ID').format(t.amount)}" inputmode="numeric"/></div>
-    <div class="form-group"><label class="form-label">Tanggal</label><input type="date" class="form-input" id="rev-date" value="${t.date}"/></div>
-    <button class="sm-btn orange" onclick="saveRevisedTxn('${t.id}')">Simpan Perubahan</button>
-  `;
-  setupCurrencyInput('rev-amount');
-  document.getElementById('sm-overlay').classList.add('open');
 }
 
 async function saveRevisedTxn(id){
@@ -2940,6 +2917,7 @@ function getSpCatIcon(cat) {
   };
   return map[cat] || '🔧';
 }
+function renderFleetHistory(f, name) {
   if(name==='ban'){renderFleetTires(f.id);}
   if(name==='perjalanan'){
     const trips=transactions.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).sort((a,b)=>b.date.localeCompare(a.date));
@@ -3564,16 +3542,18 @@ function openTireEditModal(fleetId, pos, data){
 }
 
 async function renderAdminSettings(){
-  const cont=document.getElementById('admin-list-container');if(!cont)return;
+  const cont=document.getElementById('admin-list-container'); if(!cont) return;
   try{
-    const admins=await apiFetch('/api/admins');
-    cont.innerHTML=admins.map(a=>`
+    if (!_sb) { cont.innerHTML='<p style="color:var(--text3);font-size:12px;">Supabase belum dikonfigurasi.</p>'; return; }
+    const { data: admins, error } = await _sb.from('admins').select('id, name, role').order('name');
+    if (error) throw error;
+    cont.innerHTML=(admins||[]).map(a=>`
       <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg2); padding:10px; border-radius:10px; border:1px solid var(--card-b);">
         <div><div style="font-weight:700; font-size:13px;">${a.name}</div><div style="font-size:10px; color:var(--text3);">${a.id} · ${a.role}</div></div>
         ${a.id==='admin'?'':`<button onclick="deleteAdmin('${a.id}')" style="color:var(--danger); background:none; border:none; font-size:18px; cursor:pointer;">&times;</button>`}
       </div>
     `).join('');
-  }catch(e){console.error(e);}
+  }catch(e){ console.error(e); cont.innerHTML='<p style="color:var(--danger);font-size:12px;">Gagal memuat admin: '+e.message+'</p>'; }
 }
 
 function openAddAdminModal(){
@@ -3597,24 +3577,30 @@ function openAddAdminModal(){
 }
 
 async function saveAdmin(){
-  const id=document.getElementById('ad-id').value, name=document.getElementById('ad-name').value, 
-        pass=document.getElementById('ad-pass').value, role=document.getElementById('ad-role').value;
+  const id=document.getElementById('ad-id').value.trim(),
+        name=document.getElementById('ad-name').value.trim(),
+        pass=document.getElementById('ad-pass').value,
+        role=document.getElementById('ad-role').value;
   if(!id||!name||!pass) return alert('Data belum lengkap');
+  if (!_sb) return alert('Supabase belum dikonfigurasi.');
   try{
-    await apiFetch('/api/admins', {method:'POST', body:{id, name, password:pass, role}});
+    const { error } = await _sb.from('admins').insert({ id, name, password: pass, role });
+    if (error) throw error;
     showToast('Admin berhasil ditambahkan');
     closeSm();
     renderAdminSettings();
-  }catch(e){alert(e.message);}
+  }catch(e){ alert('Gagal: ' + e.message); }
 }
 
 async function deleteAdmin(id){
   if(!confirm('Hapus admin ini?')) return;
+  if (!_sb) return alert('Supabase belum dikonfigurasi.');
   try{
-    await apiFetch('/api/admins/'+id, {method:'DELETE'});
+    const { error } = await _sb.from('admins').delete().eq('id', id);
+    if (error) throw error;
     showToast('Admin dihapus');
     renderAdminSettings();
-  }catch(e){alert(e.message);}
+  }catch(e){ alert('Gagal: ' + e.message); }
 }
 
 function saveCompanyProfile(){
@@ -3826,10 +3812,10 @@ function resetAppSession() {
 // FINAL INITIALIZATION
 window.jsReady = true;
 console.log("✅ BHD SmartFlow System Ready.");
-const badge = document.getElementById('js-init-badge');
-if(badge) {
-  badge.textContent = "Sistem Siap (JS Ready)";
-  badge.style.color = "#86EFAC";
+const badgeFinal = document.getElementById('js-init-badge');
+if(badgeFinal) {
+  badgeFinal.textContent = "Sistem Siap (JS Ready)";
+  badgeFinal.style.color = "#86EFAC";
 }
 
 </script>
