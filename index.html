@@ -1755,44 +1755,37 @@ async function doLogin(isAuto = false) {
       // Auto-login: gunakan data sesi yang sudah tersimpan
       adminData = activeAdmin;
     } else {
-      if (!_sb) {
-        // Fallback ke kredensial lokal jika Supabase belum dikonfigurasi
-        if (username === LOGIN_USERNAME && password === LOGIN_PASSWORD) {
-          adminData = { id: 'admin-local', name: username, role: 'superadmin' };
+      // Authenticate via backend API
+      let ok = false;
+      let res = null;
+      try {
+        res = await apiFetch('/api/auth/login', {
+          method: 'POST',
+          body: { username, password }
+        });
+        ok = res.ok;
+      } catch (e) {
+        // Fallback for mock mode or API downtime
+        if (!_useAPI && username === LOGIN_USERNAME && password === LOGIN_PASSWORD) {
+          ok = true;
+          res = { id: 'admin-local', username, role: 'superadmin' };
         } else {
-          throw new Error('Supabase belum dikonfigurasi. Isi SB_URL & SB_KEY, atau gunakan kredensial lokal.');
+          throw e; // Pass error up
         }
-      } else {
-        // Query langsung ke Supabase — tabel: admins
-        const { data, error } = await _sb
-          .from('admins')
-          .select('id, username, password, role')
-          .eq('username', username)
-          .limit(1);
-
-        if (error) {
-          throw new Error('DB error: ' + error.message + ' (code: ' + error.code + ')');
-        }
-
-        if (!data || data.length === 0) {
-          throw new Error('Username tidak ditemukan.');
-        }
-
-        const admin = data[0];
-
-        // Cek password (plaintext)
-        if (admin.password !== password) {
-          throw new Error('Password salah.');
-        }
-
-        adminData = { id: admin.id, name: admin.username, role: admin.role };
       }
+
+      if (!ok) {
+        throw new Error('Username atau password salah.');
+      }
+
+      adminData = { id: res.id, name: res.username, role: res.role };
     }
 
     // Simpan sesi
     window.activeAdmin = adminData;
     currentAdmin = adminData;
     localStorage.setItem('bhd_active_admin', JSON.stringify(adminData));
+
 
     if (err) { err.textContent = 'Berhasil! Memuat Dashboard...'; err.style.color = 'var(--green)'; }
 
@@ -3418,7 +3411,34 @@ document.getElementById('main').addEventListener('touchstart',e=>{if(document.ge
 document.getElementById('main').addEventListener('touchmove',e=>{const dy=e.touches[0].clientY-ptrStartY;if(dy>60&&!ptrActive){ptrActive=true;document.getElementById('ptr-indicator').classList.add('show');vibrate(15);}});
 document.getElementById('main').addEventListener('touchend',()=>{if(ptrActive){ptrActive=false;setTimeout(()=>{document.getElementById('ptr-indicator').classList.remove('show');showSkeleton();renderDashboard();showToast('Data diperbarui');},600);}ptrStartY=0;});
 
+function uid(prefix){return(prefix||'id')+'-'+Math.random().toString(36).substring(2,9);}
+function showSkeleton(){
+  const sv=document.getElementById('skeleton-view'),rc=document.getElementById('real-content');
+  if(sv)sv.classList.add('show');if(rc)rc.classList.add('hidden');
+  setTimeout(()=>{if(sv)sv.classList.remove('show');if(rc)rc.classList.remove('hidden');},600);
+}
+function fmt(n){if(!n&&n!==0)return'—';const a=Math.abs(n);if(a>=1e9)return'Rp '+(n/1e9).toFixed(1)+'M';if(a>=1e6)return'Rp '+(n/1e6).toFixed(1)+'Jt';if(a>=1e3)return'Rp '+(n/1e3).toFixed(0)+'Rb';return'Rp '+n;}
+function fmtFull(n){return'Rp '+new Intl.NumberFormat('id-ID').format(Math.round(n));}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});}
+function daysUntil(d){if(!d)return 9999;return Math.ceil((new Date(d)-new Date())/(86400000));}
+function _ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function today(){return _ds(new Date());}
+function animNum(el,target,dur=700){
+  if(!el)return;let st=null;
+  const step=ts=>{if(!st)st=ts;const p=Math.min((ts-st)/dur,1);const e=1-Math.pow(1-p,3);el.textContent=fmt(Math.round(e*target));if(p<1)requestAnimationFrame(step);};
+  requestAnimationFrame(step);
+}
+function vibrate(ms=30){if(navigator.vibrate)navigator.vibrate(ms);}
+function setupCurrencyInput(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.addEventListener('input',function(){let r=this.value.replace(/\D/g,'');this.value=r?new Intl.NumberFormat('id-ID').format(parseInt(r)):''});
+}
+function getRaw(id){const el=document.getElementById(id);if(!el)return 0;return parseInt(el.value.replace(/\D/g,'')||'0');}
+function getArmadaOpts(){return fleetData.map(f=>`<option value="${f.nopol}">${f.nopol}</option>`).join('');}
+function getDriverOpts(sel=''){return[...new Set([...driverList,...fleetData.map(f=>f.driver)])].map(d=>`<option value="${d}"${d===sel?' selected':''}>${d}</option>`).join('');}
+
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
 
 // ═══════════════════════════════ INIT ════════════════════════════
 async function _appInit(){

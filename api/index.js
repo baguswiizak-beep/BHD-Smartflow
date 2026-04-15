@@ -34,7 +34,6 @@ app.use((req, res, next) => {
     next();
 });
 
-<<<<<<< Updated upstream
 // ── HEALTH CHECK (tidak butuh DB) ────────────────────────────
 app.get('/api/ping', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -96,44 +95,6 @@ app.post('/api/auth/register', async (req, res) => {
     if (e.message.includes('unique constraint')) return res.status(400).json({ ok: false, error: 'Username sudah digunakan' });
     res.status(500).json({ ok: false, error: e.message });
   }
-=======
-// ════════════════════════════════════════════════════════════════
-// AUTH
-// ════════════════════════════════════════════════════════════════
-app.post('/api/auth/login', (req, res) => {
-  const { username, password } = req.body || {};
-  const settings = db.getSettings();
-  const admins = db.getAdmins();
-  
-  const isAdmin = admins.some(a => a.name.toLowerCase() === username.toLowerCase());
-  
-  // Always check Bootstrap Admin first or as fallback
-  if (username === settings.login_username && password === settings.login_password) {
-    return res.json({ ok: true, username: username === 'admin' ? 'Admin' : username, avatar: '' });
-  }
-
-  if (isAdmin && password === settings.login_password) {
-    const adminData = admins.find(a => a.name.toLowerCase() === username.toLowerCase());
-    return res.json({ ok: true, username: adminData.name, avatar: adminData.avatar });
-  }
-  res.status(401).json({ ok: false, error: 'Username tidak terdaftar atau password salah' });
-});
-
-// ADMIN MANAGEMENT
-app.get('/api/admins', (_req, res) => {
-  res.json(db.getAdmins());
-});
-
-app.post('/api/admins', async (req, res) => {
-  const { name, avatar } = req.body || {};
-  if (!name) return res.status(400).json({ error: 'Nama diperlukan' });
-  await db.addAdmin({ name, avatar: avatar || '' });
-  res.status(201).json({ ok: true });
-});
-
-app.delete('/api/admins/:name', async (req, res) => {
-  await db.deleteAdmin(decodeURIComponent(req.params.name));
-  res.json({ ok: true });
 });
 
 // PRESENCE
@@ -145,8 +106,8 @@ app.post('/api/auth/heartbeat', async (req, res) => {
 
 app.get('/api/auth/active-users', (_req, res) => {
   res.json(db.getActiveUsers());
->>>>>>> Stashed changes
 });
+
 
 app.post('/api/auth/change-password', async (req, res) => {
   const { oldPassword, newPassword, username } = req.body || {};
@@ -267,26 +228,8 @@ app.post('/api/transactions', async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
-<<<<<<< Updated upstream
-=======
-  await db.addTransaction({
-    id:       String(t.id),
-    type:     t.type,
-    amount:   Number(t.amount) || 0,
-    label:    t.label     || '',
-    kategori: t.kategori  || '',
-    armada:   t.armada    || '',
-    driver:   t.driver    || '',
-    toko:     t.toko      || '',
-    nota:     t.nota      || '',
-    date:     t.date,
-    status:   t.status    || 'lunas',
-    author:   t.author    || 'Admin',
-    lastUpdatedBy: t.author || 'Admin'
-  });
-  res.status(201).json({ ok: true, id: t.id });
->>>>>>> Stashed changes
 });
+
 
 app.put('/api/transactions/:id', async (req, res) => {
   try {
@@ -477,8 +420,6 @@ app.delete('/api/inventory/:id/install/:installId', async (req, res) => {
   res.json({ ok: true });
 });
 
-<<<<<<< Updated upstream
-// ── DASHBOARD SUMMARY ───────────────────────────────────────
 app.get('/api/summary', async (req, res) => {
   try {
     const txns = await db.getTransactions(req.query);
@@ -495,44 +436,7 @@ app.get('/api/summary', async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
-=======
-app.get('/api/sync-all', async (_req, res) => {
-  try {
-    await db.init(); // Paksa ambil data terbaru dari Firebase
-    const data = db.get();
-    const settings = { ...data.settings };
-    delete settings.login_password; // Keamanan
-    
-    res.json({
-      transactions: data.transactions || [],
-      fleet: data.fleet || [],
-      drivers: data.drivers || [],
-      inventory: (data.inventory || []).map(sp => ({ ...sp, installed: sp.installed || [] })),
-      settings: settings,
-      admins: data.admins || [],
-      activeUsers: db.getActiveUsers()
-    });
-  } catch (e) {
-    res.status(500).json({ error: 'Gagal sinkronisasi: ' + e.message });
-  }
-});
 
-// ════════════════════════════════════════════════════════════════
-// DASHBOARD SUMMARY
-// ════════════════════════════════════════════════════════════════
-app.get('/api/summary', (req, res) => {
-  const txns = db.getTransactions(req.query);
-  const inflow  = txns.filter(t=>t.type==='inflow').reduce((s,t)=>s+t.amount,0);
-  const outflow = txns.filter(t=>t.type==='outflow').reduce((s,t)=>s+t.amount,0);
-  const fleet   = db.getFleet();
-  const statusCount = fleet.reduce((acc,f)=>{ acc[f.status]=(acc[f.status]||0)+1; return acc; },{});
-  res.json({
-    inflow, outflow, net: inflow - outflow,
-    margin: inflow > 0 ? ((inflow-outflow)/inflow*100).toFixed(1) : '0',
-    txnCount: txns.length,
-    fleet: statusCount,
-  });
->>>>>>> Stashed changes
 });
 
 app.get('/api/sync/summary', async (req, res) => {
