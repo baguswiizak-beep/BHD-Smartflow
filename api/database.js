@@ -1,4 +1,7 @@
-require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+// Vercel handles environment variables natively.
+if (process.env.NODE_ENV !== 'production' && !process.env.POSTGRES_URL) {
+    require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+}
 // Fix: Explicitly using 'pg' for Supabase connectivity (replacing accidental @vercel/postgres)
 const { Pool } = require('pg');
 

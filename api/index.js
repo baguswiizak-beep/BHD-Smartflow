@@ -1,4 +1,8 @@
-require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+// Vercel handles environment variables natively via the dashboard.
+// const dotenv = require('dotenv'); // Not needed if not using local files
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+}
 const express = require('express');
 const cors = require('cors');
 const db = require('./database');
