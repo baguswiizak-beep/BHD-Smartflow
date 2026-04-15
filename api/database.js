@@ -5,6 +5,7 @@ if (process.env.NODE_ENV !== 'production' && !process.env.POSTGRES_URL) {
 // Fix: Explicitly using 'pg' for Supabase connectivity (replacing accidental @vercel/postgres)
 const { Pool } = require('pg');
 
+<<<<<<< Updated upstream
 /**
  * BHD SmartFlow — Database Layer (Postgres SQL)
  * PT. Bagus Harya Dwiprima
@@ -33,6 +34,16 @@ const MOCK_DATA = {
         { id: '2', nopol: 'B 5678 ZW', driver: 'Wizak', status: 'bengkel' }
     ],
     drivers: [{ nama: 'Bagus' }, { nama: 'Wizak' }]
+=======
+const DEFAULTS = {
+  transactions: [],
+  fleet: [],
+  drivers: [],
+  inventory: [],
+  settings: {},
+  admins: [],
+  presence: {},
+>>>>>>> Stashed changes
 };
 
 try {
@@ -242,6 +253,7 @@ const db = {
         return rows[0] || null;
     },
 
+<<<<<<< Updated upstream
     registerAdmin: async (username, password, role = 'admin') => {
         const id = 'admin-' + Date.now();
         await query(
@@ -594,6 +606,109 @@ const db = {
             if (!isMock) client.release();
         }
     },
+=======
+  // ----- INVENTORY -----
+  getInventory: () => (_db.inventory || []).map(sp => ({
+    ...sp,
+    installed: sp.installed || [],
+  })),
+  addInventory: async (sp) => {
+    _db.inventory = _db.inventory || [];
+    _db.inventory.push({ ...sp, installed: sp.installed || [] });
+    await save();
+  },
+  updateInventory: async (id, data) => {
+    _db.inventory = _db.inventory || [];
+    const i = _db.inventory.findIndex(s => s.id === id);
+    if (i === -1) return false;
+    _db.inventory[i] = { ..._db.inventory[i], ...data };
+    await save();
+    return true;
+  },
+  deleteInventory: async (id) => {
+    _db.inventory = _db.inventory || [];
+    const before = _db.inventory.length;
+    _db.inventory = _db.inventory.filter(s => s.id !== id);
+    await save();
+    return _db.inventory.length < before;
+  },
+  bulkUpdateInventory: async (list) => {
+    _db.inventory = _db.inventory || [];
+    list.forEach(item => {
+      const i = _db.inventory.findIndex(s => s.id === item.id);
+      if (i > -1) _db.inventory[i] = { ..._db.inventory[i], ...item };
+      else _db.inventory.push(item);
+    });
+    await save();
+    return true;
+  },
+  installInventory: async (id, installData) => {
+    _db.inventory = _db.inventory || [];
+    const sp = _db.inventory.find(s => s.id === id);
+    if (!sp) return { error: 'Tidak ditemukan' };
+    if ((sp.stokSisa || 0) < (installData.jumlah || 1)) return { error: 'Stok tidak cukup' };
+    sp.installed = sp.installed || [];
+    sp.installed.push(installData);
+    sp.stokSisa = (sp.stokSisa || 0) - (installData.jumlah || 1);
+    await save();
+    return { ok: true };
+  },
+  uninstallInventory: async (id, installId) => {
+    _db.inventory = _db.inventory || [];
+    const sp = _db.inventory.find(s => s.id === id);
+    if (!sp) return false;
+    const inst = (sp.installed || []).find(i => i.id === installId);
+    if (!inst) return false;
+    sp.installed = sp.installed.filter(i => i.id !== installId);
+    sp.stokSisa = (sp.stokSisa || 0) + (inst.jumlah || 1);
+    await save();
+    return true;
+  },
+
+  // ----- SETTINGS -----
+  getSettings: () => ({ ...(_db.settings || {}) }),
+  updateSetting: async (key, value) => {
+    _db.settings = _db.settings || {};
+    _db.settings[key] = value;
+    await save();
+  },
+
+  // ----- ADMINS -----
+  getAdmins: () => [...(_db.admins || [])],
+  addAdmin: async (admin) => {
+    _db.admins = _db.admins || [];
+    const i = _db.admins.findIndex(a => a.name === admin.name);
+    if (i > -1) _db.admins[i] = admin;
+    else _db.admins.push(admin);
+    await save();
+  },
+  deleteAdmin: async (name) => {
+    _db.admins = (_db.admins || []).filter(a => a.name !== name);
+    await save();
+  },
+
+  // ----- PRESENCE (Real-time Online) -----
+  updatePresence: async (name, avatar) => {
+    _db.presence = _db.presence || {};
+    _db.presence[name] = {
+      name,
+      avatar,
+      lastSeen: Date.now()
+    };
+    await save();
+  },
+  getActiveUsers: () => {
+    const now = Date.now();
+    const active = [];
+    const presence = _db.presence || {};
+    for (const name in presence) {
+      if (now - presence[name].lastSeen < 120000) { // Active in last 2 mins
+        active.push(presence[name]);
+      }
+    }
+    return active;
+  }
+>>>>>>> Stashed changes
 };
 
 const exportedDb = {

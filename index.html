@@ -105,11 +105,16 @@ html{scroll-behavior:smooth;}
 .nav-item.active svg{stroke:var(--green);}
 .nav-item.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;background:var(--green);border-radius:0 3px 3px 0;}
 .nav-badge{margin-left:auto;background:var(--danger);color:#fff;border-radius:20px;font-size:9px;font-weight:700;padding:1px 6px;}
-.sb-foot{padding:12px 16px;border-top:1px solid var(--card-b);}
-.user-chip{display:flex;align-items:center;gap:9px;}
-.user-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#5FA00D,#A8F040);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#1A3300;}
-.user-name{font-size:12px;font-weight:700;color:var(--text);}
-.user-role{font-size:10px;color:var(--text3);}
+.sb-foot{padding:14px 16px;border-top:1px dashed var(--card-b);margin-top:auto;}
+.user-chip{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg2);border:1px solid var(--card-b);border-radius:14px;transition:all .2s;cursor:pointer;}
+.user-chip:hover{background:var(--bg3);border-color:var(--green-bd);}
+.user-av{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#5FA00D,#A8F040);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#1A3300;flex-shrink:0;overflow:hidden;}
+.user-av img{width:100%;height:100%;object-fit:cover;}
+.user-name{font-size:12.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;}
+.user-role{font-size:9.5px;color:var(--text3);font-weight:600;}
+.avatar-circle{width:42px;height:42px;border-radius:12px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text3);border:2px dashed var(--card-b);overflow:hidden;flex-shrink:0;transition:all .2s;}
+.avatar-circle img{width:100%;height:100%;object-fit:cover;}
+.avatar-mini{width:32px;height:32px;border-radius:10px;font-size:11px;border:none;}
 
 /* ── MAIN ── */
 #main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;padding-bottom:var(--nav-h);width:calc(100% - var(--sidebar-w));}
@@ -117,17 +122,22 @@ html{scroll-behavior:smooth;}
 /* ══════════════════════════════════════
    TOPBAR (mobile)
 ══════════════════════════════════════ */
-#topbar{display:none;align-items:center;gap:9px;padding:10px 14px;background:var(--card);border-bottom:1px solid var(--card-b);position:sticky;top:0;z-index:99;}
-.tb-menu{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
-.tb-menu svg{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:2;}
-.tb-brand{display:flex;align-items:center;gap:7px;}
-.tb-lm{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#5FA00D,#7DCE13);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#1A3300;}
-.tb-name{font-size:12.5px;font-weight:800;color:var(--text);}
-.tb-clock{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:4px 9px;border-radius:20px;margin-left:auto;letter-spacing:.05em;}
-.tb-acts{display:flex;gap:6px;}
-.tb-btn{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;}
+#topbar{display:none;align-items:center;padding:12px 18px;background:var(--card);border-bottom:1px solid var(--card-b);position:sticky;top:0;z-index:99;justify-content:space-between;}
+.tb-menu{width:36px;height:36px;border-radius:10px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.tb-menu svg{width:18px;height:18px;stroke:var(--text2);fill:none;stroke-width:2;}
+.tb-brand{display:flex;align-items:center;gap:10px;flex:1;margin-left:4px;}
+.tb-lm{width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,#5FA00D,#7DCE13);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#1A3300;box-shadow:0 3px 10px rgba(125,206,19,.2);}
+.tb-name{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.2px;}
+.tb-acts{display:flex;gap:8px;align-items:center;}
+.tb-btn{width:36px;height:36px;border-radius:10px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
 .tb-btn:hover{background:var(--bg4);}
+<<<<<<< Updated upstream
 .tb-btn svg{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:2;}
+=======
+@keyframes spin { 100% { transform:rotate(360deg); } }
+.spinning { animation: spin 1s linear infinite; }
+.tb-btn svg { width:18px; height:18px; stroke:var(--text2); fill:none; stroke-width:2; transition: transform 0.2s; }
+>>>>>>> Stashed changes
 #notif-wrap{position:relative;}
 #notif-dot{position:absolute;top:5px;right:5px;width:6px;height:6px;background:var(--danger);border-radius:50%;border:1.5px solid var(--card);}
 
@@ -690,6 +700,16 @@ input[type="date"].form-input::-webkit-calendar-picker-indicator{opacity:.45;cur
 .gh-stat-v{font-size:15px;font-weight:800;}
 .gh-stat-v.bl{color:#93C5FD;}.gh-stat-v.yw{color:#FDE68A;}.gh-stat-v.rd{color:#FCA5A5;}
 
+.sp-inst-list { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; margin-bottom:12px; }
+.sp-inst-chip { 
+  display:inline-flex; align-items:center; gap:4px; 
+  background:rgba(0,0,0,0.04); padding:3px 8px; border-radius:12px;
+  font-size:10px; font-weight:600; color:var(--text2);
+  border:1px solid rgba(0,0,0,0.05);
+}
+[data-theme="dark"] .sp-inst-chip { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.08); }
+.sp-inst-chip .ritase-dot { width:6px; height:6px; border-radius:50%; }
+
 /* sparepart cards */
 .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:10px;}
 .sp-card{background:var(--card);border:1px solid var(--card-b);border-radius:var(--r);padding:14px;transition:all .15s;position:relative;overflow:hidden;}
@@ -817,6 +837,7 @@ input,select,textarea{font-size:16px!important;}
   .dp-stats{grid-template-columns:1fr 1fr 1fr!important;}
 }
 
+<<<<<<< Updated upstream
 /* ══════════════════════════════════════
    ADMIN SELECTOR & SYNC INDICATOR
    (FASE 1 PREMIUM)
@@ -890,6 +911,57 @@ input,select,textarea{font-size:16px!important;}
 .critical-text{color:var(--danger)!important;font-weight:800;}
 .min-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:var(--bg3);color:var(--text3);border:1px solid var(--card-b);margin-left:5px;}
 
+=======
+@keyframes pulse-sync{0%{opacity:.5;transform:scale(0.98);}50%{opacity:1;transform:scale(1.02);}100%{opacity:.5;transform:scale(0.98);}}
+.sync-pulse{animation:pulse-sync 1.5s infinite ease-in-out;color:var(--green2)!important;font-weight:700!important;}
+.txn-actions-inline{display:flex;gap:4px;margin-top:5px;justify-content:flex-end;}
+.txn-act-btn-sm{width:26px;height:26px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
+.txn-act-btn-sm svg{width:11px;height:11px;fill:none;stroke-width:2.5;stroke:var(--text3);}
+.txn-act-btn-sm.edit:hover{background:var(--orange-bg);border-color:var(--orange-bd);}
+.txn-act-btn-sm.edit:hover svg{stroke:var(--orange);}
+.txn-act-btn-sm.del:hover{background:rgba(224,48,48,.1);border-color:rgba(224,48,48,.2);}
+.txn-act-btn-sm.del:hover svg{stroke:var(--danger);}
+
+/* CHART SLIDER */
+.chart-slider-container{position:relative;margin-bottom:14px;}
+.chart-slider{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;gap:10px;}
+.chart-slider::-webkit-scrollbar{display:none;}
+.chart-slide{flex:0 0 100%;scroll-snap-align:start;width:100%;}
+.slider-dots{display:flex;justify-content:center;gap:6px;margin-top:8px;}
+.slider-dot{width:6px;height:6px;border-radius:50%;background:var(--card-b);transition:all .2s;}
+.slider-dot.active{background:var(--green);width:15px;border-radius:4px;}
+
+/* KAT FILTER GRID */
+.kat-filter-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:5px 0;}
+.kfg-item{background:var(--bg3);border:1.5px solid var(--card-b);border-radius:15px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;}
+.kfg-item:hover{border-color:var(--green);background:var(--card);}
+.kfg-item.active{background:var(--green-bg);border-color:var(--green);color:var(--green2);}
+.kfg-ico{font-size:22px;margin-bottom:6px;display:block;}
+.kfg-lbl{font-size:11px;font-weight:700;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+@media(min-width:769px){
+  .chart-slider{display:grid;grid-template-columns:1fr 1fr;overflow:visible;scroll-snap-type:none;gap:10px;}
+  .chart-slide{flex:none;width:auto;}
+  .slider-dots{display:none;}
+}
+/* LOGIN TABS & AVATAR */
+.login-tabs{display:flex;gap:4px;background:rgba(255,255,255,.05);padding:4px;border-radius:14px;margin-bottom:24px;border:1.5px solid rgba(212,168,67,.1);}
+.login-tab{flex:1;padding:10px;text-align:center;font-size:12px;font-weight:700;color:rgba(255,255,255,.4);cursor:pointer;border-radius:10px;transition:all .2s;}
+.login-tab.active{background:linear-gradient(135deg,#8B6914,#D4A843);color:#2C1810;box-shadow:0 4px 12px rgba(212,168,67,0.25);}
+.login-avatar-picker{width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.08);border:2px dashed rgba(212,168,67,.3);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:24px;color:rgba(212,168,67,.6);cursor:pointer;overflow:hidden;position:relative;transition:all .2s;}
+.login-avatar-picker:hover{border-color:var(--green);background:rgba(255,255,255,.1);}
+.login-avatar-picker img{width:100%;height:100%;object-fit:cover;}
+
+/* ADMIN & PRESENCE */
+.sb-user-profile{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg3);border-radius:18px;margin-bottom:15px;border:1px solid var(--card-b);}
+.avatar-circle{width:38px;height:38px;border-radius:50%;background:var(--green-bg);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--green2);overflow:hidden;flex-shrink:0;}
+.avatar-circle img{width:100%;height:100%;object-fit:cover;}
+.sb-user-name{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sb-online-list{display:flex;gap:5px;flex-wrap:wrap;padding:0 10px;margin-top:5px;margin-bottom:15px;}
+.avatar-mini{width:28px;height:28px;font-size:10px;border-width:1.5px;}
+.audit-label{font-size:9.5px;color:var(--text3);margin-top:4px;display:flex;align-items:center;gap:4px;}
+.avatar-tiny{width:16px;height:16px;border-width:1.2px;font-size:7.5px;}
+>>>>>>> Stashed changes
 </style>
 </head>
 <body>
@@ -897,6 +969,7 @@ input,select,textarea{font-size:16px!important;}
 <!-- LOGIN OVERLAY -->
 <div id="login-overlay">
   <div class="login-box">
+<<<<<<< Updated upstream
     <div class="login-logo">BHD</div>
     <div class="login-title" id="login-title">BHD Smart Flow</div>
     <div class="login-sub" id="login-sub">PT. Bagus Harya Dwiprima<br>⛏️ Sistem Manajemen Tambang Pasir · v12</div>
@@ -942,6 +1015,33 @@ input,select,textarea{font-size:16px!important;}
     </div>
     
     <div class="login-ver">🚀 BHD Smart Flow v12.1.3 • Premium Restoration</div>
+=======
+    <div class="login-tabs">
+      <div class="login-tab active" id="tab-masuk" onclick="toggleLoginMode('masuk')">Masuk</div>
+      <div class="login-tab" id="tab-daftar" onclick="toggleLoginMode('daftar')">Daftar Admin</div>
+    </div>
+    
+    <!-- Bagian Daftar (Hidden by Default) -->
+    <div id="login-reg-section" style="display:none;text-align:center;">
+      <div class="login-avatar-picker" id="login-avatar-preview" onclick="document.getElementById('login-avatar-file').click()">
+        👤
+      </div>
+      <input type="file" id="login-avatar-file" hidden accept="image/*" onchange="previewLoginAvatar(this)"/>
+      <div style="font-size:10px;color:rgba(212,168,67,0.7);margin-top:-8px;margin-bottom:15px;">Ketuk untuk pasang foto (opsional)</div>
+    </div>
+
+    <div class="login-field">
+      <label class="login-label">Nama Admin</label>
+      <input class="login-input" id="login-user" type="text" placeholder="Masukkan nama..." autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
+    </div>
+    <div class="login-field">
+      <label class="login-label">Password Master</label>
+      <input class="login-input" id="login-pass" type="password" placeholder="Masukkan password utama" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="login-btn" id="login-main-btn" onclick="doLogin()">Masuk ke Dashboard ⛏️</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-ver">🚛 BHD Smart Flow v10 · Tambang Pasir Management</div>
+>>>>>>> Stashed changes
   </div>
 </div>
 
@@ -954,7 +1054,22 @@ input,select,textarea{font-size:16px!important;}
     <div class="logo-mark">BHD</div>
     <div><div class="lt-main">BHD Smart Flow</div><div class="lt-sub">PT. BAGUS HARYA DWIPRIMA</div></div>
   </div>
-  <div class="sb-clock"><div id="sb-clock">00:00:00</div><div id="sb-date"></div></div>
+
+  <!-- Sidebar Footer (Profile) moves to the bottom -->
+  
+  <div class="sb-clock">
+    <div id="sb-clock">00:00:00</div>
+    <div id="sb-date"></div>
+    <div style="margin-top:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="api-status-badge-sb" style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--text3);border:1px solid var(--card-b);display:none;">🟡 Offline</span>
+        <button class="tb-btn" onclick="syncAllData()" title="Sinkronkan data" style="width:28px;height:28px;">
+          <svg id="sync-icon-sb" viewBox="0 0 24 24" style="width:14px;height:14px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
+      <div id="sync-time-sb" style="font-size:8.5px;color:var(--text3);opacity:.7;font-weight:500;"></div>
+    </div>
+  </div>
   <div class="sb-input-btns">
     <button class="sb-input-btn inflow" onclick="openModal('inflow')">
       <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>+ Input Inflow
@@ -980,13 +1095,18 @@ input,select,textarea{font-size:16px!important;}
       <svg viewBox="0 0 24 24" style="width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2.5;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
     </button>
   </div>
+<<<<<<< Updated upstream
+=======
+  <div class="sb-foot" id="sidebar-footer-profile"></div>
+>>>>>>> Stashed changes
 </div>
 <div id="sb-overlay" onclick="closeSb()"></div>
 
 <div id="main">
   <!-- TOPBAR -->
-  <div id="topbar">
+    <div id="topbar">
     <button class="tb-menu" onclick="openSb()"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+<<<<<<< Updated upstream
     <div class="tb-brand"><div class="tb-lm">BHD</div><span class="tb-name">Smart Flow</span></div>
     
     <div class="sync-indicator" id="sync-top">
@@ -1004,6 +1124,12 @@ input,select,textarea{font-size:16px!important;}
 
     <div class="tb-acts">
       <button class="tb-btn" onclick="toggleTheme()" id="theme-btn"><svg id="ti-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="ti-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y2="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+=======
+    <div class="tb-brand"><div class="tb-lm">BHD</div><span class="tb-name">BHD Smart Flow</span></div>
+    <div class="tb-acts">
+      <button class="tb-btn" onclick="toggleTheme()" id="theme-btn"><svg id="ti-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="ti-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+      <div id="notif-wrap" style="display:none;"><button class="tb-btn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></button><span id="notif-dot"></span></div>
+>>>>>>> Stashed changes
     </div>
   </div>
 
@@ -1062,6 +1188,7 @@ input,select,textarea{font-size:16px!important;}
         </div>
       </div>
 
+<<<<<<< Updated upstream
       <!-- Donut + Line Chart row (Mobile Optimized) -->
       <div class="chart-grid-slide">
         <div class="chart-wrap">
@@ -1098,6 +1225,41 @@ input,select,textarea{font-size:16px!important;}
             </div>
           </div>
           <canvas id="miniLineChart" style="max-height:115px;"></canvas>
+=======
+      <!-- Donut + Line Chart row with Slider -->
+      <div class="chart-slider-container">
+        <div class="chart-slider" id="chart-slider" onscroll="updateSliderDots()">
+          <div class="chart-slide">
+            <div class="chart-wrap" style="margin-bottom:0;height:100%;">
+              <div class="cw-hdr"><span class="cw-title">Rasio Kas</span></div>
+              <div class="donut-wrap">
+                <div class="donut-canvas"><canvas id="donutChart" width="100" height="100"></canvas></div>
+                <div class="donut-legend">
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--success)"></div><div class="dl-info"><div class="dl-label">Inflow</div><div class="dl-val" id="dl-in">—</div><div class="dl-pct" id="dl-in-pct">—%</div></div></div>
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--danger)"></div><div class="dl-info"><div class="dl-label">Outflow</div><div class="dl-val" id="dl-out">—</div><div class="dl-pct" id="dl-out-pct">—%</div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="chart-slide">
+            <div class="chart-wrap" style="margin-bottom:0;height:100%;">
+              <div class="cw-hdr" style="flex-direction:column;align-items:flex-start;gap:7px;">
+                <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+                  <span class="cw-title">Cash Flow Trend</span>
+                  <div class="cw-filters" id="trend-filter-btns">
+                    <button class="cf-btn active" id="trend-btn-7d" onclick="setTrendFilter('7d',this)">7 Hr</button>
+                    <button class="cf-btn" id="trend-btn-30d" onclick="setTrendFilter('30d',this)">30 Hr</button>
+                  </div>
+                </div>
+              </div>
+              <canvas id="miniLineChart" style="max-height:130px;"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="slider-dots">
+          <div class="slider-dot active"></div>
+          <div class="slider-dot"></div>
+>>>>>>> Stashed changes
         </div>
       </div>
 
@@ -1326,7 +1488,14 @@ input,select,textarea{font-size:16px!important;}
         <div class="gh-stat"><div class="gh-stat-l">💵 Nilai Stok</div><div class="gh-stat-v" style="color:#86EFAC;font-size:12px;" id="gh-nilai">—</div></div>
       </div>
     </div>
-    <div class="filter-strip" id="gudang-filter-chips" style="margin-bottom:12px;"></div>
+    <div style="display:flex;gap:7px;margin-bottom:12px;align-items:center;">
+      <div class="filter-strip" id="gudang-filter-chips" style="margin:0;flex:1;">
+        <!-- Chips rendered via JS -->
+      </div>
+      <button class="fs-chip" onclick="openGudangFilterPopup()" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd);flex-shrink:0;">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter
+      </button>
+    </div>
     <div class="sp-grid" id="sp-grid"></div>
   </div>
 
@@ -1381,6 +1550,22 @@ input,select,textarea{font-size:16px!important;}
         <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;">Overlay Gelap</label>
         <input type="range" min="0" max="80" value="50" id="overlay-range"/>
         <button onclick="resetBg()" style="padding:10px;border-radius:11px;border:1px solid rgba(224,48,48,.25);background:rgba(224,48,48,.06);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;">Reset Background</button>
+      </div>
+    </div>
+
+    <!-- Kelola Admin -->
+    <div class="settings-card">
+      <div class="settings-title">👥 Kelola Admin & Foto</div>
+      <div id="admin-mgmt-list" style="margin-bottom:12px;"></div>
+      
+      <div style="padding:10px 12px;background:var(--bg3);border-radius:14px;border:1px dashed var(--card-b);">
+        <div style="font-size:10px;font-weight:700;margin-bottom:6px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">+ Tambah Admin Baru</div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div id="new-admin-avatar-preview" class="avatar-circle" style="width:36px;height:36px;border-radius:10px;font-size:12px;background:var(--card);cursor:pointer;" onclick="document.getElementById('new-admin-file').click()">+</div>
+          <input type="file" id="new-admin-file" hidden accept="image/*" onchange="previewAdminAvatar(this)"/>
+          <input type="text" id="new-admin-name" class="form-input" style="flex:1;padding:8px 12px;font-size:12.5px;min-width:0;height:36px;border-radius:10px;" placeholder="Nama admin..."/>
+          <button class="sm-btn" style="background:var(--green-bg);color:var(--green2);width:auto;padding:0 14px;height:36px;font-size:11.5px;margin-top:0;border-radius:10px;font-weight:700;" onclick="addAdminProcess()">Tambah</button>
+        </div>
       </div>
     </div>
     <div class="settings-card">
@@ -1575,17 +1760,298 @@ window.apiInitialized = true;
 var badge = document.getElementById('js-init-badge');
 if (badge) badge.textContent = 'JS Ready (' + (API_BASE ? 'API' : 'Local') + ')';
 
-let _useAPI = false; // akan di-set true setelah ping berhasil
+let _useAPI = false;
+let loginMode = 'masuk', loginAvatarBase64 = '';
+let currentAdmin = null, adminList = [], activeUsers = [];
+let heartbeatTimer = null;
+
+// --- APP GLOBAL STATE & DATA ---
+const LOGIN_USERNAME = 'admin', LOGIN_PASSWORD = 'bhd2024';
+let FLEET_COUNT=6, isDark=false, fabOpen=false;
+let isEditMode=false, currentEditId=null;
+let currentPeriod='today', currentBarFilter='6m', lapFilter='bulan-ini';
+let txnFilterTipe='all', txnSearch='', txnSort='newest', txnPage=5;
+let currentDetailUnit=null;
+let donutChart=null, barChart=null, miniChart=null;
+
+// --- DATABASE LOKAL (INITIAL DATA) ---
+let fleetData = [
+  {id:'f1',nopol:'B 1234 CD',driver:'Budi Santoso',status:'jalan',pajak:'2025-07-20',kir:'2025-07-18'},
+  {id:'f2',nopol:'B 5678 EF',driver:'Andi Pratama',status:'jalan',pajak:'2025-09-15',kir:'2025-10-01'},
+  {id:'f3',nopol:'B 9012 GH',driver:'Rudi Hartono',status:'bengkel',pajak:'2025-08-05',kir:'2025-08-10'},
+  {id:'f4',nopol:'B 3456 IJ',driver:'Sari Dewi',status:'antre',pajak:'2025-07-22',kir:'2025-07-25'},
+  {id:'f5',nopol:'B 7890 KL',driver:'Hendra Wijaya',status:'jalan',pajak:'2025-12-01',kir:'2025-11-15'},
+  {id:'f6',nopol:'B 2345 MN',driver:'Teguh Purnomo',status:'jalan',pajak:'2025-10-10',kir:'2025-09-20'},
+];
+let driverList = ['Budi Santoso','Andi Pratama','Rudi Hartono','Sari Dewi','Hendra Wijaya','Teguh Purnomo','Agus Setiawan','Dian Kusuma'];
+let transactions = [];
+let sparepartStock = [];
+let gudangKategori = ['Ban','Oli','Filter','Spare','Aki','Rem','Lampu','Mesin','Baut','Tool'];
+let gudangFilter = 'all', gudangSearch = '', gudangSort = 'stok-low';
+
+// --- CORE UTILS (TOP PRIORITY) ---
+
+// --- CORE UTILS (TOP PRIORITY) ---
+function compressImage(file, callback){
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = e => {
+    const img = new Image();
+    img.src = e.target.result;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const size = 80;
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      callback(canvas.toDataURL('image/jpeg', 0.8));
+    };
+  };
+}
+
+function startHeartbeat(){
+  if(heartbeatTimer) clearInterval(heartbeatTimer);
+  sendHeartbeat();
+  heartbeatTimer = setInterval(sendHeartbeat, 30000);
+}
+
+async function sendHeartbeat(){
+  if(!currentAdmin) return;
+  try {
+    await apiFetch('/api/auth/heartbeat', { 
+      method:'POST', 
+      body: { username: currentAdmin.name, avatar: currentAdmin.avatar } 
+    });
+    const users = await apiFetch('/api/auth/active-users');
+    if(Array.isArray(users)) {
+      activeUsers = users;
+      renderActiveUsers();
+    }
+  } catch(e){}
+}
+
+function renderAdminProfile(){
+  const el = document.getElementById('sidebar-footer-profile');
+  if(!el || !currentAdmin) return;
+  const name = currentAdmin.name;
+  const avatar = currentAdmin.avatar;
+  const initials = name.substring(0,2).toUpperCase();
+  el.innerHTML = `
+    <div class="user-chip" onclick="showPage('settings',document.getElementById('sb-settings'),'bn-settings')">
+      <div class="user-av">
+        ${avatar ? `<img src="${avatar}">` : initials}
+      </div>
+      <div style="min-width:0;">
+        <div class="user-name">${name}</div>
+        <div class="user-role">Administrator</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderActiveUsers(){
+  const el = document.getElementById('online-admins-list');
+  if(!el) return;
+  const others = activeUsers.filter(u => u.name !== currentAdmin?.name);
+  if(others.length === 0) {
+    el.innerHTML = '<div style="font-size:10px;color:var(--text3);margin-left:5px;">Hanya Anda</div>';
+    return;
+  }
+  el.innerHTML = others.map(u => {
+    const initials = u.name.substring(0,2).toUpperCase();
+    return `
+      <div class="avatar-circle avatar-mini" title="${u.name} (Online)">
+        ${u.avatar ? `<img src="${u.avatar}">` : initials}
+      </div>
+    `;
+  }).join('');
+}
+
+// --- LOGIN LOGIC ---
+function toggleLoginMode(m){
+  loginMode = m;
+  const tM = document.getElementById('tab-masuk');
+  const tD = document.getElementById('tab-daftar');
+  const regSec = document.getElementById('login-reg-section');
+  const btn = document.getElementById('login-main-btn');
+  const err = document.getElementById('login-err');
+  if(err) err.textContent = '';
+  
+  if(m==='masuk'){
+    tM?.classList.add('active'); tD?.classList.remove('active');
+    if(regSec) regSec.style.display = 'none';
+    if(btn) btn.textContent = 'Masuk ke Dashboard ⛏️';
+  } else {
+    tD?.classList.add('active'); tM?.classList.remove('active');
+    if(regSec) regSec.style.display = 'block';
+    if(btn) btn.textContent = 'Daftar & Masuk ⛏️';
+  }
+}
+
+function previewLoginAvatar(input){
+  if(input.files && input.files[0]){
+    compressImage(input.files[0], base64 => {
+      loginAvatarBase64 = base64;
+      const prev = document.getElementById('login-avatar-preview');
+      if(prev) prev.innerHTML = `<img src="${base64}">`;
+    });
+  }
+}
+
+async function doLogin(){
+  const u=document.getElementById('login-user')?.value?.trim();
+  const p=document.getElementById('login-pass')?.value;
+  const errEl=document.getElementById('login-err');
+  const btn=document.getElementById('login-main-btn');
+  if(!u||!p){ if(errEl)errEl.textContent='Lengkapi nama dan password'; return; }
+  
+  if(btn){btn.textContent='Memproses...';btn.disabled=true;}
+  let ok=false;
+  const serverUp = await apiPing();
+
+  if(serverUp){
+    try{
+      if(loginMode === 'daftar'){
+        await apiFetch('/api/admins', { method:'POST', body: { name:u, avatar:loginAvatarBase64 } });
+        showToast('Akun berhasil dibuat! Silakan masuk.');
+        toggleLoginMode('masuk'); 
+        if(btn){btn.textContent='Masuk ke Dashboard ⛏️';btn.disabled=false;}
+        return;
+      }
+      const res = await apiFetch('/api/auth/login',{method:'POST',body:{username:u,password:p}});
+      ok = res;
+    } catch(e){ 
+      ok=false; 
+      if(errEl) errEl.textContent = e.message || 'Gagal terhubung';
+    }
+  } else {
+    ok = (u===LOGIN_USERNAME && p===LOGIN_PASSWORD) ? {ok:true, username:'admin', avatar:''} : false;
+  }
+  
+  if(btn){btn.textContent = loginMode==='masuk'?'Masuk ke Dashboard ⛏️':'Daftar & Masuk ⛏️'; btn.disabled=false;}
+  
+  if(ok && ok.ok){
+    const overlay=document.getElementById('login-overlay');
+    const app=document.getElementById('app');
+    if(overlay){overlay.style.opacity='0';overlay.style.transition='opacity .4s';setTimeout(()=>{overlay.style.display='none';},400);}
+    if(app){app.style.display='flex';}
+    
+    currentAdmin = { name: ok.username, avatar: ok.avatar };
+    if(serverUp) startHeartbeat();
+
+    const badge=document.getElementById('api-status-badge');
+    if(badge){badge.textContent=serverUp?'🟢 Online':'🟡 Offline';}
+    setTimeout(()=>{_appInit();},100);
+  } else {
+    if(errEl && !errEl.textContent) errEl.textContent = 'Username atau password salah.';
+    const passEl=document.getElementById('login-pass');if(passEl){passEl.value='';passEl.focus();}
+  }
+}
 
 async function apiPing(){
+<<<<<<< Updated upstream
+=======
+  const syncIcons = [document.getElementById('sync-icon'), document.getElementById('sync-icon-sb')];
+  syncIcons.forEach(ico => ico?.parentElement.classList.add('spinning'));
+  
+>>>>>>> Stashed changes
   try{
     // Menggunakan fetch standar tanpa signal timeout untuk kompatibilitas browser lama
     const r = await fetch(API_BASE+'/api/ping');
     _useAPI = r.ok;
+<<<<<<< Updated upstream
   } catch(e){ _useAPI = false; }
   return _useAPI;
 }
 
+=======
+  } catch(e){ 
+    _useAPI = false; 
+  }
+  
+  const badges = [document.getElementById('api-status-badge'), document.getElementById('api-status-badge-sb')];
+  badges.forEach(badge => {
+    if(badge){
+      badge.style.display = 'inline-block';
+      badge.textContent = _useAPI ? '🟢 Online' : '🟡 Offline';
+      badge.style.background = _useAPI ? 'rgba(34,197,94,.1)' : 'rgba(234,179,8,.1)';
+      badge.style.color = _useAPI ? '#22C55E' : '#EAB308';
+    }
+  });
+  
+  syncIcons.forEach(ico => ico?.parentElement.classList.remove('spinning'));
+  return _useAPI;
+}
+
+async function syncAllData(isAuto = false){
+  const syncBtn = document.getElementById('sync-icon-sb')?.parentElement;
+  if(isAuto && !syncBtn) return; // Skip if no sidebar yet
+  
+  if(await apiPing()){
+    try {
+      const data = await apiFetch('/api/sync-all');
+      
+      // Update local memory
+      transactions = data.transactions.map(t=>({...t, amount:Number(t.amount)}));
+      fleetData.length = 0;
+      data.fleet.forEach(f=>fleetData.push(f));
+      FLEET_COUNT = fleetData.length;
+      driverList = [...data.drivers];
+      sparepartStock.length = 0;
+      data.inventory.forEach(sp=>sparepartStock.push(sp));
+      
+      if(data.settings.gudang_kategori) gudangKategori = JSON.parse(data.settings.gudang_kategori);
+      if(data.admins) adminList = data.admins;
+      if(data.activeUsers) { activeUsers = data.activeUsers; renderActiveUsers(); }
+      
+      // Update UI
+      renderDashboard();
+      renderAdminProfile();
+      renderAdminManagement();
+      renderGudangFilterChips();
+      renderGudang();
+      applyTxnFilters();
+      renderLaporanTable();
+      renderFleetUnits();
+      
+      const now = new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      const timeEl = document.getElementById('sync-time-sb');
+      if(timeEl) {
+        timeEl.textContent = 'Terakhir Sync: ' + now;
+        timeEl.classList.add('sync-pulse');
+        setTimeout(() => timeEl.classList.remove('sync-pulse'), 3000);
+      }
+      
+      if(!isAuto) showToast('Data berhasil disinkronkan 🚀');
+    } catch (e) {
+      console.error('Sync-all failed:', e);
+      if(!isAuto) showToast('⚠️ Sinkronisasi gagal');
+    }
+  } else {
+    if(!isAuto) showToast('⚠️ Gagal terhubung ke server');
+  }
+}
+
+// Start background sync every 15 seconds for real-time feel
+let syncInterval = setInterval(() => syncAllData(true), 15000);
+
+// Smart-Sync: Instant sync when user returns to app (more aggressive than just visibilitychange)
+['visibilitychange', 'focus', 'pageshow', 'load'].forEach(evt => {
+  window.addEventListener(evt, () => {
+    if (document.visibilityState === 'visible') {
+      console.log('Smart-Sync triggered via:', evt);
+      syncAllData(true);
+    }
+  });
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    syncAllData(true);
+  }
+});
+window.addEventListener('focus', () => syncAllData(true));
+
+>>>>>>> Stashed changes
 async function apiFetch(path, opts={}){
   const headers = {
     'Content-Type':'application/json'
@@ -1607,6 +2073,7 @@ async function apiFetch(path, opts={}){
   return r.json();
 }
 
+<<<<<<< Updated upstream
 // ═══════════════════════════════════════════════════════
 // AUDIT LOGS & ADMIN MANAGEMENT (FASE 1)
 // ═══════════════════════════════════════════════════════
@@ -1838,19 +2305,157 @@ let currentPeriod='today',currentBarFilter='6m',lapFilter='bulan-ini';
 let txnFilterTipe='all',txnSearch='',txnSort='newest',txnPage=5;
 let currentDetailUnit=null;
 let donutChart=null,barChart=null,miniChart=null;
+=======
+// redundant state removed and moved to top
 
-const fleetData=[
-  {id:'f1',nopol:'B 1234 CD',driver:'Budi Santoso',status:'jalan',pajak:'2025-07-20',kir:'2025-07-18'},
-  {id:'f2',nopol:'B 5678 EF',driver:'Andi Pratama',status:'jalan',pajak:'2025-09-15',kir:'2025-10-01'},
-  {id:'f3',nopol:'B 9012 GH',driver:'Rudi Hartono',status:'bengkel',pajak:'2025-08-05',kir:'2025-08-10'},
-  {id:'f4',nopol:'B 3456 IJ',driver:'Sari Dewi',status:'antre',pajak:'2025-07-22',kir:'2025-07-25'},
-  {id:'f5',nopol:'B 7890 KL',driver:'Hendra Wijaya',status:'jalan',pajak:'2025-12-01',kir:'2025-11-15'},
-  {id:'f6',nopol:'B 2345 MN',driver:'Teguh Purnomo',status:'jalan',pajak:'2025-10-10',kir:'2025-09-20'},
-];
 
-let driverList=['Budi Santoso','Andi Pratama','Rudi Hartono','Sari Dewi','Hendra Wijaya','Teguh Purnomo','Agus Setiawan','Dian Kusuma'];
+// functions removed and moved to top
 
-let transactions=[];
+
+function getAdminAvatar(name){
+  const a = adminList.find(x => x.name === name);
+  return a ? a.avatar : '';
+}
+
+// compressImage removed and moved to top
+
+
+let tempAdminAvatar = '';
+function previewAdminAvatar(input){
+  if(input.files && input.files[0]){
+    compressImage(input.files[0], base64 => {
+      tempAdminAvatar = base64;
+      document.getElementById('new-admin-avatar-preview').innerHTML = `<img src="${base64}">`;
+    });
+  }
+}
+
+async function addAdminProcess(){
+  const name = document.getElementById('new-admin-name')?.value?.trim();
+  if(!name) { showToast('Nama admin diperlukan'); return; }
+  
+  try {
+    await apiFetch('/api/admins', { 
+      method:'POST', 
+      body: { name, avatar: tempAdminAvatar } 
+    });
+    showToast('Admin "'+name+'" ditambahkan');
+    document.getElementById('new-admin-name').value = '';
+    document.getElementById('new-admin-avatar-preview').innerHTML = '+';
+    tempAdminAvatar = '';
+    syncAllData(); // Refresh list
+  } catch(e) { showToast('Gagal menambah admin'); }
+}
+>>>>>>> Stashed changes
+
+async function deleteAdminProcess(name){
+  if(name === currentAdmin?.name) { showToast('Tidak bisa menghapus diri sendiri'); return; }
+  if(!confirm('Hapus akses admin "'+name+'"?')) return;
+  try {
+    await apiFetch('/api/admins/' + encodeURIComponent(name), { method:'DELETE' });
+    showToast('Admin dihapus');
+    syncAllData();
+  } catch(e) { showToast('Gagal hapus admin'); }
+}
+
+function renderAdminManagement(){
+  const el = document.getElementById('admin-mgmt-list');
+  if(!el) return;
+  if(adminList.length === 0) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:10px;">Belum ada admin terdaftar</div>';
+    return;
+  }
+  el.innerHTML = adminList.map(a => {
+    const initials = a.name.substring(0,2).toUpperCase();
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg2);border-radius:14px;margin-bottom:8px;border:1px solid var(--card-b);box-shadow:var(--sh);">
+        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+          <div class="avatar-circle avatar-mini" style="background:var(--bg3);">
+            ${a.avatar ? `<img src="${a.avatar}">` : initials}
+          </div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.name}</div>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button onclick="openEditAdminModal('${a.name}')" style="background:var(--bg3);border:none;color:var(--text2);cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;" title="Edit Admin">✏️</button>
+          <button onclick="deleteAdminProcess('${a.name}')" style="background:rgba(224,48,48,.05);border:none;color:var(--danger);cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;" title="Hapus Admin">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+let editAdminTargetName = '';
+function openEditAdminModal(name){
+  const a = adminList.find(x => x.name === name);
+  if(!a) return;
+  editAdminTargetName = name;
+  tempAdminAvatar = a.avatar || '';
+  
+  const body = `
+    <div class="form-group">
+      <label class="form-label">Foto Profilbaru</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div id="edit-admin-avatar-preview" class="avatar-circle" style="width:60px;height:60px;cursor:pointer;" onclick="document.getElementById('edit-admin-file').click()">
+          ${tempAdminAvatar ? `<img src="${tempAdminAvatar}">` : a.name.substring(0,2).toUpperCase()}
+        </div>
+        <button class="sm-btn" style="width:auto;padding:8px 15px;margin-top:0;" onclick="document.getElementById('edit-admin-file').click()">Ganti Foto</button>
+        <input type="file" id="edit-admin-file" hidden accept="image/*" onchange="previewEditAdminAvatar(this)"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Admin</label>
+      <input type="text" id="edit-admin-name" class="form-input" value="${a.name}" placeholder="Masukkan nama baru..."/>
+    </div>
+    <button class="sm-btn orange" onclick="saveEditAdminProcess()">Simpan Perubahan</button>
+  `;
+  document.getElementById('sm-title-text').textContent = 'Edit Profile Admin';
+  document.getElementById('sm-body').innerHTML = body;
+  openSm();
+}
+
+function previewEditAdminAvatar(input){
+  if(input.files && input.files[0]){
+    compressImage(input.files[0], base64 => {
+      tempAdminAvatar = base64;
+      const prev = document.getElementById('edit-admin-avatar-preview');
+      if(prev) prev.innerHTML = `<img src="${base64}">`;
+    });
+  }
+}
+
+async function saveEditAdminProcess(){
+  const newName = document.getElementById('edit-admin-name')?.value?.trim();
+  if(!newName) { showToast('Nama tidak boleh kosong'); return; }
+  
+  try {
+    const btn = document.querySelector('.sm-btn.orange');
+    if(btn) btn.textContent = 'Menyimpan...';
+    
+    await apiFetch('/api/admins/' + encodeURIComponent(editAdminTargetName), {
+      method: 'PUT',
+      body: { name: newName, avatar: tempAdminAvatar }
+    });
+    
+    // Jika admin yang diedit adalah yang sedang login, update currentAdmin
+    if(currentAdmin && currentAdmin.name === editAdminTargetName){
+      currentAdmin.name = newName;
+      currentAdmin.avatar = tempAdminAvatar;
+      localStorage.setItem('BHD_ADMIN', JSON.stringify(currentAdmin));
+      renderAdminProfile();
+    }
+    
+    showToast('Profil admin diperbarui');
+    closeSm();
+    syncAllData();
+  } catch(e) {
+    showToast('Gagal update admin: ' + e.message);
+    const btn = document.querySelector('.sm-btn.orange');
+    if(btn) btn.textContent = 'Simpan Perubahan';
+  }
+}
+
+// redundant local data removed and moved to top
+
 
 // Monthly data computed from real transactions (see renderBarChart)
 
@@ -1861,11 +2466,9 @@ let transactions=[];
 // ════════════════════════════════════
 // SPAREPART STOCK (terpisah dari transactions)
 // ════════════════════════════════════
-let gudangFilter='all';
+// redundant gudang state removed and moved to top
 let waDataReady=false,waTextCache='';
 
-let sparepartStock=[];
-let gudangKategori=['Ban','Oli','Filter','Spare']; // dynamic categories
 
 // ════════════════════════════════════
 // GUDANG HELPERS
@@ -1881,6 +2484,7 @@ function spStatusLabel(sp){
              critical:'<span class="sp-status-badge critical">Kritis</span>'};
   return map[s];
 }
+<<<<<<< Updated upstream
 const spCatIconDefault = {
   'Ban': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle></svg>',
   'Oli': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 3m-6 0l3-3M6 7l12 0M6 17l12 0M12 7l0 10"></path></svg>',
@@ -1893,6 +2497,24 @@ const spCatIconDefault = {
   'Per': '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 16h18M3 8h18M3 4h18M3 20h18"></path></svg>'
 };
 function getSpCatIcon(kat){ return spCatIconDefault[kat] || '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>'; }
+=======
+const spCatIconDefault={Ban:'🎡',Oli:'🛢️',Filter:'🌫️',Spare:'🔧',Aki:'🔋',Accu:'🔋',Rem:'🛑',Lampu:'💡',Mesin:'⚙️',Baut:'🔩',Tool:'🛠️'};
+function getSpCatIcon(kat){
+  if(!kat) return '📦';
+  const k=kat.toLowerCase();
+  if(k.includes('ban')) return '🎡';
+  if(k.includes('oli')) return '🛢️';
+  if(k.includes('aki')||k.includes('accu')) return '🔋';
+  if(k.includes('filter')) return '🌫️';
+  if(k.includes('lampu')) return '💡';
+  if(k.includes('rem')) return '🛑';
+  if(k.includes('mesin')) return '⚙️';
+  if(k.includes('baut')) return '🔩';
+  if(k.includes('kunci')||k.includes('tool')) return '🛠️';
+  if(k.includes('spare')) return '🔧';
+  return spCatIconDefault[kat]||'📦';
+}
+>>>>>>> Stashed changes
 
 function setGudangFilter(f,btn){
   gudangFilter=f;
@@ -1924,6 +2546,38 @@ function _renderKatList(){
   }).join('');
 }
 
+function openGudangFilterPopup(){
+  const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
+  tEl.textContent='Filter Berdasarkan Kategori';
+  const cats = ['all', ...gudangKategori];
+  body.innerHTML = `<div class="kat-filter-grid">
+    ${cats.map(k => `
+      <div class="kfg-item ${gudangFilter===k?'active':''}" onclick="setGudangFilterPop('${k}')">
+        <span class="kfg-ico">${k==='all'?'📋':getSpCatIcon(k)}</span>
+        <span class="kfg-lbl">${k==='all'?'Semua':k}</span>
+      </div>
+    `).join('')}
+  </div>`;
+  document.getElementById('sm-overlay').classList.add('open');
+  vibrate(15);
+}
+
+function setGudangFilterPop(k){
+  gudangFilter = k;
+  renderGudangFilterChips(); // Keep chips in sync
+  renderGudang();
+  closeSm();
+  vibrate(20);
+}
+
+function updateSliderDots() {
+  const slider = document.getElementById('chart-slider');
+  if(!slider) return;
+  const dots = document.querySelectorAll('.slider-dot');
+  const index = Math.round(slider.scrollLeft / slider.offsetWidth);
+  dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+}
+
 function openKategoriModal(){
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent='Kelola Kategori Onderdil';
@@ -1941,7 +2595,7 @@ function openKategoriModal(){
   document.getElementById('sm-overlay').classList.add('open');
 }
 
-function addKategori(){
+async function addKategori(){
   const input=document.getElementById('kat-new-name');
   const nama=(input?.value||'').trim();
   if(!nama){showToast('Nama kategori tidak boleh kosong');return;}
@@ -1958,10 +2612,11 @@ function addKategori(){
       </div>`).join('');
   }
   renderGudangFilterChips();
+  if(_useAPI) await apiFetch('/api/settings', { method:'PUT', body: { key: 'gudang_kategori', value: JSON.stringify(gudangKategori) } }).catch(e=>console.warn(e));
   showToast('Kategori "'+nama+'" ditambahkan');vibrate(20);
 }
 
-function deleteKategori(nama){
+async function deleteKategori(nama){
   const inUse=sparepartStock.some(s=>s.kategori===nama);
   if(inUse){showToast('Kategori masih dipakai '+sparepartStock.filter(s=>s.kategori===nama).length+' item');return;}
   gudangKategori=gudangKategori.filter(k=>k!==nama);
@@ -1975,6 +2630,7 @@ function deleteKategori(nama){
       </div>`).join('');
   }
   renderGudangFilterChips();
+  if(_useAPI) await apiFetch('/api/settings', { method:'PUT', body: { key: 'gudang_kategori', value: JSON.stringify(gudangKategori) } }).catch(e=>console.warn(e));
   showToast('Kategori "'+nama+'" dihapus');vibrate(30);
 }
 
@@ -2013,6 +2669,7 @@ function renderGudang(){
     const st=spStatus(sp);
     const ico=getSpCatIcon(sp.kategori)||'📦';
     const pct=Math.round(sp.stokSisa/sp.stokAwal*100);
+<<<<<<< Updated upstream
     const instCount = sp.installed?.length || 0;
     
     return `<div class="sp-card ${st==='critical'?'critical-stock ':''}${st}" onclick="openSparepartDetail('${sp.id}')">
@@ -2039,6 +2696,39 @@ function renderGudang(){
         <div class="sp-act edit" onclick="event.stopPropagation();openAddStockModal('${sp.id}')">✏️ Edit</div>
       </div>
     </div>`;
+=======
+    const nilaiSisa=sp.stokSisa*sp.hargaSatuan;
+    const instList=sp.installed.map(i=>{
+      const f=fleetData.find(x=>x.nopol===i.armada);
+      const color=getRitaseStatusColor(i.ritase,sp.kategori);
+      return `<div class="sp-inst-chip" title="${i.armada} - ${f?f.driver:''} (${i.ritase} ritase)">
+        <span class="ritase-dot" style="background:${color}"></span>
+        <span>${i.armada}</span>
+      </div>`;
+    }).join('');
+    return '<div class="sp-card '+st+'">'
+      +'<div class="sp-header"><div class="sp-icon-wrap '+st+'">'+ico+'</div>'+spStatusLabel(sp)+'</div>'
+      +'<div class="sp-name">'+sp.nama+'</div>'
+      +'<div class="sp-spec">🏷️ '+sp.spek+' · 🏪 '+sp.toko+'</div>'
+      +(instList?'<div class="sp-inst-list">'+instList+'</div>':'')
+      +'<div class="sp-meta-grid">'
+      +'<div class="sp-meta-item"><div class="sp-meta-label">📦 Sisa/Total</div><div class="sp-meta-val" style="color:'+(st==='fresh'?'var(--success)':st==='warn'?'var(--warning)':'var(--danger)')+';">'+sp.stokSisa+' / '+sp.stokAwal+'</div></div>'
+      +'<div class="sp-meta-item"><div class="sp-meta-label">💰 Harga/unit</div><div class="sp-meta-val">'+fmt(sp.hargaSatuan)+'</div></div>'
+      +'<div class="sp-meta-item"><div class="sp-meta-label">💵 Nilai Sisa</div><div class="sp-meta-val" style="color:var(--info);">'+fmt(nilaiSisa)+'</div></div>'
+      +'<div class="sp-meta-item"><div class="sp-meta-label">📅 Tgl Masuk</div><div class="sp-meta-val">'+fmtDate(sp.tglMasuk)+'</div></div>'
+      +'</div>'
+      +'<div class="sp-progress-wrap">'
+      +'<div class="sp-progress-label"><span>Sisa Stok</span><span>'+pct+'%</span></div>'
+      +'<div class="sp-progress-bar"><div class="sp-progress-fill '+st+'" style="width:'+pct+'%"></div></div>'
+      +'</div>'
+      +(sp.catatan?'<div style="font-size:10px;color:var(--text3);background:var(--bg3);border-radius:8px;padding:6px 9px;margin-top:8px;">📝 '+sp.catatan+'</div>':'')
+      +'<div class="sp-actions">'
+      +(sp.stokSisa>0?'<div class="sp-act pasang" onclick="openPasangModal(\''+sp.id+'\')">🚛 Pasang</div>':'<div class="sp-act" style="opacity:.4;cursor:not-allowed;">🚫 Habis</div>')
+      +'<div class="sp-act edit" onclick="openAddStockModal(\''+sp.id+'\')">✏️ Edit</div>'
+      +'<div class="sp-act del" onclick="deleteSparepart(\''+sp.id+'\')">🗑️</div>'
+      +'</div>'
+      +'</div>';
+>>>>>>> Stashed changes
   }).join('');
 }
 
@@ -2124,21 +2814,22 @@ function openAddStockModal(editId){
   document.getElementById('sm-overlay').classList.add('open');
 }
 
-function saveSparepart(editId){
+async function saveSparepart(editId){
   const nama=document.getElementById('sp-nama')?.value?.trim();
   const spek=document.getElementById('sp-spek')?.value?.trim();
   const kat=document.getElementById('sp-kat')?.value||'Spare';
   const toko=document.getElementById('sp-toko')?.value?.trim()||'';
   const nota=document.getElementById('sp-nota')?.value?.trim()||'';
   const tgl=document.getElementById('sp-tgl')?.value||today();
-  // Parse jumlah: strip non-digits first then parseInt, fallback 0
   const jmlRaw=document.getElementById('sp-jml')?.value||'';
   const jml=parseInt(jmlRaw.toString().replace(/\D/g,''))||0;
-  // Parse harga: use getRaw which already strips formatting
   const harga=getRaw('sp-harga')||0;
   if(!nama){showToast('Nama barang tidak boleh kosong');return;}
   if(!spek){showToast('Spek/tipe tidak boleh kosong');return;}
   if(jml<=0){showToast('Jumlah harus lebih dari 0');return;}
+  
+  // OPTIMISTIC UI
+  closeSm();
   if(editId){
     const sp=sparepartStock.find(s=>s.id===editId);
     if(sp){
@@ -2147,24 +2838,24 @@ function saveSparepart(editId){
       sp.stokAwal=jml;
       sp.stokSisa=Math.min(isNaN(sp.stokSisa)?jml:sp.stokSisa,jml);
       sp.hargaSatuan=isNaN(harga)?0:harga;
-      if(_useAPI) apiFetch('/api/inventory/'+sp.id,{method:'PUT',body:sp}).catch(e=>console.warn(e));
+      if(_useAPI) await apiFetch('/api/inventory/'+sp.id,{method:'PUT',body:sp}).catch(e=>console.warn(e));
     }
   } else {
     const spNew = {
-      id:'sp'+Date.now(),nama,spek,kategori:kat,toko,nota,
+      id:uid('sp'),nama,spek,kategori:kat,toko,nota,
       tglMasuk:tgl,stokAwal:jml,stokSisa:jml,
       hargaSatuan:isNaN(harga)?0:harga,
       installed:[],catatan:''
     };
     sparepartStock.push(spNew);
-    if(_useAPI) apiFetch('/api/inventory',{method:'POST',body:spNew}).catch(e=>console.warn(e));
+    if(_useAPI) await apiFetch('/api/inventory',{method:'POST',body:spNew}).catch(e=>console.warn(e));
   }
-  closeSm();renderGudang();showToast(editId?'Item diperbarui':'Stok ditambahkan');vibrate(30);
+  renderGudang();showToast(editId?'Item diperbarui':'Stok ditambahkan');vibrate(30);
 }
 
-function deleteSparepart(id){
+async function deleteSparepart(id){
   const i=sparepartStock.findIndex(s=>s.id===id);if(i>-1)sparepartStock.splice(i,1);
-  if(_useAPI) apiFetch('/api/inventory/'+id,{method:'DELETE'}).catch(e=>console.warn(e));
+  if(_useAPI) await apiFetch('/api/inventory/'+id,{method:'DELETE'}).catch(e=>console.warn(e));
   renderGudang();showToast('Item dihapus');vibrate(40);
 }
 
@@ -2186,7 +2877,7 @@ function openPasangModal(spId){
   document.getElementById('sm-overlay').classList.add('open');
 }
 
-function confirmPasang(spId){
+async function confirmPasang(spId){
   const sp=sparepartStock.find(s=>s.id===spId);if(!sp)return;
   const armada=document.getElementById('pasang-armada')?.value;
   const tgl=document.getElementById('pasang-tgl')?.value;
@@ -2195,49 +2886,51 @@ function confirmPasang(spId){
   if(jml>sp.stokSisa){showToast('Jumlah melebihi stok (sisa: '+sp.stokSisa+')');return;}
   const driver=fleetData.find(f=>f.nopol===armada)?.driver||'';
   sp.stokSisa-=jml;
-  // Track each unit as separate installed entry
+  const outId = uid('txn');
   for(let i=0;i<jml;i++){
-    sp.installed.push({armada,tglPasang:tgl,ritase:0,txnId:Date.now()+i});
+    sp.installed.push({armada,tglPasang:tgl,ritase:0,txnId:outId});
   }
   const newTxn = {
-    id:'txn_'+Date.now(),type:'outflow',
+    id:outId,type:'outflow',
     label:sp.nama+' ('+sp.spek+') — '+jml+' unit',
     sub:'No.Nota: '+sp.nota+' · '+sp.toko+' · '+driver,
     amount:sp.hargaSatuan*jml,date:tgl,
     armada,nota:sp.nota,toko:sp.toko,
-    kategori:'Onderdil',driver,status:'lunas',sparepartId:spId
+    kategori:'Onderdil',driver,status:'lunas',sparepartId:spId,
+    author: currentAdmin ? currentAdmin.name : 'Admin'
   };
   transactions.unshift(newTxn);
+  
+  closeSm(); renderGudang(); renderDashboard(); applyTxnFilters(); renderLaporanTable();
+  showToast(sp.nama+' ('+jml+' unit) dipasang ke '+armada); vibrate([30,50,30]);
+
   if(_useAPI){
     apiFetch('/api/inventory/'+spId,{method:'PUT',body:sp}).catch(e=>console.warn(e));
     apiFetch('/api/transactions',{method:'POST',body:newTxn}).catch(e=>console.warn(e));
   }
-  closeSm();renderGudang();renderDashboard();applyTxnFilters();renderLaporanTable();
-  showToast(sp.nama+' ('+jml+' unit) dipasang ke '+armada);vibrate([30,50,30]);
 }
 
-// Ritase thresholds per kategori
 const RITASE_THRESHOLDS={Ban:100,Oli:50,Filter:80,Spare:60};
 function getRitaseThreshold(kategori){
   return RITASE_THRESHOLDS[kategori]||50;
 }
 
-// Dipanggil saat submitInflow — hitung ritase berdasarkan trip baru
-// Tidak hitung jika armada sedang bengkel (status SEBELUM update)
-function incrementRitaseForArmada(nopol, statusSebelum){
-  // Jika armada sedang bengkel sebelum trip ini, skip
+async function incrementRitaseForArmada(nopol, statusSebelum){
   if(statusSebelum==='bengkel') return;
   const warnings=[];
-  sparepartStock.forEach(sp=>{
+  for(const sp of sparepartStock){
+    let changed = false;
     sp.installed.forEach(i=>{
       if(i.armada!==nopol) return;
       i.ritase++;
+      changed = true;
       const threshold=getRitaseThreshold(sp.kategori);
       if(i.ritase===threshold||(i.ritase>threshold&&(i.ritase-threshold)%10===0)){
         warnings.push(sp.nama+': '+i.ritase+'/'+threshold+' ritase ⚠️');
       }
     });
-  });
+    if(changed && _useAPI) await apiFetch('/api/inventory/'+sp.id, { method:'PUT', body: sp }).catch(e=>console.warn(e));
+  }
   if(warnings.length){
     setTimeout(()=>warnings.forEach(w=>showToast('🔧 '+w)),900);
   }
@@ -2276,13 +2969,11 @@ function buildWAText(){
   const cnt={jalan:0,antre:0,bengkel:0};
   fleetData.forEach(f=>cnt[f.status]=(cnt[f.status]||0)+1);
   const SEP='━'.repeat(22);
-  // Per-armada summary for today
   const armadaTodayLines=fleetData.map(f=>{
     const fInf=todayTxn.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
     if(fInf===0) return null;
     return '  🚛 '+f.nopol+' ('+f.driver+'): +'+fmtFull(fInf);
   }).filter(Boolean);
-  // Outflow today
   const outTodayLines=todayTxn.filter(t=>t.type==='outflow').map(t=>'  💸 '+t.label+' ['+t.kategori+']: -'+fmtFull(t.amount));
   const docW=fleetData.filter(f=>daysUntil(f.pajak)<=30||daysUntil(f.kir)<=30);
   const docTxt=docW.length?docW.map(f=>{
@@ -2413,7 +3104,6 @@ function renderArmadaTable(txns){
       +'<td class="ar-num '+(fNet>=0?'net-pos':'net-neg')+'">'+fmt(fNet)+'</td>'
       +'</tr>';
   }).join('');
-  // UMUM row
   const umRow='<tr style="background:var(--bg3);">'
     +'<td><div class="ar-nopol" style="color:var(--text3);">UMUM / Bersama</div><div class="ar-driver">Dibagi '+FLEET_COUNT+' unit</div></td>'
     +'<td class="ar-num zero">-</td>'
@@ -2460,7 +3150,6 @@ function buildOutflowSpOpts(){
   return sparepartStock.map(sp=>'<option value="'+sp.id+'">['+sp.kategori+'] '+sp.nama+' - Sisa: '+sp.stokSisa+'</option>').join('');
 }
 function syncOutflowFromSparepart(){
-  // Now handled by onGudangItemSelect()
   onGudangItemSelect();
 }
 
@@ -2482,7 +3171,6 @@ function animNum(el,target,dur=700){
 }
 function vibrate(ms=30){if(navigator.vibrate)navigator.vibrate(ms);}
 
-// Currency formatter
 function setupCurrencyInput(id){
   const el=document.getElementById(id);if(!el)return;
   el.addEventListener('input',function(){let r=this.value.replace(/\D/g,'');this.value=r?new Intl.NumberFormat('id-ID').format(parseInt(r)):''});
@@ -2563,7 +3251,6 @@ function renderDashboard(){
   const inf=totalInflow(filtered),out=totalOutflow(filtered),prf=inf-out;
   const margin=inf>0?((prf/inf)*100).toFixed(1):0;
   const perUnit=Math.round(out/FLEET_COUNT);
-  // Real comparison vs previous period
   const _prev=getPrevPeriodTxns();const _pi=totalInflow(_prev),_po=totalOutflow(_prev),_pp=_pi-_po;
   const _pct=(c,p)=>p!==0?((c-p)/Math.abs(p)*100).toFixed(0)+'%':c>0?'baru':'—';
   const cmpIn=_pct(inf,_pi),cmpOut=_pct(out,_po),cmpPrf=_pct(prf,_pp);
@@ -2574,19 +3261,16 @@ function renderDashboard(){
     ['h-prf','kc-prf','k-prf'].forEach(id=>{const e=document.getElementById(id);if(e)animNum(e,prf);});
     const pu=document.getElementById('kc-per-unit');if(pu)pu.textContent=fmt(perUnit);
     const km=document.getElementById('kc-margin');if(km)km.textContent=margin+'%';
-    // donut legend
     const dIn=document.getElementById('dl-in');if(dIn)dIn.textContent=fmt(inf);
     const dOut=document.getElementById('dl-out');if(dOut)dOut.textContent=fmt(out);
     const total=inf+out||1;
     const dip=document.getElementById('dl-in-pct');if(dip)dip.textContent=(inf/total*100).toFixed(0)+'%';
     const dop=document.getElementById('dl-out-pct');if(dop)dop.textContent=(out/total*100).toFixed(0)+'%';
-    // comparison badges
     const ci=document.getElementById('cmp-in');if(ci){const _u=inf>=_pi;ci.textContent=(_u?'↑':'↓')+' '+cmpIn;ci.className='cmp-badge '+(_u?'up':'dn');}
     const co=document.getElementById('cmp-out');if(co){const _u=out>_po;co.textContent=(_u?'↑':'↓')+' '+cmpOut;co.className='cmp-badge '+(_u?'dn':'up');}
     const cp=document.getElementById('cmp-prf');if(cp){const _u=prf>=_pp;cp.textContent=(_u?'↑':'↓')+' '+cmpPrf;cp.className='cmp-badge '+(_u?'up':'dn');}
   },120);
 
-  // fleet counts
   const counts={jalan:0,bengkel:0,antre:0};
   fleetData.forEach(f=>counts[f.status]=(counts[f.status]||0)+1);
   ['jalan','bengkel','antre'].forEach(s=>{
@@ -2644,32 +3328,30 @@ function renderTxnCards(elId,list,showActions=true){
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:12.5px;">Tidak ada transaksi ditemukan</div>';return;}
   el.innerHTML=list.map(t=>`
     <div class="txn-item" id="txn-${t.id}">
-      <div class="txn-main" onclick="toggleTxn(${t.id})">
-        <div class="txn-ico ${t.type==='inflow'?'in':'out'}">${t.type==='inflow'?svgIn:svgOut}</div>
-        <div class="txn-body">
+      <div class="txn-main" style="padding-bottom:12px;">
+        <div class="txn-ico ${t.type==='inflow'?'in':'out'}" onclick="toggleTxn('${t.id}')">${t.type==='inflow'?svgIn:svgOut}</div>
+        <div class="txn-body" onclick="toggleTxn('${t.id}')">
           <div class="txn-name">${t.label}</div>
-          <div class="txn-meta">${t.sub} · ${fmtDate(t.date)}</div>
+          <div class="txn-meta">${t.sub || '—'} · ${fmtDate(t.date)}</div>
         </div>
         <div class="txn-right">
           <div class="txn-amt ${t.type==='inflow'?'in':'out'}">${t.type==='inflow'?'+':'-'}${fmt(t.amount)}</div>
-          ${statusBadge(t.status||'lunas')}
+          ${showActions?`
+            <div class="txn-actions-inline">
+              <button class="txn-act-btn-sm edit" onclick="editTxn('${t.id}')" title="Revisi"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="txn-act-btn-sm del" onclick="deleteTxn('${t.id}')" title="Hapus"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+            </div>
+          `:statusBadge(t.status||'lunas')}
         </div>
-        <svg class="txn-expand-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       <div class="txn-detail">
-        ${t.muat?`<div class="route-row"><svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 5.25 8 13 8 13s8-7.75 8-13a8 8 0 00-8-8z"/></svg><span class="route-text">${t.muat} <b>→</b> ${t.bongkar}</span></div>`:''}
-        <div class="txn-detail-grid">
+        <div class="txn-detail-grid" style="margin-top:0;border-top:1px solid var(--card-b);padding-top:10px;">
           <div class="tdg-item"><div class="tdg-label">Tanggal</div><div class="tdg-val">${fmtDate(t.date)}</div></div>
           <div class="tdg-item"><div class="tdg-label">Armada</div><div class="tdg-val">${t.armada||'—'}</div></div>
           ${t.driver?`<div class="tdg-item"><div class="tdg-label">Supir</div><div class="tdg-val">${t.driver}</div></div>`:''}
+          ${t.muat?`<div class="tdg-item"><div class="tdg-label">Rute</div><div class="tdg-val" style="font-size:10px;">${t.muat} → ${t.bongkar}</div></div>`:''}
           ${t.nota&&t.nota!=='—'?`<div class="tdg-item"><div class="tdg-label">No. Nota</div><div class="tdg-val">${t.nota}</div></div>`:''}
-          ${t.toko&&t.toko!=='—'?`<div class="tdg-item"><div class="tdg-label">Toko</div><div class="tdg-val">${t.toko}</div></div>`:''}
-          ${t.kategori==='UMUM'?`<div class="tdg-item"><div class="tdg-label">Per Unit</div><div class="tdg-val" style="color:var(--green2);">${fmt(t.amount/FLEET_COUNT)}</div></div>`:''}
         </div>
-        ${showActions?`<div class="txn-actions">
-          <button class="txn-act-btn edit" onclick="editTxn(${t.id})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
-          <button class="txn-act-btn del" onclick="deleteTxn(${t.id})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Hapus</button>
-        </div>`:''}
       </div>
     </div>`).join('');
 }
@@ -2679,6 +3361,7 @@ function toggleTxn(id){
   vibrate(15);
 }
 function deleteTxn(id){
+<<<<<<< Updated upstream
   const t = transactions.find(x=>x.id===id);
   if(!t)return;
   
@@ -2776,6 +3459,121 @@ async function doLogin(isAuto = false) {
   } finally {
     const btn = document.querySelector('.login-btn');
     if (btn) btn.disabled = false;
+=======
+  const t = transactions.find(x => x.id == id);
+  if(!t) return;
+
+  const smOverlay = document.getElementById('sm-overlay');
+  const smTitle = document.getElementById('sm-title-text');
+  const smBody = document.getElementById('sm-body');
+  
+  smTitle.innerHTML = `<span style="color:var(--danger)">⚠️ Konfirmasi Hapus</span>`;
+  smBody.innerHTML = `
+    <div style="text-align:center;padding:10px 0;">
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text);">Hapus transaksi ini?</div>
+      <div style="font-size:11.5px;color:var(--text3);line-height:1.5;">
+        ${t.label} - ${fmt(t.amount)}<br>
+        ${t.sparepartId ? '<b style="color:var(--green2)">Catatan: Stok gudang akan otomatis dikembalikan (+1).</b>' : 'Tindakan ini tidak dapat dibatalkan.'}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+      <button class="sm-btn" onclick="closeSm()" style="background:var(--bg3);color:var(--text2);">Batal</button>
+      <button class="sm-btn danger" onclick="executeDelete('${id}')" style="background:var(--danger);color:#fff;box-shadow:0 4px 12px rgba(224,48,48,0.25);">Ya, Hapus</button>
+    </div>
+  `;
+  smOverlay.classList.add('open');
+  vibrate(20);
+}
+
+async function executeDelete(id) {
+  const t = transactions.find(x => x.id == id);
+  if(!t) { closeSm(); return; }
+
+  if(t.sparepartId) {
+    const sp = sparepartStock.find(s => s.id === t.sparepartId);
+    if(sp) {
+      sp.stokSisa += (t.amount > sp.hargaSatuan ? Math.round(t.amount/sp.hargaSatuan) : 1); 
+      sp.installed = sp.installed.filter(ins => ins.txnId != id); 
+      if(_useAPI) await apiFetch('/api/inventory/'+sp.id, { method: 'PUT', body: sp }).catch(E => console.warn(E));
+      showToast('Stok '+sp.nama+' dikembalikan');
+    }
+  }
+
+  transactions = transactions.filter(x => x.id !== id);
+  
+  closeSm(); renderDashboard(); applyTxnFilters(); renderGudang(); renderLaporanTable();
+  showToast('Transaksi Berhasil Dihapus');
+  vibrate(40);
+
+  if(_useAPI) apiFetch('/api/transactions/'+id, { method: 'DELETE' }).catch(e => console.warn(e));
+}
+function editTxn(id){
+  const t = transactions.find(x => x.id == id);
+  if(!t) return;
+  
+  isEditMode = true;
+  currentEditId = id;
+  
+  if(t.type === 'inflow') {
+    openModal('inflow');
+    setTimeout(() => {
+      const modalTitle = document.getElementById('mt-text');
+      if(modalTitle) modalTitle.textContent = 'Revisi Inflow (Setoran)';
+      
+      const btn = document.querySelector('.form-btn.inflow');
+      if(btn) btn.textContent = 'Simpan Perubahan';
+      
+      const armada = document.getElementById('inf-armada');
+      const driver = document.getElementById('inf-driver');
+      const amount = document.getElementById('inf-amount');
+      const muat = document.getElementById('inf-muat');
+      const bongkar = document.getElementById('inf-bongkar');
+      const date = document.getElementById('inf-date');
+      const antreRow = document.querySelector('#inf-antre')?.closest('.form-group');
+      
+      if(armada) armada.value = t.armada || '';
+      if(driver) driver.value = t.driver || '';
+      if(amount) amount.value = new Intl.NumberFormat('id-ID').format(t.amount);
+      if(muat) muat.value = t.muat || '';
+      if(bongkar) bongkar.value = t.bongkar || '';
+      if(date) date.value = t.date;
+      if(antreRow) antreRow.style.display = 'none';
+      
+      setupCurrencyInput('inf-amount');
+    }, 150);
+  } else {
+    openModal('outflow');
+    setTimeout(() => {
+      const modalTitle = document.getElementById('mt-text');
+      if(modalTitle) modalTitle.textContent = 'Revisi Outflow (Pengeluaran)';
+      
+      const btn = document.querySelector('.form-btn.outflow');
+      if(btn) btn.textContent = 'Simpan Perubahan';
+      
+      const cat = document.getElementById('out-cat');
+      const label = document.getElementById('out-label');
+      const amount = document.getElementById('out-amount');
+      const date = document.getElementById('out-date');
+      const toko = document.getElementById('out-toko');
+      const nota = document.getElementById('out-nota');
+      const armada = document.getElementById('out-armada');
+      const driver = document.getElementById('out-driver');
+      
+      if(cat) { 
+        cat.value = t.kategori || 'Kas'; 
+        onOutCatChange();
+      }
+      if(label) label.value = t.label || '';
+      if(amount) amount.value = new Intl.NumberFormat('id-ID').format(t.amount);
+      if(date) date.value = t.date;
+      if(toko) toko.value = t.toko || '';
+      if(nota) nota.value = t.nota || '';
+      if(armada) armada.value = t.armada || '';
+      if(driver) driver.value = t.driver || '';
+      
+      setupCurrencyInput('out-amount');
+    }, 150);
+>>>>>>> Stashed changes
   }
 }
 
@@ -2924,18 +3722,18 @@ function applyTxnFilters(){
   txnSort=document.getElementById('txn-sort')?.value||'newest';
   let list=[...transactions];
   if(txnFilterTipe!=='all')list=list.filter(t=>t.type===txnFilterTipe);
-  if(txnSearch)list=list.filter(t=>t.label.toLowerCase().includes(txnSearch)||t.sub.toLowerCase().includes(txnSearch)||(t.armada||'').toLowerCase().includes(txnSearch)||(t.driver||'').toLowerCase().includes(txnSearch));
-  if(txnSort==='oldest')list.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(txnSearch)list=list.filter(t=>(t.label||'').toLowerCase().includes(txnSearch)||(t.sub||'').toLowerCase().includes(txnSearch)||(t.armada||'').toLowerCase().includes(txnSearch)||(t.driver||'').toLowerCase().includes(txnSearch));
+  if(txnSort==='oldest')list.sort((a,b)=>a.date.localeCompare(b.date));
   else if(txnSort==='biggest')list.sort((a,b)=>b.amount-a.amount);
   else if(txnSort==='smallest')list.sort((a,b)=>a.amount-b.amount);
-  else list.sort((a,b)=>b.id-a.id);
+  else list.sort((a,b)=>b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
   renderTxnCards('txn-full',list.slice(0,txnPage),true);
   const lm=document.getElementById('load-more-btn');
   if(lm)lm.style.display=list.length>txnPage?'block':'none';
 }
 function loadMoreTxn(){txnPage+=5;applyTxnFilters();}
 
-// ═══════════════════════════════ CHARTS ══════════════════════════
+// ═══════════════════════════════ CHARTS ════════════════════════
 function renderDonut(inf,out){
   if(typeof Chart==='undefined')return;
   const ctx=document.getElementById('donutChart');if(!ctx)return;
@@ -2971,7 +3769,6 @@ function setBarFilter(f,btn){
   renderBarChart(f);
 }
 
-// Build real monthly data from transactions array
 function buildMonthlyData(numMonths){
   if(typeof Chart==='undefined')return;
   const now=new Date();
@@ -3011,7 +3808,6 @@ let currentTrendFilter='7d',trendCustomFrom=null,trendCustomTo=null;
 
 function setTrendFilter(f,btn){
   currentTrendFilter=f;
-  // Hanya ubah tombol di dalam #trend-filter-btns agar tidak bentrok dengan bar chart
   const trendBtns=document.getElementById('trend-filter-btns');
   if(trendBtns)trendBtns.querySelectorAll('.cf-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
@@ -3038,9 +3834,7 @@ function renderMiniLine(){
   const labels=[],profits=[],inflowArr=[],outflowArr=[];
 
   if(currentTrendFilter==='custom'){
-    // Mode custom: build per-day dari trendCustomFrom ke trendCustomTo
     if(!trendCustomFrom||!trendCustomTo){
-      // Belum ada range, render kosong saja
       _buildMiniLineChart(ctx,dark,gc,tc,[],[],[],[]);return;
     }
     const start=new Date(trendCustomFrom+'T00:00:00');
@@ -3056,7 +3850,6 @@ function renderMiniLine(){
       inflowArr.push(inf);outflowArr.push(out);profits.push(inf-out);
     }
   } else {
-    // Mode 7d / 30d: N hari terakhir dari hari ini
     const days=currentTrendFilter==='30d'?30:7;
     for(let i=days-1;i>=0;i--){
       const d=new Date();d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
@@ -3239,7 +4032,6 @@ function renderLaporanTable(){
   const tfoot=document.getElementById('lap-tfoot');
   const periodBadge=document.getElementById('rekap-period-badge');
   if(!tbody)return;
-  // Compute human-readable period label + date range
   const _now=new Date();
   let _periodLabel='',_rangeLabel='';
   if(lapFilter==='bulan-ini'){
@@ -3261,12 +4053,10 @@ function renderLaporanTable(){
     }
   }
   if(periodBadge)periodBadge.textContent=_periodLabel;
-  // Update date range label
   const _rangeEl=document.getElementById('rekap-date-range');
   if(_rangeEl)_rangeEl.textContent=_rangeLabel?'Periode: '+_rangeLabel:'';
   const umum=list.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount,0);
   const bebanPerUnit=FLEET_COUNT>0?umum/FLEET_COUNT:0;
-  // Build per-armada rows
   let rows=fleetData.map(f=>{
     const inflow=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
     const outTunai=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
@@ -3275,13 +4065,11 @@ function renderLaporanTable(){
     const nett=inflow-(outTunai+outOnderdil+outUmum);
     return{nopol:f.nopol,driver:f.driver,status:f.status,inflow,outTunai,outOnderdil,outUmum,nett};
   });
-  // Sort
   rows.sort((a,b)=>{
     let va=a[rekapSortCol],vb=b[rekapSortCol];
     if(typeof va==='string')return va.localeCompare(vb)*rekapSortDir;
     return(va-vb)*rekapSortDir;
   });
-  // Update sort arrows
   ['nopol','driver','inflow','outTunai','outOnderdil','outUmum','nett'].forEach(col=>{
     const th=document.querySelector('#rekap-table th[data-col="'+col+'"]');
     const ar=document.getElementById('sa-'+col);
@@ -3300,7 +4088,6 @@ function renderLaporanTable(){
     <td class="ar-num ${r.outUmum>0?'neg':'zero'}">${r.outUmum>0?'-'+fmt(r.outUmum):'—'}</td>
     <td class="ar-num ${r.nett>=0?'net-pos':'net-neg'}" style="font-weight:800;">${fmt(r.nett)}</td>
   </tr>`).join('');
-  // Footer totals
   const totInf=rows.reduce((s,r)=>s+r.inflow,0);
   const totTunai=rows.reduce((s,r)=>s+r.outTunai,0);
   const totOnderdil=rows.reduce((s,r)=>s+r.outOnderdil,0);
@@ -3314,7 +4101,6 @@ function renderLaporanTable(){
     <td style="text-align:right;color:var(--info);font-weight:800;">${fmt(totNett)}</td>
   </tr>`;
   const s=document.getElementById('lap-sum');if(s)s.innerHTML=`<span class="rs-lbl">Net Profit Periode</span><span class="rs-val">${fmt(totNett)}</span>`;
-  // Also refresh the Armada Performance Chart
   renderArmadaPerfChart(list);
 }
 function exportCSV(){
@@ -3452,10 +4238,20 @@ function openUnitDetail(id){
   currentDetailUnit=f;
   document.getElementById('armada-list').style.display='none';
   document.getElementById('detail-panel').classList.add('active');
+<<<<<<< Updated upstream
   
   // Render Hero Header
   const pD=daysUntil(f.pajak),kD=daysUntil(f.kir);
   const initials=(f.nopol||'??').replace(/\s/g,'').slice(-4);
+=======
+  const uIn=transactions.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
+  const uOutTunai=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
+  const uOutOnderdil=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+  const beban=transactions.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount/FLEET_COUNT,0);
+  const net=uIn-(uOutTunai+uOutOnderdil+beban);
+  const pD=daysUntil(f.pajak),kD=daysUntil(f.kir);
+  const activeParts=sparepartStock.filter(sp=>sp.installed.some(i=>i.armada===f.nopol));
+>>>>>>> Stashed changes
   document.getElementById('dp-hero').innerHTML=`
     <div style="display:flex;align-items:center;gap:13px;margin-bottom:12px;position:relative;z-index:1;">
       <div style="width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,#CC5200,#FF6700);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;box-shadow:var(--sh);">${initials}</div>
@@ -3713,6 +4509,7 @@ function openSmModal(type,val){
   }
   document.getElementById('sm-overlay').classList.add('open');
 }
+<<<<<<< Updated upstream
 
 /** 
  * Generic Sheet Modal for dynamic content (Admin Selection, Audit Details, etc)
@@ -3728,22 +4525,56 @@ function openSm(title, html) {
   }
 }
 
+=======
+function openSm(){document.getElementById('sm-overlay').classList.add('open');}
+>>>>>>> Stashed changes
 function closeSm(){document.getElementById('sm-overlay').classList.remove('open');}
 function closeSmOuter(e){if(e.target===document.getElementById('sm-overlay'))closeSm();}
 
-function saveDriver(old){
+async function saveDriver(old){
   const name=document.getElementById('sm-driver-name')?.value?.trim();
   if(!name){showToast('Nama tidak boleh kosong');return;}
   if(old&&old!==name){const i=driverList.indexOf(old);if(i>-1)driverList[i]=name;else driverList.push(name);fleetData.forEach(f=>{if(f.driver===old)f.driver=name;});}
   else if(!old&&!driverList.includes(name))driverList.push(name);
-  if(_useAPI) apiFetch('/api/drivers',{method:'POST',body:{nama:name}}).catch(e=>console.warn('Sync driver gagal:',e));
+  if(_useAPI) await apiFetch('/api/drivers',{method:'POST',body:{nama:name}}).catch(e=>console.warn('Sync driver gagal:',e));
   closeSm();renderDriverList();renderDashboard();showToast(old?'Supir diperbarui':'Supir ditambahkan');vibrate(30);
 }
 function deleteDriver(name){
-  if(fleetData.some(f=>f.driver===name)){showToast('Supir sedang bertugas');return;}
-  driverList=driverList.filter(d=>d!==name);renderDriverList();showToast('Supir dihapus');vibrate(40);
+  if(fleetData.some(f=>f.driver===name)){showToast('Supir sedang bertugas di unit');return;}
+  
+  const smOverlay = document.getElementById('sm-overlay');
+  const smTitle = document.getElementById('sm-title-text');
+  const smBody = document.getElementById('sm-body');
+  
+  smTitle.innerHTML = `<span style="color:var(--danger)">⚠️ Konfirmasi Hapus</span>`;
+  smBody.innerHTML = `
+    <div style="text-align:center;padding:10px 0;">
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text);">Hapus supir ini?</div>
+      <div style="font-size:11.5px;color:var(--text3);line-height:1.5;">
+        <b>${name}</b><br>
+        Data akan dihapus secara permanen dari daftar supir.
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+      <button class="sm-btn" onclick="closeSm()" style="background:var(--bg3);color:var(--text2);">Batal</button>
+      <button class="sm-btn danger" onclick="executeDeleteDriver('${encodeURIComponent(name)}')" style="background:var(--danger);color:#fff;box-shadow:0 4px 12px rgba(224,48,48,0.25);">Ya, Hapus</button>
+    </div>
+  `;
+  smOverlay.classList.add('open');
+  vibrate(20);
 }
-function saveUnit(existId){
+
+async function executeDeleteDriver(encodedName) {
+  const name = decodeURIComponent(encodedName);
+  driverList = driverList.filter(d => d !== name);
+  if(_useAPI) await apiFetch('/api/drivers/' + encodedName, { method: 'DELETE' }).catch(e => console.warn(e));
+  
+  closeSm();
+  renderDriverList(); renderDashboard();
+  showToast('Supir Dihapus Permanen');
+  vibrate(40);
+}
+async function saveUnit(existId){
   const nopol=(document.getElementById('sm-nopol')?.value||'').trim().toUpperCase();
   const driver=document.getElementById('sm-unit-driver')?.value||'';
   const status=document.getElementById('sm-status')?.value||'jalan';
@@ -3755,21 +4586,21 @@ function saveUnit(existId){
   if(existId){
     const u=fleetData.find(f=>f.id===existId);
     if(u){u.nopol=nopol;u.driver=driver;u.status=status;u.pajak=pajak;u.kir=kir;}
-    if(_useAPI) apiFetch('/api/fleet/'+existId,{method:'PUT',body:{nopol,driver,status,pajak,kir}}).catch(e=>console.warn('Sync fleet gagal:',e));
+    if(_useAPI) await apiFetch('/api/fleet/'+existId,{method:'PUT',body:{nopol,driver,status,pajak,kir}}).catch(e=>console.warn('Sync fleet gagal:',e));
   } else {
-    const newId='f'+Date.now();
+    const newId=uid('f');
     fleetData.push({id:newId,nopol,driver,status,pajak,kir});
-    if(_useAPI) apiFetch('/api/fleet',{method:'POST',body:{id:newId,nopol,driver,status,pajak,kir}}).catch(e=>console.warn('Sync fleet gagal:',e));
+    if(_useAPI) await apiFetch('/api/fleet',{method:'POST',body:{id:newId,nopol,driver,status,pajak,kir}}).catch(e=>console.warn('Sync fleet gagal:',e));
   }
   FLEET_COUNT=fleetData.length;
   const fi=document.getElementById('fleet-count-input');if(fi)fi.value=FLEET_COUNT;
   closeSm();renderFleetUnits();renderDashboard();renderLaporanTable();checkDocWarnings();
   showToast(existId?'Unit diperbarui':'Unit '+nopol+' ditambahkan');vibrate(30);
 }
-function deleteUnit(id){
+async function deleteUnit(id){
   const u=fleetData.find(f=>f.id===id);
   const i=fleetData.findIndex(f=>f.id===id);if(i>-1)fleetData.splice(i,1);
-  if(_useAPI) apiFetch('/api/fleet/'+id,{method:'DELETE'}).catch(e=>console.warn('Sync fleet delete gagal:',e));
+  if(_useAPI) await apiFetch('/api/fleet/'+id,{method:'DELETE'}).catch(e=>console.warn('Sync fleet delete gagal:',e));
   FLEET_COUNT=fleetData.length;
   const fi=document.getElementById('fleet-count-input');if(fi)fi.value=FLEET_COUNT;
   renderFleetUnits();renderDashboard();renderLaporanTable();checkDocWarnings();
@@ -3798,6 +4629,7 @@ function buildGudangOpts(){
 
 function openModal(type){
   closeFab();
+  if(!isEditMode) resetEditMode();
   document.getElementById('mt-dot').className='mt-dot '+type;
   const title=document.getElementById('mt-text'),body=document.getElementById('modal-body');
   if(type==='inflow'){
@@ -3916,7 +4748,7 @@ function syncOutDriver(){const a=document.getElementById('out-armada')?.value;co
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
 function closeModalOuter(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
 
-function submitInflow(){
+async function submitInflow(){
   const armada=document.getElementById('inf-armada')?.value;
   const driver=document.getElementById('inf-driver')?.value||'';
   const amount=getRaw('inf-amount');
@@ -3925,9 +4757,10 @@ function submitInflow(){
   const date=document.getElementById('inf-date')?.value;
   const antre=document.getElementById('inf-antre')?.value;
   if(antre!=='antre' && (!amount||amount<=0)){showToast('Masukkan jumlah yang valid');return;}
-  // Ambil status armada SEBELUM diupdate — untuk logika ritase
+  
   const fUnit=fleetData.find(x=>x.nopol===armada);
   const statusSebelum=fUnit?fUnit.status:'jalan';
+<<<<<<< Updated upstream
   const txnId = 'txn_'+Date.now();
   const txnLabel = (amount > 0) ? 'Setoran ' + armada : 'Antrean ' + armada;
   const newTxn={id:txnId,type:'inflow',label:txnLabel,sub:driver+' · Netto',amount,date,armada,muat:muat||'',bongkar:bongkar||'',driver,nota:'',toko:'',kategori:'Inflow',status:'lunas'};
@@ -3938,11 +4771,44 @@ function submitInflow(){
   if(_useAPI){
     apiFetch('/api/transactions',{method:'POST',body:newTxn}).then(()=>syncDataSilent()).catch(e=>console.warn('Sync inflow gagal:',e));
     apiFetch('/api/fleet/'+fUnit?.id,{method:'PUT',body:{nopol:armada,driver,status:antre,pajak:fUnit?.pajak||'',kir:fUnit?.kir||''}}).catch(e=>console.warn('Sync fleet gagal:',e));
+=======
+  
+  if(isEditMode && currentEditId) {
+    const tIndex = transactions.findIndex(t => t.id == currentEditId);
+    if(tIndex > -1) {
+      const updated = { ...transactions[tIndex], label: (amount > 0) ? 'Setoran ' + armada : 'Antrean ' + armada, amount, date, armada, muat, bongkar, driver };
+      transactions[tIndex] = updated;
+      if(_useAPI) await apiFetch('/api/transactions/' + currentEditId, { method: 'PUT', body: updated }).catch(E => console.warn(E));
+      showToast('Revisi Inflow berhasil');
+    }
+  } else {
+    const txnId = uid('txn');
+    const txnLabel = (amount > 0) ? 'Setoran ' + armada : 'Antrean ' + armada;
+    const newTxn={id:txnId,type:'inflow',label:txnLabel,sub:driver+' · Netto',amount,date,armada,muat:muat||'',bongkar:bongkar||'',driver,nota:'',toko:'',kategori:'Inflow',status:'lunas'};
+    transactions.unshift(newTxn);
+    if(fUnit){ fUnit.status=antre; fUnit.driver=driver; }
+    incrementRitaseForArmada(armada, statusSebelum);
+
+    // OPTIMISTIC UI: Close & Render immediately
+    resetEditMode(); closeModal(); renderDashboard(); applyTxnFilters(); renderLaporanTable();
+    showToast(amount > 0 ? 'Inflow ' + fmt(amount) + ' berhasil disimpan' : 'Status armada '+armada+' diperbarui ke Antre');
+
+    if(_useAPI){
+      apiFetch('/api/inventory/sync-multi', { method:'POST', body: sparepartStock }).catch(e=>console.warn('Sync inventory bulk gagal:',e));
+      apiFetch('/api/transactions',{method:'POST',body:newTxn}).catch(e=>console.warn('Sync inflow gagal:',e));
+      apiFetch('/api/fleet/'+fUnit?.id,{method:'PUT',body:{nopol:armada,driver,status:antre,pajak:fUnit?.pajak||'',kir:fUnit?.kir||''}}).catch(e=>console.warn('Sync fleet gagal:',e));
+    }
+>>>>>>> Stashed changes
   }
-  closeModal();renderDashboard();applyTxnFilters();renderLaporanTable();
-  showToast(amount > 0 ? 'Inflow ' + fmt(amount) + ' berhasil disimpan' : 'Status armada '+armada+' diperbarui ke Antre');vibrate(30);
+  
+  vibrate(30);
 }
-function submitOutflow(){
+
+function resetEditMode() {
+  isEditMode = false;
+  currentEditId = null;
+}
+async function submitOutflow(){
   const nota=document.getElementById('out-nota')?.value||'—';
   const toko=document.getElementById('out-toko')?.value||'—';
   const label=document.getElementById('out-label')?.value?.trim();
@@ -3954,27 +4820,71 @@ function submitOutflow(){
   const driver=isUnit?document.getElementById('out-driver')?.value:'';
   if(!label){showToast('Masukkan keterangan pengeluaran');return;}
   if(!amount||amount<=0){showToast('Masukkan jumlah yang valid');return;}
-  // Handle gudang item selection (Onderdil from stok)
-  let spId=null;
-  if(cat==='Onderdil'){
-    const spSel=document.getElementById('out-sp-select');
-    spId=spSel?.value||null;
-    if(spId){
-      const sp=sparepartStock.find(s=>s.id===spId);
-      if(sp){
-        if(sp.stokSisa<=0){showToast('Stok '+sp.nama+' sudah habis!');return;}
-        sp.stokSisa--;
-        // Tambah ke installed[] — ritase mulai dari 0
-        sp.installed.push({
-          armada:armada||'UMUM',
-          tglPasang:date,
-          ritase:0,
-          txnId:Date.now()
-        });
-        showToast('✅ '+sp.nama+' dipasang ke '+armada+' — ritase mulai dihitung');
+
+  const outId = isEditMode && currentEditId ? currentEditId : uid('txn');
+  
+  if(isEditMode && currentEditId) {
+    const tIndex = transactions.findIndex(t => t.id == currentEditId);
+    if(tIndex > -1) {
+      const oldTxn = transactions[tIndex];
+      // Logic: Restore old stock if it was an Onderdil
+      if(oldTxn.sparepartId) {
+        const oldSp = sparepartStock.find(s => s.id === oldTxn.sparepartId);
+        if(oldSp) {
+          oldSp.stokSisa++;
+          oldSp.installed = oldSp.installed.filter(ins => ins.txnId != oldTxn.id);
+          if(_useAPI) await apiFetch('/api/inventory/'+oldSp.id, { method:'PUT', body: oldSp }).catch(e=>console.warn(e));
+        }
+      }
+
+      // Logic: Reduce new stock if current cat is Onderdil
+      let newSpId = null;
+      if(cat === 'Onderdil') {
+        const spSel = document.getElementById('out-sp-select');
+        newSpId = spSel?.value || null;
+        if(newSpId){
+          const newSp = sparepartStock.find(s => s.id === newSpId);
+          if(newSp){
+            newSp.stokSisa--;
+            newSp.installed.push({ armada: armada||'UMUM', tglPasang: date, ritase: 0, txnId: outId });
+            if(_useAPI) await apiFetch('/api/inventory/'+newSp.id, { method:'PUT', body: newSp }).catch(e=>console.warn(e));
+          }
+        }
+      }
+
+      const updated = { ...oldTxn, label: label||'Pengeluaran', amount, date, armada, nota, toko, kategori: cat, driver, sparepartId: newSpId };
+      transactions[tIndex] = updated;
+      if(_useAPI) await apiFetch('/api/transactions/' + currentEditId, { method: 'PUT', body: updated }).catch(E => console.warn(E));
+      showToast('Revisi Outflow & Stok berhasil');
+    }
+  } else {
+    // Handle gudang item selection (Onderdil from stok)
+    let spId=null;
+    if(cat==='Onderdil'){
+      const spSel=document.getElementById('out-sp-select');
+      spId=spSel?.value||null;
+      if(spId){
+        const sp=sparepartStock.find(s=>s.id===spId);
+        if(sp){
+          if(sp.stokSisa<=0){showToast('Stok '+sp.nama+' sudah habis!');return;}
+          sp.stokSisa--;
+          sp.installed.push({ armada:armada||'UMUM', tglPasang:date, ritase:0, txnId:outId });
+          if(_useAPI) await apiFetch('/api/inventory/'+sp.id, { method:'PUT', body: sp }).catch(e=>console.warn(e));
+          showToast('✅ '+sp.nama+' dipasang ke '+armada);
+        }
       }
     }
+    const txnLabel=label||(spId?sparepartStock.find(s=>s.id===spId)?.nama||'Onderdil':'Pengeluaran');
+    const newOut={id:outId,type:'outflow',label:txnLabel,sub:`No.Nota: ${nota} · ${toko}${driver?' · '+driver:''}`,amount,date,armada,nota,toko,kategori:cat,driver,status:'lunas',sparepartId:spId||null};
+    transactions.unshift(newOut);
+    
+    // OPTIMISTIC UI
+    resetEditMode(); closeModal(); renderDashboard(); applyTxnFilters(); renderGudang(); renderLaporanTable();
+    if(!spId) showToast('Outflow '+fmt(amount)+' disimpan');
+
+    if(_useAPI) apiFetch('/api/transactions',{method:'POST',body:newOut}).catch(e=>console.warn('Sync outflow gagal:',e));
   }
+<<<<<<< Updated upstream
   const txnLabel=label||(spId?sparepartStock.find(s=>s.id===spId)?.nama||'Onderdil':'Pengeluaran');
   const outId='txn_'+Date.now();
   const newOut={id:outId,type:'outflow',label:txnLabel,sub:`No.Nota: ${nota} · ${toko}${driver?' · '+driver:''}`,amount,date,armada,nota,toko,kategori:cat,driver,status:'lunas',sparepartId:spId||null};
@@ -3984,6 +4894,9 @@ function submitOutflow(){
   }
   closeModal();renderDashboard();applyTxnFilters();renderGudang();renderLaporanTable();
   if(!spId) showToast('Outflow '+fmt(amount)+' disimpan');
+=======
+
+>>>>>>> Stashed changes
   vibrate(30);
 }
 
@@ -4000,7 +4913,11 @@ function showPage(name,sbEl,bnId){
   if(name==='keuangan'){renderDashboard();applyTxnFilters();}
   if(name==='laporan'){renderLaporanTable();_buildAndShowWAPreview();}
   if(name==='armada'){renderFleetUnits();renderDashboard();}
+<<<<<<< Updated upstream
   if(name==='audit-logs'){fetchAuditLogs();}
+=======
+  if(name==='gudang'){renderGudang();}
+>>>>>>> Stashed changes
 }
 function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open');}
 function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
@@ -4075,7 +4992,11 @@ async function _appInit(){
       }
     }
     renderGudangFilterChips();
+<<<<<<< Updated upstream
     updateAdminUI();
+=======
+    renderGudang();
+>>>>>>> Stashed changes
     renderDashboard();
     applyTxnFilters();
     renderLaporanTable();
