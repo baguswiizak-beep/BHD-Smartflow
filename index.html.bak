@@ -131,9 +131,13 @@ html{scroll-behavior:smooth;}
 .tb-acts{display:flex;gap:8px;align-items:center;}
 .tb-btn{width:36px;height:36px;border-radius:10px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
 .tb-btn:hover{background:var(--bg4);}
+<<<<<<< Updated upstream
+.tb-btn svg{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:2;}
+=======
 @keyframes spin { 100% { transform:rotate(360deg); } }
 .spinning { animation: spin 1s linear infinite; }
 .tb-btn svg { width:18px; height:18px; stroke:var(--text2); fill:none; stroke-width:2; transition: transform 0.2s; }
+>>>>>>> Stashed changes
 #notif-wrap{position:relative;}
 #notif-dot{position:absolute;top:5px;right:5px;width:6px;height:6px;background:var(--danger);border-radius:50%;border:1.5px solid var(--card);}
 
@@ -833,6 +837,81 @@ input,select,textarea{font-size:16px!important;}
   .dp-stats{grid-template-columns:1fr 1fr 1fr!important;}
 }
 
+<<<<<<< Updated upstream
+/* ══════════════════════════════════════
+   ADMIN SELECTOR & SYNC INDICATOR
+   (FASE 1 PREMIUM)
+══════════════════════════════════════ */
+.admin-selector{
+  margin-left:auto;margin-right:12px;
+  background:var(--bg3);border:1.5px solid var(--card-b);
+  border-radius:12px;padding:5px 10px;
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;transition:all .15s;
+  position:relative;
+}
+.admin-selector:hover{background:var(--bg4);border-color:var(--green-bd);}
+.as-av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#5FA00D,#A8F040);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#1A3300;}
+.as-info{display:flex;flex-direction:column;line-height:1.1;}
+.as-name{font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;}
+.as-role{font-size:8.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+
+.sync-indicator{
+  display:flex;align-items:center;gap:6px;
+  font-size:9px;font-weight:700;color:var(--text3);
+  padding:4px 10px;border-radius:20px;
+  background:var(--bg3);margin-right:10px;
+  transition:all .3s;
+}
+
+/* Audit Detail Styles */
+.audit-detail-box{background:var(--bg);padding:12px;border-radius:8px;border:1px solid var(--card-b);overflow-x:auto;}
+.audit-detail-box table{width:100%;border-collapse:collapse;font-size:11px;}
+.audit-detail-box th{text-align:left;padding:6px;color:var(--text3);font-weight:700;border-bottom:1px solid var(--card-b);}
+.audit-detail-box td{padding:8px;border-bottom:1px dotted var(--card-b);}
+.audit-diff-val{padding:2px 4px;border-radius:4px;font-family:'JetBrains Mono',monospace;}
+.audit-diff-old{background:rgba(255,59,48,0.1);color:var(--danger);text-decoration:line-through;}
+.audit-diff-new{background:rgba(40,199,111,0.1);color:var(--success);font-weight:700;}
+.sync-indicator.syncing{color:var(--green2);background:var(--green-bg);border:1px solid var(--green-bd);}
+.sync-dot{width:5px;height:5px;border-radius:50%;background:var(--text4);}
+.syncing .sync-dot{background:var(--green);animation:ap 1s infinite;}
+
+/* Audit Log Table */
+.audit-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px;}
+.audit-table th{text-align:left;padding:10px;border-bottom:2px solid var(--card-b);color:var(--text3);font-size:9.5px;text-transform:uppercase;}
+.audit-table td{padding:12px 10px;border-bottom:1px solid var(--card-b);vertical-align:top;}
+.al-badge{font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:20px;}
+.al-create{background:var(--green-bg);color:var(--green2);}
+.al-update{background:var(--orange-bg);color:var(--orange);}
+.al-delete{background:rgba(224,48,48,.1);color:var(--danger);}
+
+/* Smooth Scroll Optimizations */
+.txn-list, .fleet-rows, .sp-grid {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Tire Layout (Phase 2) */
+.tire-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;padding:15px;background:var(--bg3);border-radius:16px;margin-top:10px;justify-items:center;}
+.tire-col{display:flex;flex-direction:column;gap:12px;}
+.tire-item{width:40px;height:65px;background:var(--bg2);border:2px solid var(--card-b);border-radius:8px;position:relative;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;}
+.tire-item:hover{border-color:var(--green);background:var(--bg3);transform:scale(1.05);}
+.tire-item.active{border-color:var(--green);background:var(--green-bg);}
+.tire-item.empty{border-style:dashed;opacity:.6;}
+.tire-label{font-size:7px;font-weight:800;text-transform:uppercase;color:var(--text3);position:absolute;top:-10px;background:var(--card);padding:0 3px;border-radius:4px;white-space:nowrap;}
+.tire-sn{font-size:8px;font-weight:700;color:var(--text);margin-top:2px;max-width:32px;overflow:hidden;text-overflow:ellipsis;}
+.tire-cond{width:6px;height:6px;border-radius:50%;margin-top:4px;}
+.cond-baru{background:var(--green);}
+.cond-vulkanisir{background:var(--orange);}
+.cond-tipis{background:var(--danger);}
+
+/* Stock Highlights */
+.critical-stock{background:rgba(224,48,48,.08)!important;border-color:rgba(224,48,48,.3)!important;}
+.critical-text{color:var(--danger)!important;font-weight:800;}
+.min-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;background:var(--bg3);color:var(--text3);border:1px solid var(--card-b);margin-left:5px;}
+
+=======
 @keyframes pulse-sync{0%{opacity:.5;transform:scale(0.98);}50%{opacity:1;transform:scale(1.02);}100%{opacity:.5;transform:scale(0.98);}}
 .sync-pulse{animation:pulse-sync 1.5s infinite ease-in-out;color:var(--green2)!important;font-weight:700!important;}
 .txn-actions-inline{display:flex;gap:4px;margin-top:5px;justify-content:flex-end;}
@@ -882,6 +961,7 @@ input,select,textarea{font-size:16px!important;}
 .avatar-mini{width:28px;height:28px;font-size:10px;border-width:1.5px;}
 .audit-label{font-size:9.5px;color:var(--text3);margin-top:4px;display:flex;align-items:center;gap:4px;}
 .avatar-tiny{width:16px;height:16px;border-width:1.2px;font-size:7.5px;}
+>>>>>>> Stashed changes
 </style>
 </head>
 <body>
@@ -889,6 +969,53 @@ input,select,textarea{font-size:16px!important;}
 <!-- LOGIN OVERLAY -->
 <div id="login-overlay">
   <div class="login-box">
+<<<<<<< Updated upstream
+    <div class="login-logo">BHD</div>
+    <div class="login-title" id="login-title">BHD Smart Flow</div>
+    <div class="login-sub" id="login-sub">PT. Bagus Harya Dwiprima<br>⛏️ Sistem Manajemen Tambang Pasir · v12</div>
+    
+    <!-- Login Mode -->
+    <div id="login-fields">
+      <div class="login-field">
+        <label class="login-label">Username</label>
+        <input class="login-input" id="login-user" type="text" placeholder="Username admin" autocomplete="username"/>
+      </div>
+      <div class="login-field">
+        <label class="login-label">Password</label>
+        <input class="login-input" id="login-pass" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="login-btn" onclick="doLogin()">Masuk ke Dashboard ⛏️</button>
+      <div style="text-align:center;margin-top:16px;">
+        <a href="#" onclick="setLoginMode('register')" style="color:rgba(212,168,67,.8);font-size:11px;text-decoration:none;font-weight:600;">Belum punya akun? Daftar Admin</a>
+      </div>
+    </div>
+
+    <!-- Register Mode -->
+    <div id="register-fields" style="display:none;">
+      <div class="login-field">
+        <label class="login-label">Username Baru</label>
+        <input class="login-input" id="reg-user" type="text" placeholder="Buat username"/>
+      </div>
+      <div class="login-field">
+        <label class="login-label">Password Baru</label>
+        <input class="login-input" id="reg-pass" type="password" placeholder="Buat password"/>
+      </div>
+      <button class="login-btn" onclick="doRegister()" style="background:linear-gradient(135deg,#CC5200,#FF6700);">Daftar Admin Baru 🚛</button>
+      <div style="text-align:center;margin-top:16px;">
+        <a href="#" onclick="setLoginMode('login')" style="color:rgba(255,255,255,.4);font-size:11px;text-decoration:none;">Sudah punya akun? Login</a>
+      </div>
+    </div>
+
+    <div class="login-err" id="login-err" style="margin-bottom:10px;"></div>
+    <div id="login-debug" style="font-size:9px;color:rgba(212,168,67,0.4);margin-top:5px;text-align:center;max-width:100%;word-break:break-all;font-family:monospace; min-height:12px;"></div>
+    
+    <div style="text-align:center; margin-top:15px; border-top:1px solid rgba(212,168,67,0.1); padding-top:15px;">
+      <button onclick="resetAppSession()" style="background:transparent; border:none; color:var(--text3); font-size:10px; cursor:pointer; text-decoration:none; opacity:0.6;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6" title="Gunakan jika aplikasi macet">Reset Sesi &amp; Cache Browser</button>
+      <div id="js-init-badge" style="color:rgba(212,168,67,0.1); font-size:7px; margin-top:4px;">Inisialisasi...</div>
+    </div>
+    
+    <div class="login-ver">🚀 BHD Smart Flow v12.1.3 • Premium Restoration</div>
+=======
     <div class="login-tabs">
       <div class="login-tab active" id="tab-masuk" onclick="toggleLoginMode('masuk')">Masuk</div>
       <div class="login-tab" id="tab-daftar" onclick="toggleLoginMode('daftar')">Daftar Admin</div>
@@ -914,6 +1041,7 @@ input,select,textarea{font-size:16px!important;}
     <button class="login-btn" id="login-main-btn" onclick="doLogin()">Masuk ke Dashboard ⛏️</button>
     <div class="login-err" id="login-err"></div>
     <div class="login-ver">🚛 BHD Smart Flow v10 · Tambang Pasir Management</div>
+>>>>>>> Stashed changes
   </div>
 </div>
 
@@ -967,7 +1095,10 @@ input,select,textarea{font-size:16px!important;}
       <svg viewBox="0 0 24 24" style="width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2.5;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
     </button>
   </div>
+<<<<<<< Updated upstream
+=======
   <div class="sb-foot" id="sidebar-footer-profile"></div>
+>>>>>>> Stashed changes
 </div>
 <div id="sb-overlay" onclick="closeSb()"></div>
 
@@ -975,10 +1106,30 @@ input,select,textarea{font-size:16px!important;}
   <!-- TOPBAR -->
     <div id="topbar">
     <button class="tb-menu" onclick="openSb()"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+<<<<<<< Updated upstream
+    <div class="tb-brand"><div class="tb-lm">BHD</div><span class="tb-name">Smart Flow</span></div>
+    
+    <div class="sync-indicator" id="sync-top">
+      <div class="sync-dot"></div>
+      <span id="sync-text">Updated</span>
+    </div>
+
+    <div class="admin-selector" id="admin-sel-top" onclick="showAdminList()">
+      <div class="as-av" id="as-av-top">AD</div>
+      <div class="as-info">
+        <span class="as-name" id="as-name-top">Admin</span>
+        <span class="as-role" id="as-role-top">Superadmin</span>
+      </div>
+    </div>
+
+    <div class="tb-acts">
+      <button class="tb-btn" onclick="toggleTheme()" id="theme-btn"><svg id="ti-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="ti-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y2="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+=======
     <div class="tb-brand"><div class="tb-lm">BHD</div><span class="tb-name">BHD Smart Flow</span></div>
     <div class="tb-acts">
       <button class="tb-btn" onclick="toggleTheme()" id="theme-btn"><svg id="ti-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="ti-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
       <div id="notif-wrap" style="display:none;"><button class="tb-btn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></button><span id="notif-dot"></span></div>
+>>>>>>> Stashed changes
     </div>
   </div>
 
@@ -1037,6 +1188,44 @@ input,select,textarea{font-size:16px!important;}
         </div>
       </div>
 
+<<<<<<< Updated upstream
+      <!-- Donut + Line Chart row (Mobile Optimized) -->
+      <div class="chart-grid-slide">
+        <div class="chart-wrap">
+          <div class="cw-hdr"><span class="cw-title">Rasio Kas</span></div>
+          <div class="donut-wrap">
+            <div class="donut-canvas"><canvas id="donutChart" width="85" height="85"></canvas></div>
+            <div class="donut-legend">
+              <div class="dl-item"><div class="dl-dot" style="background:var(--success)"></div><div class="dl-info"><div class="dl-label">Inflow</div><div class="dl-val" id="dl-in">—</div><div class="dl-pct" id="dl-in-pct">—%</div></div></div>
+              <div class="dl-item"><div class="dl-dot" style="background:var(--danger)"></div><div class="dl-info"><div class="dl-label">Outflow</div><div class="dl-val" id="dl-out">—</div><div class="dl-pct" id="dl-out-pct">—%</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div class="cw-hdr"><span class="cw-title">Kategori Pengeluaran</span></div>
+          <div class="donut-wrap">
+            <div class="donut-canvas"><canvas id="catChart" width="85" height="85"></canvas></div>
+            <div id="cat-legend" class="donut-legend" style="gap:5px;"></div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div class="cw-hdr" style="flex-direction:column;align-items:flex-start;gap:7px;">
+            <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+              <span class="cw-title">Cash Flow Trend</span>
+              <div class="cw-filters" id="trend-filter-btns">
+                <button class="cf-btn active" onclick="setTrendFilter('7d',this)">7 Hr</button>
+                <button class="cf-btn" onclick="setTrendFilter('30d',this)">30 Hr</button>
+                <button class="cf-btn" onclick="setTrendFilter('custom',this)">...</button>
+              </div>
+            </div>
+            <div id="trend-custom-range" style="display:none;gap:5px;width:100%;flex-wrap:wrap;align-items:center;">
+              <input type="date" id="trend-from" style="flex:1;min-width:90px;padding:4px 6px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:10px;outline:none;"/>
+              <input type="date" id="trend-to" style="flex:1;min-width:90px;padding:4px 6px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:10px;outline:none;"/>
+              <button onclick="applyTrendCustom()" style="padding:4px 9px;border-radius:8px;background:var(--green-bg);color:var(--green2);font-size:10px;font-weight:700;">OK</button>
+            </div>
+          </div>
+          <canvas id="miniLineChart" style="max-height:115px;"></canvas>
+=======
       <!-- Donut + Line Chart row with Slider -->
       <div class="chart-slider-container">
         <div class="chart-slider" id="chart-slider" onscroll="updateSliderDots()">
@@ -1070,6 +1259,7 @@ input,select,textarea{font-size:16px!important;}
         <div class="slider-dots">
           <div class="slider-dot active"></div>
           <div class="slider-dot"></div>
+>>>>>>> Stashed changes
         </div>
       </div>
 
@@ -1998,6 +2188,105 @@ function toggleTxn(id){
   vibrate(15);
 }
 function deleteTxn(id){
+<<<<<<< Updated upstream
+  const t = transactions.find(x=>x.id===id);
+  if(!t)return;
+  
+  // Logic Otomatis: Kembalikan Stok jika ini transaksi Onderdil
+  if(t.kategori==='Onderdil' && t.sparepartId){
+    const sp = sparepartStock.find(s=>s.id===t.sparepartId);
+    if(sp){
+      // 1. Tambah kembali stokSisa
+      const jmlStr = t.label.match(/\((\d+)\sunit\)/); 
+      const jml = jmlStr ? parseInt(jmlStr[1]) : 1;
+      sp.stokSisa += jml;
+      
+      // 2. Hapus dari history installed armada (paling baru)
+      if(sp.installed && t.armada){
+        // Cari entry terakhir di armada yang sama dan hapus
+        const idx = [...sp.installed].reverse().findIndex(i=>i.armada===t.armada);
+        if(idx!==-1){
+          const realIdx = sp.installed.length - 1 - idx;
+          sp.installed.splice(realIdx, 1);
+        }
+      }
+      
+      if(_useAPI) apiFetch('/api/inventory/'+sp.id, {method:'PUT', body:sp}).catch(e=>console.warn('Sync stock return gagal:',e));
+      showToast('Stok '+sp.nama+' dikembalikan (+'+jml+')');
+    }
+  }
+
+  transactions=transactions.filter(t=>t.id!==id);
+  if(_useAPI) {
+    apiFetch('/api/transactions/'+id,{method:'DELETE'})
+      .then(() => {
+        // Trigger sync instan agar stok dan dashboard selaras
+        syncDataSilent();
+      })
+      .catch(e=>console.warn('Sync delete txn gagal:',e));
+  }
+  renderDashboard();applyTxnFilters();renderLaporanTable();showToast('Transaksi dihapus');vibrate(40);
+}
+
+async function doLogin(isAuto = false) {
+  const userEl = document.getElementById('login-user');
+  const passEl = document.getElementById('login-pass');
+  const err = document.getElementById('login-err');
+  
+  if (!userEl || !passEl) return;
+
+  // ENSURE JS IS FULLY LOADED
+  if (!window.jsReady) {
+    if (err) {
+      err.textContent = "Sistem sedang memuat... Tunggu sebentar.";
+      err.style.color = "var(--orange)";
+    }
+    console.warn("System not ready yet (window.jsReady is false)");
+    return;
+  }
+
+  const username = isAuto ? activeAdmin.name : userEl.value.trim();
+  const password = isAuto ? '******' : passEl.value;
+
+  if (!isAuto && (!username || !password)) {
+    if (err) err.textContent = 'Masukkan username & password';
+    return;
+  }
+
+  try {
+    const btn = document.querySelector('.login-btn');
+    if (btn) btn.disabled = true;
+    if (err) err.textContent = isAuto ? 'Auto-logging in...' : 'Authenticating...';
+
+    let result;
+    if (isAuto) {
+      result = activeAdmin;
+    } else {
+      result = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        body: { username, password }
+      });
+    }
+
+    if (result && result.name) {
+      window.activeAdmin = result;
+      localStorage.setItem('bhd_active_admin', JSON.stringify(result));
+      
+      document.getElementById('login-overlay').classList.add('hidden');
+      setTimeout(() => {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        updateAdminUI();
+        _appInit();
+      }, 400);
+    }
+  } catch (e) {
+    if (err) err.textContent = e.message;
+    if (!isAuto) localStorage.removeItem('bhd_active_admin');
+  } finally {
+    const btn = document.querySelector('.login-btn');
+    if (btn) btn.disabled = false;
+=======
   const t = transactions.find(x => x.id == id);
   if(!t) return;
 
@@ -2111,6 +2400,7 @@ function editTxn(id){
       
       setupCurrencyInput('out-amount');
     }, 150);
+>>>>>>> Stashed changes
   }
 }
 
@@ -2775,6 +3065,12 @@ function openUnitDetail(id){
   currentDetailUnit=f;
   document.getElementById('armada-list').style.display='none';
   document.getElementById('detail-panel').classList.add('active');
+<<<<<<< Updated upstream
+  
+  // Render Hero Header
+  const pD=daysUntil(f.pajak),kD=daysUntil(f.kir);
+  const initials=(f.nopol||'??').replace(/\s/g,'').slice(-4);
+=======
   const uIn=transactions.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
   const uOutTunai=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
   const uOutOnderdil=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
@@ -2782,6 +3078,7 @@ function openUnitDetail(id){
   const net=uIn-(uOutTunai+uOutOnderdil+beban);
   const pD=daysUntil(f.pajak),kD=daysUntil(f.kir);
   const activeParts=sparepartStock.filter(sp=>sp.installed.some(i=>i.armada===f.nopol));
+>>>>>>> Stashed changes
   document.getElementById('dp-hero').innerHTML=`
     <div style="display:flex;align-items:center;gap:13px;margin-bottom:12px;position:relative;z-index:1;">
       <div style="width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,#CC5200,#FF6700);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;box-shadow:var(--sh);">${initials}</div>
@@ -3039,7 +3336,25 @@ function openSmModal(type,val){
   }
   document.getElementById('sm-overlay').classList.add('open');
 }
+<<<<<<< Updated upstream
+
+/** 
+ * Generic Sheet Modal for dynamic content (Admin Selection, Audit Details, etc)
+ */
+function openSm(title, html) {
+  closeFab();
+  const tEl = document.getElementById('sm-title-text');
+  const body = document.getElementById('sm-body');
+  if (tEl && body) {
+    tEl.textContent = title;
+    body.innerHTML = html;
+    document.getElementById('sm-overlay').classList.add('open');
+  }
+}
+
+=======
 function openSm(){document.getElementById('sm-overlay').classList.add('open');}
+>>>>>>> Stashed changes
 function closeSm(){document.getElementById('sm-overlay').classList.remove('open');}
 function closeSmOuter(e){if(e.target===document.getElementById('sm-overlay'))closeSm();}
 
@@ -3272,6 +3587,18 @@ async function submitInflow(){
   
   const fUnit=fleetData.find(x=>x.nopol===armada);
   const statusSebelum=fUnit?fUnit.status:'jalan';
+<<<<<<< Updated upstream
+  const txnId = 'txn_'+Date.now();
+  const txnLabel = (amount > 0) ? 'Setoran ' + armada : 'Antrean ' + armada;
+  const newTxn={id:txnId,type:'inflow',label:txnLabel,sub:driver+' · Netto',amount,date,armada,muat:muat||'',bongkar:bongkar||'',driver,nota:'',toko:'',kategori:'Inflow',status:'lunas'};
+  transactions.unshift(newTxn);
+  if(fUnit){fUnit.status=antre;fUnit.driver=driver;}
+  incrementRitaseForArmada(armada, statusSebelum);
+  // Simpan ke server jika online
+  if(_useAPI){
+    apiFetch('/api/transactions',{method:'POST',body:newTxn}).then(()=>syncDataSilent()).catch(e=>console.warn('Sync inflow gagal:',e));
+    apiFetch('/api/fleet/'+fUnit?.id,{method:'PUT',body:{nopol:armada,driver,status:antre,pajak:fUnit?.pajak||'',kir:fUnit?.kir||''}}).catch(e=>console.warn('Sync fleet gagal:',e));
+=======
   
   if(isEditMode && currentEditId) {
     const tIndex = transactions.findIndex(t => t.id == currentEditId);
@@ -3298,6 +3625,7 @@ async function submitInflow(){
       apiFetch('/api/transactions',{method:'POST',body:newTxn}).catch(e=>console.warn('Sync inflow gagal:',e));
       apiFetch('/api/fleet/'+fUnit?.id,{method:'PUT',body:{nopol:armada,driver,status:antre,pajak:fUnit?.pajak||'',kir:fUnit?.kir||''}}).catch(e=>console.warn('Sync fleet gagal:',e));
     }
+>>>>>>> Stashed changes
   }
   
   vibrate(30);
@@ -3383,7 +3711,19 @@ async function submitOutflow(){
 
     if(_useAPI) apiFetch('/api/transactions',{method:'POST',body:newOut}).catch(e=>console.warn('Sync outflow gagal:',e));
   }
+<<<<<<< Updated upstream
+  const txnLabel=label||(spId?sparepartStock.find(s=>s.id===spId)?.nama||'Onderdil':'Pengeluaran');
+  const outId='txn_'+Date.now();
+  const newOut={id:outId,type:'outflow',label:txnLabel,sub:`No.Nota: ${nota} · ${toko}${driver?' · '+driver:''}`,amount,date,armada,nota,toko,kategori:cat,driver,status:'lunas',sparepartId:spId||null};
+  transactions.unshift(newOut);
+  if(_useAPI){
+    apiFetch('/api/transactions',{method:'POST',body:newOut}).then(()=>syncDataSilent()).catch(e=>console.warn('Sync outflow gagal:',e));
+  }
+  closeModal();renderDashboard();applyTxnFilters();renderGudang();renderLaporanTable();
+  if(!spId) showToast('Outflow '+fmt(amount)+' disimpan');
+=======
 
+>>>>>>> Stashed changes
   vibrate(30);
 }
 
@@ -3400,7 +3740,11 @@ function showPage(name,sbEl,bnId){
   if(name==='keuangan'){renderDashboard();applyTxnFilters();}
   if(name==='laporan'){renderLaporanTable();_buildAndShowWAPreview();}
   if(name==='armada'){renderFleetUnits();renderDashboard();}
+<<<<<<< Updated upstream
+  if(name==='audit-logs'){fetchAuditLogs();}
+=======
   if(name==='gudang'){renderGudang();}
+>>>>>>> Stashed changes
 }
 function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open');}
 function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
@@ -3475,7 +3819,11 @@ async function _appInit(){
       }
     }
     renderGudangFilterChips();
+<<<<<<< Updated upstream
+    updateAdminUI();
+=======
     renderGudang();
+>>>>>>> Stashed changes
     renderDashboard();
     applyTxnFilters();
     renderLaporanTable();
