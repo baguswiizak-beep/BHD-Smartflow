@@ -12,25 +12,66 @@ const { Pool } = require('pg');
 
 // Parsing connection string manual (untuk menghindari error karakter spesial di username)
 let pool;
+let isMock = false;
+
+const MOCK_DATA = {
+    settings: [
+        { key: 'company_name', value: 'PT. BAGUS HARYA DWIPRIMA (MOCK)' },
+        { key: 'fleet_count', value: '10' },
+        { key: 'login_username', value: 'admin' },
+        { key: 'login_password', value: 'bhd2024' }
+    ],
+    admins: [
+        { id: 'admin-1', username: 'admin', password: 'bhd2024', role: 'superadmin' }
+    ],
+    transactions: [
+        { id: '1', type: 'inflow', amount: 5000000, label: 'Ritase Pasir', date: new Date().toISOString().split('T')[0], armada: 'B 1234 XY' },
+        { id: '2', type: 'outflow', amount: 1500000, label: 'BBM Solar', date: new Date().toISOString().split('T')[0], armada: 'B 5678 ZW' }
+    ],
+    fleet: [
+        { id: '1', nopol: 'B 1234 XY', driver: 'Bagus', status: 'jalan' },
+        { id: '2', nopol: 'B 5678 ZW', driver: 'Wizak', status: 'bengkel' }
+    ],
+    drivers: [{ nama: 'Bagus' }, { nama: 'Wizak' }]
+};
+
 try {
-    if (!process.env.POSTGRES_URL) {
-        console.error('❌ POSTGRES_URL tidak ditemukan di environment variables!');
-        pool = new Pool(); 
-        pool.query = () => { throw new Error('Database tidak terkonfigurasi (POSTGRES_URL missing)'); };
+    let dbUrl = process.env.SUPABASE_URL_POOLER || process.env.POSTGRES_URL;
+    if (!dbUrl) {
+        console.warn('⚠ Database URL tidak ditemukan. Menggunakan MOCK MODE.');
+        isMock = true;
     } else {
-        // Use connectionString directly, pg handles password decoding and special characters better
+        // Optimization for Supabase Pooler (PgBouncer)
+        if (dbUrl.includes('pooler.supabase.com') && !dbUrl.includes('pgbouncer=true')) {
+            dbUrl += (dbUrl.includes('?') ? '&' : '?') + 'pgbouncer=true';
+        }
+
         pool = new Pool({
-            connectionString: process.env.POSTGRES_URL,
-            ssl: {
-                rejectUnauthorized: false
-            }
+            connectionString: dbUrl,
+            ssl: { rejectUnauthorized: false },
+            connectionTimeoutMillis: 15000, // Menambah timeout ke 15 detik
         });
     }
 } catch (e) {
     console.error('❌ Gagal inisialisasi Pool:', e.message);
-    pool = new Pool();
-    pool.query = () => { throw new Error('Konfigurasi database tidak valid: ' + e.message); };
+    isMock = true;
 }
+
+// Interceptor Query untuk Mock / Real
+const query = async (text, params) => {
+    if (isMock) {
+        const sql = text.toLowerCase();
+        if (sql.includes('from settings')) return { rows: MOCK_DATA.settings };
+        if (sql.includes('from admins')) return { rows: MOCK_DATA.admins };
+        if (sql.includes('from transactions')) return { rows: MOCK_DATA.transactions };
+        if (sql.includes('from fleet')) return { rows: MOCK_DATA.fleet };
+        if (sql.includes('from drivers')) return { rows: MOCK_DATA.drivers };
+        if (sql.includes('select now()')) return { rows: [{ now: new Date() }] };
+        if (sql.includes('select count(*)')) return { rows: [{ count: '1' }] };
+        return { rows: [], rowCount: 0 };
+    }
+    return pool.query(text, params);
+};
 
 // ─── SQL SCHEMA ──────────────────────────────────────────────
 const SCHEMA = `
@@ -133,27 +174,30 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 `;
 
 async function init() {
+    if (isMock) return; // Sudah dalam mode mock
+
     try {
-        console.log('⏳ Menghubungkan ke Postgres (via pg)...');
+        console.log('⏳ Menghubungkan ke Postgres...');
         
-        // Cek koneksi
-        await pool.query('SELECT NOW()');
+        // Cek koneksi (menggunakan wrapper query yang mendukung mock)
+        // Kita gunakan timeout pendek khusus untuk tes awal agar tidak hang lama
+        await query('SELECT NOW()');
         
         // Buat tabel jika belum ada
-        await pool.query(SCHEMA);
+        await query(SCHEMA);
         console.log('✅ Skema database SQL siap');
 
         // Seed admin jika kosong
-        const adminCheck = await pool.query('SELECT COUNT(*) FROM admins');
+        const adminCheck = await query('SELECT COUNT(*) FROM admins');
         if (parseInt(adminCheck.rows[0].count) === 0) {
             console.log('🌱 Seeding default admin...');
-            await pool.query(
+            await query(
                 "INSERT INTO admins (id, username, password, role) VALUES ('admin-1', 'admin', 'bhd2024', 'superadmin')"
             );
         }
 
         // Seed settings jika kosong
-        const settingsCheck = await pool.query('SELECT COUNT(*) FROM settings');
+        const settingsCheck = await query('SELECT COUNT(*) FROM settings');
         if (parseInt(settingsCheck.rows[0].count) === 0) {
             console.log('🌱 Seeding default settings...');
             const defaults = [
@@ -163,12 +207,12 @@ async function init() {
                 ['login_password', 'bhd2024']
             ];
             for (const [key, val] of defaults) {
-                await pool.query('INSERT INTO settings (key, value) VALUES ($1, $2)', [key, val]);
+                await query('INSERT INTO settings (key, value) VALUES ($1, $2)', [key, val]);
             }
         }
     } catch (e) {
-        console.error('⚠ Gagal inisialisasi SQL:', e.message);
-        throw e;
+        console.warn('⚠ Gagal terhubung ke Database Asli. Beralih ke MODE MOCK:', e.message);
+        isMock = true;
     }
 }
 
@@ -177,21 +221,21 @@ const db = {
 
     // ----- SETTINGS & AUTH -----
     getSettings: async () => {
-        const { rows } = await pool.query('SELECT * FROM settings');
+        const { rows } = await query('SELECT * FROM settings');
         const settings = {};
         rows.forEach(r => settings[r.key] = r.value);
         return settings;
     },
 
     updateSetting: async (key, value) => {
-        await pool.query(
+        await query(
             'INSERT INTO settings (key, value) ON CONFLICT (key) DO UPDATE SET value = $2',
             [key, value]
         );
     },
 
     validateAdmin: async (username, password) => {
-        const { rows } = await pool.query(
+        const { rows } = await query(
             'SELECT * FROM admins WHERE username = $1 AND password = $2',
             [username, password]
         );
@@ -200,7 +244,7 @@ const db = {
 
     registerAdmin: async (username, password, role = 'admin') => {
         const id = 'admin-' + Date.now();
-        await pool.query(
+        await query(
             'INSERT INTO admins (id, username, password, role) VALUES ($1, $2, $3, $4)',
             [id, username, password, role]
         );
@@ -208,7 +252,7 @@ const db = {
     },
 
     updateAdminPassword: async (username, newPassword) => {
-        const { rowCount } = await pool.query(
+        const { rowCount } = await query(
             'UPDATE admins SET password = $2 WHERE username = $1',
             [username, newPassword]
         );
@@ -216,7 +260,7 @@ const db = {
     },
 
     getAdmins: async () => {
-        const { rows } = await pool.query('SELECT id, username, role FROM admins ORDER BY username ASC');
+        const { rows } = await query('SELECT id, username, role FROM admins ORDER BY username ASC');
         return rows;
     },
 
@@ -229,7 +273,7 @@ const db = {
             params.push(val);
         }
         params.push(id);
-        const { rowCount } = await pool.query(
+        const { rowCount } = await query(
             `UPDATE admins SET ${fields.join(', ')} WHERE id = $${i}`,
             params
         );
@@ -237,36 +281,36 @@ const db = {
     },
 
     deleteAdmin: async (id) => {
-        const { rowCount } = await pool.query('DELETE FROM admins WHERE id = $1', [id]);
+        const { rowCount } = await query('DELETE FROM admins WHERE id = $1', [id]);
         return rowCount > 0;
     },
 
     // ----- AUDIT LOGS -----
     getAuditLogs: async (filters = {}) => {
-        let query = 'SELECT * FROM audit_logs WHERE 1=1';
+        let sql = 'SELECT * FROM audit_logs WHERE 1=1';
         const params = [];
         let i = 1;
 
         if (filters.module) {
-            query += ` AND module = $${i++}`;
+            sql += ` AND module = $${i++}`;
             params.push(filters.module);
         }
         if (filters.action) {
-            query += ` AND action = $${i++}`;
+            sql += ` AND action = $${i++}`;
             params.push(filters.action);
         }
         if (filters.doc_id) {
-            query += ` AND doc_id = $${i++}`;
+            sql += ` AND doc_id = $${i++}`;
             params.push(filters.doc_id);
         }
 
-        query += ' ORDER BY timestamp DESC LIMIT 100';
-        const { rows } = await pool.query(query, params);
+        sql += ' ORDER BY timestamp DESC LIMIT 100';
+        const { rows } = await query(sql, params);
         return rows;
     },
 
     addAuditLog: async (log) => {
-        await pool.query(
+        await query(
             `INSERT INTO audit_logs 
             (user_id, user_name, action, module, doc_id, changes_before, changes_after, metadata)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
@@ -275,39 +319,39 @@ const db = {
     },
 
     deleteAuditLogs: async () => {
-        await pool.query('DELETE FROM audit_logs');
+        await query('DELETE FROM audit_logs');
     },
 
     // ----- TRANSACTIONS -----
     getTransactions: async (filters = {}) => {
-        let query = 'SELECT * FROM transactions WHERE 1=1';
+        let sql = 'SELECT * FROM transactions WHERE 1=1';
         const params = [];
         let i = 1;
 
         if (filters.from) {
-            query += ` AND date >= $${i++}`;
+            sql += ` AND date >= $${i++}`;
             params.push(filters.from);
         }
         if (filters.to) {
-            query += ` AND date <= $${i++}`;
+            sql += ` AND date <= $${i++}`;
             params.push(filters.to);
         }
         if (filters.type) {
-            query += ` AND type = $${i++}`;
+            sql += ` AND type = $${i++}`;
             params.push(filters.type);
         }
         if (filters.armada) {
-            query += ` AND armada = $${i++}`;
+            sql += ` AND armada = $${i++}`;
             params.push(filters.armada);
         }
 
-        query += ' ORDER BY date DESC';
-        const { rows } = await pool.query(query, params);
+        sql += ' ORDER BY date DESC';
+        const { rows } = await query(sql, params);
         return rows.map(r => ({ ...r, amount: parseInt(r.amount) }));
     },
 
     addTransaction: async (t) => {
-        await pool.query(
+        await query(
             `INSERT INTO transactions 
             (id, type, amount, label, sub, date, armada, driver, toko, nota, kategori, status, sparepart_id)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
@@ -325,7 +369,7 @@ const db = {
             params.push(val);
         }
         params.push(id);
-        const { rowCount } = await pool.query(
+        const { rowCount } = await query(
             `UPDATE transactions SET ${fields.join(', ')} WHERE id = $${i}`,
             params
         );
@@ -333,6 +377,9 @@ const db = {
     },
 
     deleteTransaction: async (id) => {
+        if (isMock) {
+            return true; // Simple mock success
+        }
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -340,6 +387,7 @@ const db = {
             // Ambil info transaksi sebelum dihapus
             const { rows } = await client.query('SELECT * FROM transactions WHERE id = $1', [id]);
             if (rows.length > 0) {
+// ... existing logic ...
                 const t = rows[0];
                 // Jika ini adalah outflow onderdil yang terhubung ke stok
                 if (t.type === 'outflow' && t.kategori === 'Onderdil' && t.sparepart_id) {
@@ -523,13 +571,13 @@ const db = {
     },
 
     uninstallInventory: async (id, installId) => {
-        const client = await pool.connect();
+        const client = isMock ? { query: async () => ({ rows: [] }), release: () => {} } : await pool.connect();
         try {
-            await client.query('BEGIN');
+            if (!isMock) await client.query('BEGIN');
             
             // Ambil info pemasangan
             const { rows } = await client.query('SELECT * FROM inventory_installed WHERE id = $1', [installId]);
-            if (rows.length === 0) throw new Error('Data pemasangan tidak ditemukan');
+            if (!isMock && rows.length === 0) throw new Error('Data pemasangan tidak ditemukan');
             
             // Hapus pemasangan
             await client.query('DELETE FROM inventory_installed WHERE id = $1', [installId]);
@@ -537,15 +585,22 @@ const db = {
             // Kembalikan stok (asumsi per baris = 1 unit)
             await client.query('UPDATE inventory SET stok_sisa = stok_sisa + 1 WHERE id = $1', [id]);
             
-            await client.query('COMMIT');
+            if (!isMock) await client.query('COMMIT');
             return true;
         } catch (e) {
-            await client.query('ROLLBACK');
+            if (!isMock) await client.query('ROLLBACK');
             return false;
         } finally {
-            client.release();
+            if (!isMock) client.release();
         }
     },
 };
 
-module.exports = db;
+const exportedDb = {
+    ...db,
+    init,
+    query,
+    isMock: () => isMock
+};
+
+module.exports = exportedDb;

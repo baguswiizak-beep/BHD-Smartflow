@@ -42,9 +42,11 @@ app.get('/api/ping', (req, res) => {
 app.get('/api/debug', (req, res) => {
   res.json({
     env: process.env.NODE_ENV || 'development',
+    hasSupabasePooler: !!process.env.SUPABASE_URL_POOLER,
+    supabasePoolerLength: process.env.SUPABASE_URL_POOLER ? process.env.SUPABASE_URL_POOLER.length : 0,
     hasPostgresUrl: !!process.env.POSTGRES_URL,
-    postgresUrlType: typeof process.env.POSTGRES_URL,
     postgresUrlLength: process.env.POSTGRES_URL ? process.env.POSTGRES_URL.length : 0,
+    isMockMode: db.isMock(), // Use the newly exported function
     dbLoaded: !!db
   });
 });
