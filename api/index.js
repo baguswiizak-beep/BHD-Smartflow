@@ -19,15 +19,27 @@ app.use(express.json());
 
 // Middleware untuk mengekstrak info Admin dari header (untuk Audit Trail)
 app.use((req, res, next) => {
-    // Log incoming request for debugging
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    
     req.admin = {
         id: req.headers['x-admin-id'] || 'system',
         name: req.headers['x-admin-name'] || 'System',
         role: req.headers['x-admin-role'] || 'admin'
     };
     next();
+});
+
+// ── HEALTH CHECK (tidak butuh DB) ────────────────────────────
+app.get('/api/ping', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', async (req, res) => {
+  try {
+    await ensureDb();
+    res.json({ status: 'ok', db: 'postgres', timestamp: new Date().toISOString() });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
 });
 
 // Middleware untuk memastikan DB siap sebelum request diproses
@@ -38,19 +50,6 @@ app.use(async (req, res, next) => {
     } catch (e) {
         res.status(500).json({ status: 'error', message: 'Database initialization failed: ' + e.message });
     }
-});
-
-// ── HEALTH CHECK ─────────────────────────────────────────────
-app.get('/api/health', async (req, res) => {
-  try {
-    res.json({ status: 'ok', db: 'postgres', timestamp: new Date().toISOString() });
-  } catch (e) {
-    res.status(500).json({ status: 'error', message: e.message });
-  }
-});
-
-app.get('/api/ping', async (req, res) => {
-  res.json({ status: 'ok' });
 });
 
 // ── AUTH ─────────────────────────────────────────────────────
@@ -417,20 +416,24 @@ app.get('/api/sync/summary', async (req, res) => {
 });
 
 // ── START SERVER ─────────────────────────────────────────────
-db.init().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`
+// Di Vercel (serverless), app.listen() tidak diperlukan.
+// Jalankan hanya jika dieksekusi secara lokal langsung.
+if (require.main === module) {
+  db.init().then(() => {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`
   ╔══════════════════════════════════════════════════════════════╗
   ║          BHD SmartFlow API - Terhubung ke SQL                ║
   ╟──────────────────────────────────────────────────────────────╢
   ║  ✅ PC/Laptop : http://127.0.0.1:${PORT}             ║
   ║  🚀 Status    : Database SQL Aktif                           ║
   ╚══════════════════════════════════════════════════════════════╝
-    `);
+      `);
+    });
+  }).catch(err => {
+    console.error('❌ Gagal inisialisasi database:', err.message);
+    process.exit(1);
   });
-}).catch(err => {
-  console.error('❌ Gagal inisialisasi database:', err.message);
-  process.exit(1);
-});
+}
 
 module.exports = app;
