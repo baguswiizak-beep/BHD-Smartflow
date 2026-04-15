@@ -15,24 +15,19 @@ let pool;
 try {
     if (!process.env.POSTGRES_URL) {
         console.error('❌ POSTGRES_URL tidak ditemukan di environment variables!');
-        // Fallback dummy pool untuk mencegah crash saat startup
-        pool = new Pool(); // Biarkan Pool kosong, query akan gagal tapi app tidak crash saat startup
+        pool = new Pool(); 
         pool.query = () => { throw new Error('Database tidak terkonfigurasi (POSTGRES_URL missing)'); };
     } else {
-        const dbUrl = new URL(process.env.POSTGRES_URL);
+        // Use connectionString directly, pg handles password decoding and special characters better
         pool = new Pool({
-            user: decodeURIComponent(dbUrl.username),
-            password: decodeURIComponent(dbUrl.password),
-            host: dbUrl.hostname,
-            port: dbUrl.port || 5432,
-            database: dbUrl.pathname.split('/')[1] || 'postgres',
+            connectionString: process.env.POSTGRES_URL,
             ssl: {
                 rejectUnauthorized: false
             }
         });
     }
 } catch (e) {
-    console.error('❌ Gagal parsing POSTGRES_URL:', e.message);
+    console.error('❌ Gagal inisialisasi Pool:', e.message);
     pool = new Pool();
     pool.query = () => { throw new Error('Konfigurasi database tidak valid: ' + e.message); };
 }

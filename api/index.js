@@ -1,11 +1,13 @@
-// Vercel handles environment variables natively via the dashboard.
-// const dotenv = require('dotenv'); // Not needed if not using local files
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
-}
 const express = require('express');
 const cors = require('cors');
-const db = require('./database');
+
+// Move db require inside ensureDb or routes to prevent top-level crashes during module load
+let db;
+try {
+    db = require('./database');
+} catch (e) {
+    console.error('Database module load failed:', e.message);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -37,8 +39,19 @@ app.get('/api/ping', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/api/debug', (req, res) => {
+  res.json({
+    env: process.env.NODE_ENV || 'development',
+    hasPostgresUrl: !!process.env.POSTGRES_URL,
+    postgresUrlType: typeof process.env.POSTGRES_URL,
+    postgresUrlLength: process.env.POSTGRES_URL ? process.env.POSTGRES_URL.length : 0,
+    dbLoaded: !!db
+  });
+});
+
 app.get('/api/health', async (req, res) => {
   try {
+    if (!db) throw new Error('Database module not loaded');
     await ensureDb();
     res.json({ status: 'ok', db: 'postgres', timestamp: new Date().toISOString() });
   } catch (e) {
@@ -205,6 +218,7 @@ app.post('/api/transactions', async (req, res) => {
 
 app.put('/api/transactions/:id', async (req, res) => {
   try {
+    const db = require('./database');
     // Ambil data sebelum update (opsional untuk audit)
     const oldData = await db.getTransactions({ id: req.params.id });
     
@@ -229,6 +243,7 @@ app.put('/api/transactions/:id', async (req, res) => {
 
 app.delete('/api/transactions/:id', async (req, res) => {
   try {
+    const db = require('./database');
     const oldData = await db.getTransactions({ id: req.params.id });
     await db.deleteTransaction(req.params.id);
     
