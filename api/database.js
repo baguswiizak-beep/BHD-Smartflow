@@ -348,7 +348,12 @@ const db = {
                     // Kembalikan stok
                     await client.query('UPDATE inventory SET stok_sisa = stok_sisa + 1 WHERE id = $1', [t.sparepart_id]);
                     // Hapus entry di inventory_installed yang sesuai
-                    await client.query('DELETE FROM inventory_installed WHERE txn_id = $1 OR (inventory_id = $2 AND armada = $3 AND tgl_pasang = $4 LIMIT 1)', 
+                    await client.query(
+                        `DELETE FROM inventory_installed WHERE id = (
+                            SELECT id FROM inventory_installed 
+                            WHERE txn_id = $1 OR (inventory_id = $2 AND armada = $3 AND tgl_pasang = $4)
+                            LIMIT 1
+                        )`,
                         [t.id, t.sparepart_id, t.armada, t.date]);
                 }
             }
