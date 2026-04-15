@@ -19,6 +19,9 @@ app.use(express.json());
 
 // Middleware untuk mengekstrak info Admin dari header (untuk Audit Trail)
 app.use((req, res, next) => {
+    // Log incoming request for debugging
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    
     req.admin = {
         id: req.headers['x-admin-id'] || 'system',
         name: req.headers['x-admin-name'] || 'System',
@@ -56,7 +59,7 @@ app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body || {};
     const user = await db.validateAdmin(username, password);
     if (user) {
-      return res.json({ ok: true, username: user.username, role: user.role });
+      return res.json({ ok: true, id: user.id, username: user.username, role: user.role });
     }
     res.status(401).json({ ok: false, error: 'Username atau password salah' });
   } catch (e) {
@@ -77,9 +80,15 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 app.post('/api/auth/change-password', async (req, res) => {
-  const { oldPassword, newPassword } = req.body || {};
-  const settings = await db.getSettings();
+  const { oldPassword, newPassword, username } = req.body || {};
+  // Update both settings table (for legacy/display) and admins table (for auth)
   await db.updateSetting('login_password', newPassword);
+  if (username) {
+    await db.updateAdminPassword(username, newPassword);
+  } else {
+    // If username not provided, try to update 'admin' default account
+    await db.updateAdminPassword('admin', newPassword);
+  }
   res.json({ ok: true });
 });
 
@@ -325,7 +334,7 @@ app.post('/api/inventory', async (req, res) => {
   
   // Audit Log
   await db.addAuditLog({
-    user_id: req.adminId, user_name: req.adminName,
+    user_id: req.admin.id, user_name: req.admin.name,
     action: 'create', module: 'inventory', doc_id: sp.id,
     changes_after: sp, metadata: { ip: req.ip, agent: req.get('user-agent') }
   });
@@ -339,7 +348,7 @@ app.put('/api/inventory/:id', async (req, res) => {
 
   // Audit Log
   await db.addAuditLog({
-    user_id: req.adminId, user_name: req.adminName,
+    user_id: req.admin.id, user_name: req.admin.name,
     action: 'update', module: 'inventory', doc_id: req.params.id,
     changes_after: req.body, metadata: { ip: req.ip, agent: req.get('user-agent') }
   });
@@ -353,7 +362,7 @@ app.delete('/api/inventory/:id', async (req, res) => {
 
   // Audit Log
   await db.addAuditLog({
-    user_id: req.adminId, user_name: req.adminName,
+    user_id: req.admin.id, user_name: req.admin.name,
     action: 'delete', module: 'inventory', doc_id: req.params.id,
     metadata: { ip: req.ip, agent: req.get('user-agent') }
   });

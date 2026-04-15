@@ -8,17 +8,31 @@ const { Pool } = require('pg');
  */
 
 // Parsing connection string manual (untuk menghindari error karakter spesial di username)
-const dbUrl = new URL(process.env.POSTGRES_URL);
-const pool = new Pool({
-    user: decodeURIComponent(dbUrl.username),
-    password: decodeURIComponent(dbUrl.password),
-    host: dbUrl.hostname,
-    port: dbUrl.port || 5432,
-    database: dbUrl.pathname.split('/')[1] || 'postgres',
-    ssl: {
-        rejectUnauthorized: false
+let pool;
+try {
+    if (!process.env.POSTGRES_URL) {
+        console.error('❌ POSTGRES_URL tidak ditemukan di environment variables!');
+        // Fallback dummy pool untuk mencegah crash saat startup
+        pool = new Pool(); // Biarkan Pool kosong, query akan gagal tapi app tidak crash saat startup
+        pool.query = () => { throw new Error('Database tidak terkonfigurasi (POSTGRES_URL missing)'); };
+    } else {
+        const dbUrl = new URL(process.env.POSTGRES_URL);
+        pool = new Pool({
+            user: decodeURIComponent(dbUrl.username),
+            password: decodeURIComponent(dbUrl.password),
+            host: dbUrl.hostname,
+            port: dbUrl.port || 5432,
+            database: dbUrl.pathname.split('/')[1] || 'postgres',
+            ssl: {
+                rejectUnauthorized: false
+            }
+        });
     }
-});
+} catch (e) {
+    console.error('❌ Gagal parsing POSTGRES_URL:', e.message);
+    pool = new Pool();
+    pool.query = () => { throw new Error('Konfigurasi database tidak valid: ' + e.message); };
+}
 
 // ─── SQL SCHEMA ──────────────────────────────────────────────
 const SCHEMA = `
@@ -193,6 +207,14 @@ const db = {
             [id, username, password, role]
         );
         return { id, username, role };
+    },
+
+    updateAdminPassword: async (username, newPassword) => {
+        const { rowCount } = await pool.query(
+            'UPDATE admins SET password = $2 WHERE username = $1',
+            [username, newPassword]
+        );
+        return rowCount > 0;
     },
 
     getAdmins: async () => {

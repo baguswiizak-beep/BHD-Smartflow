@@ -68,7 +68,8 @@
 .login-ver{font-size:9.5px;color:rgba(255,235,205,.15);text-align:center;margin-top:22px;letter-spacing:.03em;}
 
 
-body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;scroll-behavior:smooth;}
+html{scroll-behavior:smooth;}
 
 /* ── BG ── */
 #bg-layer{position:fixed;inset:0;z-index:0;background:var(--bg);background-size:cover;background-position:center;transition:all .4s;}
@@ -576,6 +577,60 @@ input[type="date"].form-input::-webkit-calendar-picker-indicator{opacity:.45;cur
 /* ══════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   PHASE 2 - PREMIUM COMPONENTS
+══════════════════════════════════════ */
+.f-tabs{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:14px;margin-bottom:16px;position:relative;z-index:1;}
+.f-tab{flex:1;padding:8px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer;border-radius:10px;transition:all .2s;}
+.f-tab.active{background:var(--card);color:var(--text);box-shadow:var(--sh);}
+.f-sec{display:none;animation:fadeUp .3s ease;}
+.f-sec.active{display:block;}
+
+/* Truck Visualization */
+.truck-canvas{background:var(--bg3);border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:30px;position:relative;border:1.5px solid var(--card-b);margin-bottom:16px;}
+.truck-top-view{width:120px;height:240px;background:var(--card);border-radius:12px;position:relative;border:2px solid var(--text4);box-shadow:var(--sh);}
+.truck-cabin{position:absolute;top:10px;left:10px;right:10px;height:60px;background:var(--bg4);border-radius:8px 8px 15px 15px;border:1px solid var(--card-b);}
+.truck-windshield{position:absolute;top:10px;left:8px;right:8px;height:20px;background:rgba(255,255,255,0.05);border-radius:6px 6px 2px 2px;}
+
+/* Tires Positioning (10 wheels: 1 front axle, 2 rear dual axles) */
+.tire-spot{position:absolute;width:24px;height:42px;background:#111;border-radius:4px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#fff;border:1px solid #333;}
+.tire-spot:hover{transform:scale(1.1);border-color:var(--green);}
+.tire-spot.crit{background:var(--danger);border-color:#ff0000;}
+.tire-spot.warn{background:var(--warning);border-color:#ffaa00;}
+
+/* Axle 1 (Front) */
+.t-f-l{top:30px;left:-14px;}
+.t-f-r{top:30px;right:-14px;}
+/* Axle 2 (Rear 1 - Duals) */
+.t-r1-l1{bottom:70px;left:-14px;}
+.t-r1-l2{bottom:70px;left:-40px;}
+.t-r1-r1{bottom:70px;right:-14px;}
+.t-r1-r2{bottom:70px;right:-40px;}
+/* Axle 3 (Rear 2 - Duals) */
+.t-r2-l1{bottom:20px;left:-14px;}
+.t-r2-l2{bottom:20px;left:-40px;}
+.t-r2-r1{bottom:20px;right:-14px;}
+.t-r2-r2{bottom:20px;right:-40px;}
+
+/* Ritase Timeline */
+.hist-item{display:flex;gap:12px;padding-bottom:16px;position:relative;}
+.hist-item:not(:last-child)::after{content:'';position:absolute;left:5.5px;top:16px;bottom:0;width:1.5px;background:var(--card-b);}
+.hist-dot{width:12px;height:12px;border-radius:50%;background:var(--card-b);margin-top:4px;flex-shrink:0;}
+.hist-dot.trip{background:var(--green);box-shadow:0 0 8px var(--green);}
+.hist-dot.part{background:var(--warning);box-shadow:0 0 8px var(--warning);}
+.hist-main{font-size:12.5px;font-weight:700;color:var(--text);}
+.hist-sub{font-size:10px;color:var(--text3);margin-top:2px;}
+.hist-amt{font-size:12px;font-weight:800;margin-left:auto;}
+.hist-amt.in{color:var(--success);}
+.hist-amt.out{color:var(--danger);}
+
+/* Sparepart Cards */
+.sp-card-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));gap:10px;}
+.sp-mini-card{background:var(--card);padding:10px;border-radius:12px;border:1px solid var(--card-b);position:relative;display:flex;flex-direction:column;gap:4px;}
+.sp-mini-icon{font-size:18px;margin-bottom:4px;}
+.sp-mini-name{font-size:11px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sp-mini-rit{font-size:9.5px;color:var(--text3);}
+
 @media(max-width:768px){
   #sidebar{transform:translateX(-100%);}
   #sidebar.open{transform:translateX(0);}
@@ -787,6 +842,15 @@ input,select,textarea{font-size:16px!important;}
   background:var(--bg3);margin-right:10px;
   transition:all .3s;
 }
+
+/* Audit Detail Styles */
+.audit-detail-box{background:var(--bg);padding:12px;border-radius:8px;border:1px solid var(--card-b);overflow-x:auto;}
+.audit-detail-box table{width:100%;border-collapse:collapse;font-size:11px;}
+.audit-detail-box th{text-align:left;padding:6px;color:var(--text3);font-weight:700;border-bottom:1px solid var(--card-b);}
+.audit-detail-box td{padding:8px;border-bottom:1px dotted var(--card-b);}
+.audit-diff-val{padding:2px 4px;border-radius:4px;font-family:'JetBrains Mono',monospace;}
+.audit-diff-old{background:rgba(255,59,48,0.1);color:var(--danger);text-decoration:line-through;}
+.audit-diff-new{background:rgba(40,199,111,0.1);color:var(--success);font-weight:700;}
 .sync-indicator.syncing{color:var(--green2);background:var(--green-bg);border:1px solid var(--green-bd);}
 .sync-dot{width:5px;height:5px;border-radius:50%;background:var(--text4);}
 .syncing .sync-dot{background:var(--green);animation:ap 1s infinite;}
@@ -869,8 +933,15 @@ input,select,textarea{font-size:16px!important;}
       </div>
     </div>
 
-    <div class="login-err" id="login-err"></div>
-    <div class="login-ver">🚀 BHD Smart Flow v12.1 • Premium Restoration</div>
+    <div class="login-err" id="login-err" style="margin-bottom:10px;"></div>
+    <div id="login-debug" style="font-size:9px;color:rgba(212,168,67,0.4);margin-top:5px;text-align:center;max-width:100%;word-break:break-all;font-family:monospace; min-height:12px;"></div>
+    
+    <div style="text-align:center; margin-top:15px; border-top:1px solid rgba(212,168,67,0.1); padding-top:15px;">
+      <button onclick="resetAppSession()" style="background:transparent; border:none; color:var(--text3); font-size:10px; cursor:pointer; text-decoration:none; opacity:0.6;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6" title="Gunakan jika aplikasi macet">Reset Sesi &amp; Cache Browser</button>
+      <div id="js-init-badge" style="color:rgba(212,168,67,0.1); font-size:7px; margin-top:4px;">Inisialisasi...</div>
+    </div>
+    
+    <div class="login-ver">🚀 BHD Smart Flow v12.1.3 • Premium Restoration</div>
   </div>
 </div>
 
@@ -903,7 +974,12 @@ input,select,textarea{font-size:16px!important;}
     <div class="nav-item" id="sb-settings" onclick="showPage('settings',this,'bn-settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06-.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Pengaturan</div>
     <div class="nav-item" id="sb-audit" onclick="showPage('audit-logs',this)"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>Riwayat Audit</div>
   </div>
-  <div class="sb-foot"><div class="user-chip"><div class="user-av">BH</div><div><div class="user-name">Admin BHD</div><div class="user-role">Superadmin</div></div></div></div>
+  <div class="sb-foot" style="display:flex; justify-content:space-between; align-items:center;">
+    <div class="user-chip"><div class="user-av as-av">BH</div><div><div class="user-name as-name">Admin BHD</div><div class="user-role as-role">Superadmin</div></div></div>
+    <button onclick="doLogout()" title="Keluar" style="background:transparent; border:none; color:var(--text3); cursor:pointer; padding:8px; display:flex; align-items:center; border-radius:50%; transition:all .2s;" onmouseover="this.style.color='var(--danger)';this.style.background='rgba(255,59,48,0.1)'" onmouseout="this.style.color='var(--text3)';this.style.background='transparent'">
+      <svg viewBox="0 0 24 24" style="width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2.5;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    </button>
+  </div>
 </div>
 <div id="sb-overlay" onclick="closeSb()"></div>
 
@@ -1086,16 +1162,18 @@ input,select,textarea{font-size:16px!important;}
     <div id="detail-panel">
       <div class="dp-back" onclick="backToArmadaList()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Kembali</div>
       <div class="dp-hero" id="dp-hero"></div>
-      <div class="tab-bar">
-        <button class="tab-btn active" onclick="showTab('perjalanan',this)">Perjalanan</button>
-        <button class="tab-btn" onclick="showTab('biaya',this)">Biaya</button>
-        <button class="tab-btn" onclick="showTab('ban',this)">Ban</button>
-        <button class="tab-btn" onclick="showTab('dokumen',this)">Dokumen</button>
+      
+      <div class="f-tabs">
+        <div class="f-tab active" onclick="switchFleetTab('overview', this)">Overview</div>
+        <div class="f-tab" onclick="switchFleetTab('finance', this)">Keuangan</div>
+        <div class="f-tab" onclick="switchFleetTab('parts', this)">Onderdil</div>
+        <div class="f-tab" onclick="switchFleetTab('history', this)">Ritase</div>
       </div>
-      <div id="tab-perjalanan"></div>
-      <div id="tab-biaya" style="display:none;"></div>
-      <div id="tab-ban" style="display:none;"></div>
-      <div id="tab-dokumen" style="display:none;"></div>
+
+      <div id="f-sec-overview" class="f-sec active"></div>
+      <div id="f-sec-finance" class="f-sec"></div>
+      <div id="f-sec-parts" class="f-sec"></div>
+      <div id="f-sec-history" class="f-sec"></div>
     </div>
   </div>
 
@@ -1388,19 +1466,69 @@ input,select,textarea{font-size:16px!important;}
 
 <script>
 // ═══════════════════════════════════════════════════════
-// GLOBAL STATE & AUTH (FASE 1)
+// GLOBAL ERROR HANDLER (DEKLARASI PERTAMA)
 // ═══════════════════════════════════════════════════════
-window.activeAdmin = JSON.parse(localStorage.getItem('bhd_active_admin')) || { id: 'admin-1', name: 'Admin', role: 'superadmin' };
+window.onerror = function(msg, url, line, col, error) {
+  var dbg = document.getElementById('login-debug');
+  if (dbg) {
+    dbg.innerHTML = '<div style="color:#FF3B30; padding:10px; border:1px solid #FF3B30; margin-top:10px;">' +
+                    '<b>System Error:</b> ' + msg + '<br>' +
+                    '<small>Line: ' + line + '</small></div>';
+  }
+  return false;
+};
+
+// State Awal
+window.activeAdmin = { id: 'admin-1', name: 'Admin', role: 'superadmin' };
+var jsReady = false;
+
+// Auto-Login logic at startup
+(function() {
+  try {
+    var saved = localStorage.getItem('bhd_active_admin');
+    if (saved) {
+      var parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object' && parsed.id) { 
+        window.activeAdmin = parsed; 
+        console.log('🔄 Sesi ditemukan: ' + parsed.name);
+        // Coba bypass login secara otomatis setelah DOM siap
+        window.addEventListener('DOMContentLoaded', function() {
+          setTimeout(function() {
+            if (typeof doLogin === 'function' && window.activeAdmin.name !== 'Admin') {
+              console.log('🚀 Menjalankan Auto-Login...');
+              doLogin(true); // Parameter true menandakan auto-login payload
+            }
+          }, 500);
+        });
+      }
+    }
+  } catch (e) { console.warn('LS Error', e); }
+})();
 
 function updateAdminUI() {
   const nameEls = document.querySelectorAll('.as-name, .user-name');
   const roleEls = document.querySelectorAll('.as-role, .user-role');
   const avEls = document.querySelectorAll('.as-av, .user-av');
   
+  if (!window.activeAdmin) return;
+
   nameEls.forEach(el => el.textContent = activeAdmin.name);
   roleEls.forEach(el => el.textContent = activeAdmin.role);
-  avEls.forEach(el => el.textContent = activeAdmin.name.substring(0, 2).toUpperCase());
+  avEls.forEach(el => {
+    el.textContent = activeAdmin.name.substring(0, 2).toUpperCase();
+    if (activeAdmin.role === 'superadmin') {
+      el.style.background = 'linear-gradient(135deg, #FFD700, #FFA500)';
+    } else {
+      el.style.background = 'linear-gradient(135deg, #5FA00D, #A8F040)';
+    }
+  });
   
+  // Update header selector visual
+  const sel = document.getElementById('admin-sel-top');
+  if (sel) {
+    sel.style.borderColor = activeAdmin.role === 'superadmin' ? '#FFD700' : 'var(--green-bd)';
+  }
+
   // Tampilkan tombol hapus log hanya untuk superadmin
   const superActions = document.getElementById('audit-super-actions');
   if (superActions) superActions.style.display = activeAdmin.role === 'superadmin' ? 'block' : 'none';
@@ -1431,16 +1559,28 @@ function setSystemStatus(status, text) {
 // ═══════════════════════════════════════════════════════
 // API CLIENT — BHD SmartFlow Backend
 // ═══════════════════════════════════════════════════════
-// Deteksi apakah diakses dari localhost atau IP jaringan
-const API_BASE = window.location.protocol === 'file:' || window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
-  ? 'http://127.0.0.1:3001'
-  : (window.location.port ? `http://${window.location.hostname}:3001` : "");
+var API_BASE = (function() {
+  var h = window.location.hostname;
+  var p = window.location.protocol;
+  // Jika dibuka lewat file:/// atau localhost
+  if (!h || h === 'localhost' || h === '127.0.0.1' || p === 'file:') {
+    return 'http://127.0.0.1:3001';
+  }
+  if (h.indexOf('vercel.app') !== -1) return '';
+  return 'http://' + h + ':3001';
+})();
+
+console.log('📡 API Path:', API_BASE || '(Same Origin)');
+window.apiInitialized = true;
+var badge = document.getElementById('js-init-badge');
+if (badge) badge.textContent = 'JS Ready (' + (API_BASE ? 'API' : 'Local') + ')';
 
 let _useAPI = false; // akan di-set true setelah ping berhasil
 
 async function apiPing(){
   try{
-    const r = await fetch(API_BASE+'/api/ping',{signal:AbortSignal.timeout(2000)});
+    // Menggunakan fetch standar tanpa signal timeout untuk kompatibilitas browser lama
+    const r = await fetch(API_BASE+'/api/ping');
     _useAPI = r.ok;
   } catch(e){ _useAPI = false; }
   return _useAPI;
@@ -1492,22 +1632,64 @@ function renderAuditLogs(logs) {
     return;
   }
   
-  tbody.innerHTML = logs.map(l => {
+  tbody.innerHTML = logs.map((l, idx) => {
     const ts = new Date(l.timestamp).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
     const badgeClass = l.action === 'create' ? 'al-create' : (l.action === 'update' ? 'al-update' : 'al-delete');
+    const hasDetail = l.changes_before || l.changes_after;
+    
     return `
-      <tr>
+      <tr style="cursor:${hasDetail?'pointer':'default'}" onclick="${hasDetail?`toggleAuditDetail(${idx})`:''}">
         <td style="padding-left:15px; font-weight:500;">${ts}</td>
         <td>
           <div style="font-weight:700;">${l.user_name}</div>
           <div style="font-size:9px; color:var(--text3);">${l.user_id}</div>
         </td>
         <td><span class="al-badge ${badgeClass}">${l.action.toUpperCase()}</span></td>
-        <td><span class="al-badge" style="background:var(--bg3); color:var(--text2);">${l.module.toUpperCase()}</span></td>
+        <td><span class="al-badge" style="background:var(--bg3); color:var(--text2);">${(l.module||'global').toUpperCase()}</span></td>
         <td style="padding-right:15px; font-size:10px; color:var(--text2);">${l.doc_id}</td>
+      </tr>
+      <tr id="audit-det-${idx}" style="display:none; background:var(--bg5);">
+        <td colspan="5" style="padding:15px;">
+          <div class="audit-detail-box">
+            ${getAuditDetailHTML(l)}
+          </div>
+        </td>
       </tr>
     `;
   }).join('');
+}
+
+function toggleAuditDetail(idx) {
+  const el = document.getElementById(`audit-det-${idx}`);
+  if (el) el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+}
+
+function getAuditDetailHTML(log) {
+  if (!log.changes_before && !log.changes_after) return '<div style="color:var(--text3)">Tidak ada detail perubahan data.</div>';
+  
+  const before = log.changes_before || {};
+  const after = log.changes_after || {};
+  const allKeys = [...new Set([...Object.keys(before), ...Object.keys(after)])];
+  
+  let html = '<table style="width:100%; border-collapse:collapse; font-size:11px;">';
+  html += '<tr style="border-bottom:1px solid var(--card-b);"><th style="text-align:left; padding:4px;">Kolom</th><th style="text-align:left; padding:4px;">Sebelum</th><th style="text-align:left; padding:4px;">Sesudah</th></tr>';
+  
+  allKeys.forEach(k => {
+    if (['id', 'timestamp', 'sparepartId'].includes(k)) return; // skip internal IDs
+    const v1 = before[k];
+    const v2 = after[k];
+    
+    if (JSON.stringify(v1) !== JSON.stringify(v2)) {
+      html += `<tr style="border-bottom:1px dotted var(--card-b);">
+        <td style="padding:6px; font-weight:700; color:var(--text2);">${k.toUpperCase()}</td>
+        <td style="padding:6px; color:var(--danger); text-decoration:line-through;">${v1 === undefined ? '—' : (typeof v1 === 'object' ? 'OBJ' : v1)}</td>
+        <td style="padding:6px; color:var(--success); font-weight:700;">${v2 === undefined ? '—' : (typeof v2 === 'object' ? 'OBJ' : v2)}</td>
+      </tr>`;
+    }
+  });
+  
+  html += '</table>';
+  return html;
 }
 
 async function confirmDeleteAuditLogs() {
@@ -1562,36 +1744,91 @@ const LOGIN_USERNAME = 'admin';
 const LOGIN_PASSWORD = 'bhd2024';
 // ═══════════════════════════════════════════════════════
 
-async function doLogin(){
-  const u=document.getElementById('login-user')?.value?.trim();
-  const p=document.getElementById('login-pass')?.value;
+async function doLogin(isAuto = false){
+  const u = isAuto ? activeAdmin.name : document.getElementById('login-user')?.value?.trim();
+  const p = isAuto ? '******' : document.getElementById('login-pass')?.value;
   const errEl=document.getElementById('login-err');
+  const dbgEl=document.getElementById('login-debug');
   const btn=document.querySelector('.login-btn');
-  if(btn){btn.textContent='Memeriksa...';btn.disabled=true;}
-  let ok=false;
-  // Coba login ke server dulu
-  const serverUp = await apiPing();
-  if(serverUp){
-    try{
-      const res = await apiFetch('/api/auth/login',{method:'POST',body:{username:u,password:p}});
-      ok = res.ok;
-    } catch(e){ ok=false; }
-  } else {
-    // Fallback offline
-    ok = (u===LOGIN_USERNAME && p===LOGIN_PASSWORD);
+  
+  if(dbgEl) dbgEl.textContent = 'Mencoba koneksi ke: ' + (API_BASE || 'Same Origin');
+  if(btn){
+    btn.textContent = isAuto ? 'Auto Login...' : 'Memeriksa...';
+    btn.disabled=true;
   }
+  
+  let ok=false;
+  let serverUp = false;
+
+  try {
+    if(dbgEl) dbgEl.textContent += ' > Ping...';
+    serverUp = await apiPing();
+    
+    if(serverUp){
+      if(isAuto) {
+        // Jika auto-login, kita sudah punya activeAdmin, cukup jalankan _appInit
+        ok = true;
+      } else {
+        if(dbgEl) dbgEl.textContent += ' > Online > Auth...';
+        const res = await apiFetch('/api/auth/login',{method:'POST',body:{username:u,password:p}});
+        if(res.ok){
+          window.activeAdmin = { id: res.id, name: res.username, role: res.role };
+          localStorage.setItem('bhd_active_admin', JSON.stringify(activeAdmin));
+          updateAdminUI();
+          ok = true;
+        }
+      }
+    } else {
+      if(isAuto) {
+        ok = true; // Tetap masuk mode offline jika sesi sudah ada
+      } else {
+        if(dbgEl) dbgEl.textContent += ' > Offline > Fallback...';
+        ok = (u===LOGIN_USERNAME && p===LOGIN_PASSWORD);
+      }
+    }
+  } catch(e){
+    ok = false;
+    console.error('Login Error:', e);
+    if(dbgEl) dbgEl.textContent += ' > EROR: ' + e.message;
+    if(errEl && !isAuto) {
+      errEl.textContent = e.message.includes('fetch') ? 'Gagal terhubung ke server.' : e.message;
+      errEl.style.animation='none';
+      requestAnimationFrame(()=>{errEl.style.animation='fadeUp .3s ease';});
+    }
+  }
+
   if(btn){btn.textContent='Masuk ke Dashboard ⛏️';btn.disabled=false;}
+  
   if(ok){
     const overlay=document.getElementById('login-overlay');
     const app=document.getElementById('app');
     if(overlay){overlay.style.opacity='0';overlay.style.transition='opacity .4s';setTimeout(()=>{overlay.style.display='none';},400);}
     if(app){app.style.display='flex';}
     const badge=document.getElementById('api-status-badge');
-    if(badge){badge.textContent=serverUp?'🟢 Online':'🟡 Offline';badge.title=serverUp?'Terhubung ke server':'Mode Offline - data tidak tersimpan ke server';}
+    if(badge){badge.textContent=serverUp?'🟢 Online':'🟡 Offline';badge.title=serverUp?'Terhubung ke server':'Mode Offline';}
+    updateAdminUI();
     setTimeout(()=>{_appInit();},100);
-  } else {
-    if(errEl){errEl.textContent=serverUp?'Username atau password salah.':'Username atau password salah (mode offline).';errEl.style.animation='none';requestAnimationFrame(()=>{errEl.style.animation='fadeUp .3s ease';});}
+  } else if (!errEl?.textContent && !isAuto) {
+    if(errEl){
+      errEl.textContent = serverUp ? 'Username atau password salah.' : 'Kredensial salah (Mode Offline).';
+      errEl.style.animation='none';
+      requestAnimationFrame(()=>{errEl.style.animation='fadeUp .3s ease';});
+    }
     const passEl=document.getElementById('login-pass');if(passEl){passEl.value='';passEl.focus();}
+  }
+}
+
+function doLogout() {
+  if (confirm('Keluar dari sesi ini?')) {
+    localStorage.removeItem('bhd_active_admin');
+    location.reload();
+  }
+}
+
+function resetAppSession() {
+  if (confirm('Bersihkan data cache browser dan reset sesi? Langkah ini bisa membantu jika aplikasi macet.')) {
+    localStorage.clear();
+    location.reload();
   }
 }
 
@@ -1741,20 +1978,28 @@ function deleteKategori(nama){
   showToast('Kategori "'+nama+'" dihapus');vibrate(30);
 }
 
-function renderGudangFilterChips(){
-  const el=document.getElementById('gudang-filter-chips');
-  if(!el)return;
-  let html=`<div class="fs-chip active" onclick="setGudangFilter('all',this)">Semua</div>`;
-  gudangKategori.forEach(k=>{
-    html+=`<div class="fs-chip" onclick="setGudangFilter('${k}',this)">${getSpCatIcon(k)} ${k}</div>`;
-  });
-  html+=`<div class="fs-chip" onclick="openKategoriModal()" style="background:var(--orange-bg);color:var(--orange);border-color:var(--orange-bd);">⚙️ Kelola</div>`;
-  el.innerHTML=html;
+function setGudangFilter(cat, btn) {
+  gudangFilter = cat;
+  renderGudangFilterChips();
+  renderGudang();
+}
+
+function renderGudangFilterChips() {
+  const container = document.getElementById('gudang-filter-chips');
+  if(!container) return;
+  const cats = ['all', ...gudangKategori];
+  container.innerHTML = cats.map(c => `
+    <div class="chip ${gudangFilter === c ? 'chip-green' : 'chip-gray'}" 
+         style="cursor:pointer; white-space:nowrap; padding:6px 14px;" 
+         onclick="setGudangFilter('${c}')">
+      ${c === 'all' ? '📦 Semua' : getSpCatIcon(c) + ' ' + c}
+    </div>
+  `).join('');
 }
 
 function renderGudang(){
   const el=document.getElementById('sp-grid');if(!el)return;
-  const list=gudangFilter==='all'?sparepartStock:sparepartStock.filter(s=>s.kategori===gudangFilter);
+  const list = gudangFilter === 'all' ? sparepartStock : sparepartStock.filter(s => s.kategori === gudangFilter);
   const tot=sparepartStock.length;
   const inst=sparepartStock.filter(s=>s.installed.length>0).length;
   const crit=sparepartStock.filter(s=>spStatus(s)==='critical').length;
@@ -1763,43 +2008,96 @@ function renderGudang(){
   [tot,inst,crit].forEach((v,i)=>{const e=document.getElementById(ids[i]);if(e)e.textContent=v;});
   const nilaiEl=document.getElementById('gh-nilai');if(nilaiEl)nilaiEl.textContent=fmt(nilaiTotal);
   ['sb-gudang-badge','bn-gudang-badge'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=crit>0?'':'none';});
+  
   el.innerHTML=list.length===0?'<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px;">Tidak ada item untuk kategori ini</div>':list.map(sp=>{
     const st=spStatus(sp);
     const ico=getSpCatIcon(sp.kategori)||'📦';
     const pct=Math.round(sp.stokSisa/sp.stokAwal*100);
-    const nilaiSisa=sp.stokSisa*sp.hargaSatuan;
-    const instList=sp.installed.map(i=>{
-      const f=fleetData.find(x=>x.nopol===i.armada);
-      const freeze=f&&f.status==='bengkel';
-      return '<div style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:5px;margin-top:3px;">'
-        +'<span>🚛</span><span style="font-weight:600;">'+i.armada+'</span>'
-        +(f?'<span style="color:var(--text3);">'+f.driver+'</span>':'')
-        +(freeze?'<span class="ritase-freeze">❄ FREEZE</span>':'<span class="ritase-freeze" style="color:'+getRitaseStatusColor(i.ritase,sp.kategori)+';background:rgba(0,0,0,.05);">'+i.ritase+' / '+getRitaseThreshold(sp.kategori)+' ritase'+(i.ritase>=getRitaseThreshold(sp.kategori)?' ⚠️':'')+'</span>')
-        +'</div>';
-    }).join('');
-    return '<div class="sp-card '+(st==='critical'?'critical-stock ':'')+st+'">'
-      +'<div class="sp-header"><div class="sp-icon-wrap '+st+'">'+ico+'</div>'+spStatusLabel(sp)+'</div>'
-      +'<div class="sp-name">'+sp.nama+' <span class="min-badge">Min: '+(sp.stok_min||5)+'</span></div>'
-      +'<div class="sp-spec">🏷️ '+sp.spek+' · 🏪 '+sp.toko+'</div>'
-      +(instList?'<div style="margin-bottom:8px;">'+instList+'</div>':'')
-      +'<div class="sp-meta-grid">'
-      +'<div class="sp-meta-item"><div class="sp-meta-label">📦 Sisa/Total</div><div class="sp-meta-val '+(st==='critical'?'critical-text':'')+'" style="color:'+(st==='fresh'?'var(--success)':st==='warn'?'var(--warning)':'var(--danger)')+';">'+sp.stokSisa+' / '+sp.stokAwal+'</div></div>'
-      +'<div class="sp-meta-item"><div class="sp-meta-label">💰 Harga/unit</div><div class="sp-meta-val">'+fmt(sp.hargaSatuan)+'</div></div>'
-      +'<div class="sp-meta-item"><div class="sp-meta-label">💵 Nilai Sisa</div><div class="sp-meta-val" style="color:var(--info);">'+fmt(nilaiSisa)+'</div></div>'
-      +'<div class="sp-meta-item"><div class="sp-meta-label">📅 Tgl Masuk</div><div class="sp-meta-val">'+fmtDate(sp.tglMasuk)+'</div></div>'
-      +'</div>'
-      +'<div class="sp-progress-wrap">'
-      +'<div class="sp-progress-label"><span>Sisa Stok</span><span>'+pct+'%</span></div>'
-      +'<div class="sp-progress-bar"><div class="sp-progress-fill '+st+'" style="width:'+pct+'%"></div></div>'
-      +'</div>'
-      +(sp.catatan?'<div style="font-size:10px;color:var(--text3);background:var(--bg3);border-radius:8px;padding:6px 9px;margin-top:8px;">📝 '+sp.catatan+'</div>':'')
-      +'<div class="sp-actions">'
-      +(sp.stokSisa>0?'<div class="sp-act pasang" onclick="openPasangModal(\''+sp.id+'\')">🚛 Pasang</div>':'<div class="sp-act" style="opacity:.4;cursor:not-allowed;">🚫 Habis</div>')
-      +'<div class="sp-act edit" onclick="openAddStockModal(\''+sp.id+'\')">✏️ Edit</div>'
-      +'<div class="sp-act del" onclick="deleteSparepart(\''+sp.id+'\')">🗑️</div>'
-      +'</div>'
-      +'</div>';
+    const instCount = sp.installed?.length || 0;
+    
+    return `<div class="sp-card ${st==='critical'?'critical-stock ':''}${st}" onclick="openSparepartDetail('${sp.id}')">
+      <div class="sp-header"><div class="sp-icon-wrap ${st}">${ico}</div>${spStatusLabel(sp)}</div>
+      <div class="sp-name">${sp.nama} <span class="min-badge">Min: ${sp.stok_min||5}</span></div>
+      <div class="sp-spec">🏷️ ${sp.spek} · 🏪 ${sp.toko}</div>
+      
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+        <span class="chip chip-gray" style="font-size:9px;">${instCount} Armada Memakai</span>
+      </div>
+
+      <div class="sp-meta-grid">
+        <div class="sp-meta-item"><div class="sp-meta-label">📦 Sisa/Total</div><div class="sp-meta-val ${st==='critical'?'critical-text':''}" style="color:${st==='fresh'?'var(--success)':st==='warn'?'var(--warning)':'var(--danger)'}">${sp.stokSisa} / ${sp.stokAwal}</div></div>
+        <div class="sp-meta-item"><div class="sp-meta-label">💵 Nilai Sisa</div><div class="sp-meta-val" style="color:var(--info);">${fmt(sp.stokSisa*sp.hargaSatuan)}</div></div>
+      </div>
+
+      <div class="sp-progress-wrap">
+        <div class="sp-progress-label"><span>Sisa Stok</span><span>${pct}%</span></div>
+        <div class="sp-progress-bar"><div class="sp-progress-fill ${st}" style="width:${pct}%"></div></div>
+      </div>
+
+      <div class="sp-actions">
+        ${sp.stokSisa>0?`<div class="sp-act pasang" onclick="event.stopPropagation();openPasangModal('${sp.id}')">🚛 Pasang</div>`:`<div class="sp-act" style="opacity:.4;cursor:not-allowed;">🚫 Habis</div>`}
+        <div class="sp-act edit" onclick="event.stopPropagation();openAddStockModal('${sp.id}')">✏️ Edit</div>
+      </div>
+    </div>`;
   }).join('');
+}
+
+function openSparepartDetail(id) {
+  const sp = sparepartStock.find(s => s.id === id);
+  if(!sp) return;
+  const instList = sp.installed.map(i => {
+    const f = fleetData.find(x => x.nopol === i.armada);
+    const freeze = f && f.status === 'bengkel';
+    return `
+      <div style="background:var(--bg3); border:1px solid var(--card-b); border-radius:10px; padding:10px; margin-bottom:8px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
+          <div style="font-weight:800; color:var(--text);">🚛 ${i.armada}</div>
+          <div style="font-size:9.5px; color:var(--text3);">${fmtDate(i.tglPasang)}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="ritase-count" style="font-size:14px;">${i.ritase}</div>
+          <div style="font-size:9px; color:var(--text3); line-height:1.2;">
+            Ritase Pemakaian<br>
+            Threshold: ${getRitaseThreshold(sp.kategori)}
+          </div>
+          ${freeze ? '<div class="chip chip-orange" style="margin-left:auto; font-size:9px;">❄ FREEZE</div>' : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const html = `
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px; background:var(--bg3); padding:12px; border-radius:12px; border:1px solid var(--card-b);">
+      <div style="font-size:28px;">${getSpCatIcon(sp.kategori)}</div>
+      <div>
+        <div style="font-weight:800; font-size:15px; color:var(--text);">${sp.nama}</div>
+        <div style="font-size:11px; color:var(--text3);">${sp.spek} · ${sp.toko}</div>
+      </div>
+    </div>
+    <div class="sec-title" style="margin-bottom:10px;">Daftar Armada Pengguna (${sp.installed.length})</div>
+    <div style="max-height:300px; overflow-y:auto; padding-right:4px;">
+      ${instList || '<div style="text-align:center; padding:30px; color:var(--text3);">Belum ada armada yang menggunakan item ini.</div>'}
+    </div>
+    <div style="margin-top:15px; font-size:10px; color:var(--text3); background:rgba(0,0,0,0.05); padding:10px; border-radius:10px;">
+      📝 <b>Catatan:</b> ${sp.catatan || 'Tidak ada catatan.'}
+    </div>
+  `;
+  openSm('Detail Onderdil', html);
+}
+
+function showTireDetail(fleetId, pos) {
+  // Placeholder untuk Phase 2 (Detailed Tire Status)
+  const f = fleetData.find(x => x.id === fleetId);
+  const title = `Status Ban: ${pos.replace(/-/g, ' ').toUpperCase()}`;
+  const html = `
+    <div style="text-align:center; padding:20px;">
+      <div style="font-size:40px; margin-bottom:10px;">🛞</div>
+      <div style="font-weight:700; margin-bottom:5px;">Armada: ${f?.nopol}</div>
+      <div style="color:var(--text3); font-size:12px;">Data ban detail (serial number, pemakaian per ban) akan tersedia secara instan saat modul Fleet Tire diaktifkan di backend.</div>
+      <button class="sm-btn orange" style="margin-top:20px;" onclick="closeSm()">Tutup</button>
+    </div>
+  `;
+  openSm(title, html);
 }
 
 function openAddStockModal(editId){
@@ -2409,8 +2707,76 @@ function deleteTxn(id){
   }
 
   transactions=transactions.filter(t=>t.id!==id);
-  if(_useAPI) apiFetch('/api/transactions/'+id,{method:'DELETE'}).catch(e=>console.warn('Sync delete txn gagal:',e));
+  if(_useAPI) {
+    apiFetch('/api/transactions/'+id,{method:'DELETE'})
+      .then(() => {
+        // Trigger sync instan agar stok dan dashboard selaras
+        syncDataSilent();
+      })
+      .catch(e=>console.warn('Sync delete txn gagal:',e));
+  }
   renderDashboard();applyTxnFilters();renderLaporanTable();showToast('Transaksi dihapus');vibrate(40);
+}
+
+async function doLogin(isAuto = false) {
+  const userEl = document.getElementById('login-user');
+  const passEl = document.getElementById('login-pass');
+  const err = document.getElementById('login-err');
+  
+  if (!userEl || !passEl) return;
+
+  // ENSURE JS IS FULLY LOADED
+  if (!window.jsReady) {
+    if (err) {
+      err.textContent = "Sistem sedang memuat... Tunggu sebentar.";
+      err.style.color = "var(--orange)";
+    }
+    console.warn("System not ready yet (window.jsReady is false)");
+    return;
+  }
+
+  const username = isAuto ? activeAdmin.name : userEl.value.trim();
+  const password = isAuto ? '******' : passEl.value;
+
+  if (!isAuto && (!username || !password)) {
+    if (err) err.textContent = 'Masukkan username & password';
+    return;
+  }
+
+  try {
+    const btn = document.querySelector('.login-btn');
+    if (btn) btn.disabled = true;
+    if (err) err.textContent = isAuto ? 'Auto-logging in...' : 'Authenticating...';
+
+    let result;
+    if (isAuto) {
+      result = activeAdmin;
+    } else {
+      result = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        body: { username, password }
+      });
+    }
+
+    if (result && result.name) {
+      window.activeAdmin = result;
+      localStorage.setItem('bhd_active_admin', JSON.stringify(result));
+      
+      document.getElementById('login-overlay').classList.add('hidden');
+      setTimeout(() => {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        updateAdminUI();
+        _appInit();
+      }, 400);
+    }
+  } catch (e) {
+    if (err) err.textContent = e.message;
+    if (!isAuto) localStorage.removeItem('bhd_active_admin');
+  } finally {
+    const btn = document.querySelector('.login-btn');
+    if (btn) btn.disabled = false;
+  }
 }
 
 function setLoginMode(m){
@@ -2460,15 +2826,27 @@ async function saveRevisedTxn(id){
   const newAmt = getRaw('rev-amount');
   const newDate = document.getElementById('rev-date').value;
   
-  t.label = newLabel;
-  t.amount = newAmt;
-  t.date = newDate;
+  const updated = {...t, label:newLabel, amount:newAmt, date:newDate};
   
-  if(_useAPI) await apiFetch('/api/transactions/'+id, {method:'PUT', body:t}).catch(e=>console.warn(e));
+  if(_useAPI){
+    apiFetch('/api/transactions/'+id, {method:'PUT', body:updated})
+      .then(() => {
+        syncDataSilent(); // Sync instan
+        showToast('Transaksi diperbarui');
+      })
+      .catch(e => {
+        console.warn(e);
+        showToast('Gagal sinkron revisions: ' + e.message);
+      });
+  } else {
+    t.label = newLabel;
+    t.amount = newAmt;
+    t.date = newDate;
+    renderDashboard(); applyTxnFilters(); renderLaporanTable();
+    showToast('Transaksi diperbarui (Local)');
+  }
   
   closeSm();
-  renderDashboard(); applyTxnFilters(); renderLaporanTable();
-  showToast('Transaksi diperbarui');
 }
 
 // ════════════════════════════════════════════════════════
@@ -3036,16 +3414,16 @@ function renderFleetUnits(){
     const status=f.status||'jalan';
     const initials=(f.nopol||'??').replace(/\s/g,'').slice(-4);
     const sl={jalan:'chip-green',bengkel:'chip-orange',antre:'chip-gray'};
-    return `<div class="fleet-card-unit">
-      <div class="fcu-av ${status}" onclick="openUnitDetail('${f.id}')">${initials}</div>
-      <div class="fcu-info" onclick="openUnitDetail('${f.id}')">
+    return `<div class="fleet-card-unit" style="cursor:pointer;" onclick="openUnitDetail('${f.id}')">
+      <div class="fcu-av ${status}">${initials}</div>
+      <div class="fcu-info">
         <div class="fcu-nopol">${f.nopol||'—'}</div>
         <div class="fcu-driver"><svg viewBox="0 0 24 24" width="10" height="10" style="fill:none;stroke:var(--text3);stroke-width:2;stroke-linecap:round;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${f.driver||'—'}</div>
       </div>
       <div class="fcu-right">
         ${status==='antre'?'<span class="antre-pulse"><span class="ap-dot"></span>Antre</span>':`<span class="chip ${sl[status]||'chip-gray'}">${sIcoFn(status)} ${status.charAt(0).toUpperCase()+status.slice(1)}</span>`}
         ${aW?'<span class="doc-warn">⚠ Dokumen</span>':''}
-        <button class="fcu-edit-btn" onclick="openSmModal('unit','${f.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="fcu-edit-btn" onclick="openSmModal('unit','${f.id}');event.stopPropagation();"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
       </div>
     </div>`;
   }).join('');
@@ -3068,46 +3446,30 @@ function renderDriverList(){
   }).join('');
 }
 
-// ═══════════════════════════════ UNIT DETAIL ═════════════════════
+// ═══════════════════════════════ UNIT DETAIL (PHASE 2) ════════════
 function openUnitDetail(id){
   const f=fleetData.find(x=>x.id===id);if(!f)return;
   currentDetailUnit=f;
   document.getElementById('armada-list').style.display='none';
   document.getElementById('detail-panel').classList.add('active');
-  // Use ALL transactions (no period filter) for unit detail
-  const uIn=transactions.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
-  const uOutTunai=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
-  const uOutOnderdil=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
-  // Life-to-date Repair (accumulated outflow onderdil/service)
-  const uOutLTD=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&(t.kategori==='Onderdil'||t.label.toLowerCase().includes('servis'))).reduce((s,t)=>s+t.amount,0);
   
-  const beban=transactions.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount/FLEET_COUNT,0);
-  const net=uIn-(uOutTunai+uOutOnderdil+beban);
+  // Render Hero Header
   const pD=daysUntil(f.pajak),kD=daysUntil(f.kir);
-  // Active sparepart count
-  const activeParts=sparepartStock.filter(sp=>sp.installed.some(i=>i.armada===f.nopol));
+  const initials=(f.nopol||'??').replace(/\s/g,'').slice(-4);
   document.getElementById('dp-hero').innerHTML=`
-    <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px;position:relative;z-index:1;">
-      <div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#CC5200,#FF6700,#FF9A40);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;">${f.nopol.replace(/\s/g,'').slice(-4)}</div>
-      <div><div class="dp-nopol">${f.nopol}</div><div class="dp-driver">${f.driver}</div></div>
-      <div style="margin-left:auto;">${f.status==='antre'?'<span class="antre-pulse"><span class="ap-dot"></span>Antre</span>':`<span class="chip ${f.status==='jalan'?'chip-green':'chip-orange'}">${sIcoFn(f.status)} ${f.status.charAt(0).toUpperCase()+f.status.slice(1)}</span>`}</div>
+    <div style="display:flex;align-items:center;gap:13px;margin-bottom:12px;position:relative;z-index:1;">
+      <div style="width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,#CC5200,#FF6700);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;box-shadow:var(--sh);">${initials}</div>
+      <div><div class="dp-nopol">${f.nopol}</div><div class="dp-driver">${f.driver || 'Tidak ada supir'}</div></div>
+      <div style="margin-left:auto;">${f.status==='antre'?'<span class="antre-pulse"><span class="ap-dot"></span>Antre</span>':`<span class="chip ${f.status==='jalan'?'chip-green':'chip-orange'}">${sIcoFn(f.status)} ${f.status}</span>`}</div>
     </div>
-    <div class="dp-stats" style="position:relative;z-index:1;">
-      <div class="dp-stat"><div class="dp-stat-l">Total Inflow</div><div class="dp-stat-v gr">${fmt(uIn)}</div></div>
-      <div class="dp-stat"><div class="dp-stat-l">Beban Umum</div><div class="dp-stat-v rd">${fmt(beban)}</div></div>
-      <div class="dp-stat"><div class="dp-stat-l">Repair LTD</div><div class="dp-stat-v rd" style="font-weight:700;">${fmt(uOutLTD)}</div></div>
-      <div class="dp-stat"><div class="dp-stat-l">Onderdil Aktif</div><div class="dp-stat-v" style="color:var(--warning);">${activeParts.length} item</div></div>
-      <div class="dp-stat" style="grid-column:1/-1;border-top:1px solid var(--card-b);padding-top:8px;margin-top:4px;">
-        <div class="dp-stat-l">Laba Bersih (Nett)</div><div class="dp-stat-v nt" style="font-size:16px;font-weight:900;">${fmt(net)}</div>
-      </div>
-    </div>
-    <div class="dp-docs" style="position:relative;z-index:1;">
-      <div class="dp-doc"><div class="dp-doc-lbl">Pajak</div><div class="dp-doc-val ${pD<=7?'near':pD<=30?'warn':''}">${fmtDate(f.pajak)} ${pD<=30?'('+pD+'h)':''}</div></div>
-      <div class="dp-doc"><div class="dp-doc-lbl">KIR</div><div class="dp-doc-val ${kD<=7?'near':kD<=30?'warn':''}">${fmtDate(f.kir)} ${kD<=30?'('+kD+'h)':''}</div></div>
+    <div class="dp-docs" style="margin-bottom:0; background:rgba(255,255,255,0.03); border:1px solid var(--card-b); padding:10px; border-radius:12px;">
+      <div class="dp-doc"><div class="dp-doc-lbl">Pajak</div><div class="dp-doc-val ${pD<=30?'warn':''}">${fmtDate(f.pajak)}</div></div>
+      <div class="dp-doc"><div class="dp-doc-lbl">KIR</div><div class="dp-doc-val ${kD<=30?'warn':''}">${fmtDate(f.kir)}</div></div>
     </div>`;
-  showTab('perjalanan',null);
-}
 
+  // Start at Overview tab
+  switchFleetTab('overview', document.querySelector('.f-tab'));
+}
 
 function backToArmadaList(){
   document.getElementById('armada-list').style.display='block';
@@ -3115,11 +3477,143 @@ function backToArmadaList(){
   currentDetailUnit=null;
 }
 
-function showTab(name,btnEl){
-  if(btnEl){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btnEl.classList.add('active');}
-  else document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
-  ['perjalanan','biaya','ban','dokumen'].forEach(t=>{const e=document.getElementById('tab-'+t);if(e)e.style.display=t===name?'block':'none';});
-  if(!currentDetailUnit)return;const f=currentDetailUnit;
+function switchFleetTab(name, btnEl){
+  // UI Tabs toggle
+  document.querySelectorAll('.f-tab').forEach(b => b.classList.remove('active'));
+  if(btnEl) btnEl.classList.add('active');
+  
+  document.querySelectorAll('.f-sec').forEach(s => s.classList.remove('active'));
+  const sec = document.getElementById('f-sec-' + name);
+  if(sec) sec.classList.add('active');
+  
+  // Render data based on tab
+  if(!currentDetailUnit) return;
+  const f = currentDetailUnit;
+  
+  switch(name) {
+    case 'overview': renderFleetOverview(f); break;
+    case 'finance': renderFleetFinance(f); break;
+    case 'parts': renderFleetParts(f); break;
+    case 'history': renderFleetHistory(f); break;
+  }
+}
+
+function renderFleetOverview(f) {
+  const el = document.getElementById('f-sec-overview');
+  // Ambil data ban dari fleet_tires jika ada, kalau tidak dummy data 10 ban
+  const tires = []; // Nanti fetch dari fleet_tires
+  
+  // Calculate summary stats for overview
+  const uIn=transactions.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
+  const uOut=transactions.filter(t=>t.type==='outflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
+  const net = uIn - uOut;
+
+  el.innerHTML = `
+    <div class="truck-canvas">
+      <div class="truck-top-view">
+        <div class="truck-cabin"><div class="truck-windshield"></div></div>
+        <!-- Tires Axle 1 -->
+        <div class="tire-spot t-f-l" onclick="showTireDetail('${f.id}', 'front-left')">L1</div>
+        <div class="tire-spot t-f-r" onclick="showTireDetail('${f.id}', 'front-right')">R1</div>
+        <!-- Tires Axle 2 -->
+        <div class="tire-spot t-r1-l1" onclick="showTireDetail('${f.id}', 'rear-1-l1')">L2</div>
+        <div class="tire-spot t-r1-l2" onclick="showTireDetail('${f.id}', 'rear-1-l2')">L3</div>
+        <div class="tire-spot t-r1-r1" onclick="showTireDetail('${f.id}', 'rear-1-r1')">R2</div>
+        <div class="tire-spot t-r1-r2" onclick="showTireDetail('${f.id}', 'rear-1-r2')">R3</div>
+        <!-- Tires Axle 3 -->
+        <div class="tire-spot t-r2-l1" onclick="showTireDetail('${f.id}', 'rear-2-l1')">L4</div>
+        <div class="tire-spot t-r2-l2" onclick="showTireDetail('${f.id}', 'rear-2-l2')">L5</div>
+        <div class="tire-spot t-r2-r1" onclick="showTireDetail('${f.id}', 'rear-2-r1')">R4</div>
+        <div class="tire-spot t-r2-r2" onclick="showTireDetail('${f.id}', 'rear-2-r2')">R5</div>
+      </div>
+      <div style="text-align:center; font-size:10px; color:var(--text3); font-style:italic;">Klik pada ban untuk melihat status ritase & kondisi</div>
+    </div>
+    
+    <div class="dp-stats">
+      <div class="dp-stat"><div class="dp-stat-l">Total Inflow</div><div class="dp-stat-v gr">${fmt(uIn)}</div></div>
+      <div class="dp-stat"><div class="dp-stat-l">Total Biaya</div><div class="dp-stat-v rd">${fmt(uOut)}</div></div>
+      <div class="dp-stat" style="grid-column:1/-1; border-top:1px solid var(--card-b); padding-top:10px;">
+        <div class="dp-stat-l">Laba Bersih</div><div class="dp-stat-v nt" style="font-size:18px;">${fmt(net)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderFleetFinance(f) {
+  const el = document.getElementById('f-sec-finance');
+  const ut = transactions.filter(t => t.armada === f.nopol).sort((a,b) => b.date.localeCompare(a.date));
+  
+  el.innerHTML = `
+    <div style="margin-bottom:15px; display:flex; gap:8px; overflow-x:auto; padding-bottom:5px;">
+      <button class="chip chip-gray" onclick="showToast('Fitur Filter Tanggal menyusul')">🗓 Bulan Ini</button>
+      <button class="chip chip-gray" onclick="showToast('Fitur Filter Tanggal menyusul')">🗓 3 Bulan</button>
+      <button class="chip chip-gray" onclick="showToast('Fitur Filter Tanggal menyusul')">🗓 Semua</button>
+    </div>
+    <div class="sec-title" style="margin-bottom:10px;">Daftar Transaksi</div>
+    ${ut.map(t => `
+      <div class="hist-item">
+        <div class="hist-dot ${t.type==='inflow'?'trip':'part'}"></div>
+        <div style="flex:1">
+          <div class="hist-main">${t.label}</div>
+          <div class="hist-sub">${fmtDate(t.date)} · ${t.kategori}</div>
+        </div>
+        <div class="hist-amt ${t.type==='inflow'?'in':'out'}">${t.type==='inflow'?'+':'-'}${fmt(t.amount)}</div>
+      </div>
+    `).join('') || '<div style="text-align:center; padding:20px; color:var(--text3)">Belum ada transaksi</div>'}
+  `;
+}
+
+function renderFleetParts(f) {
+  const el = document.getElementById('f-sec-parts');
+  const parts = getActivePartsForArmada(f.nopol);
+  
+  el.innerHTML = `
+    <div class="sp-card-grid">
+      ${parts.map(p => `
+        <div class="sp-mini-card">
+          <div class="sp-mini-icon">${getSpCatIcon(p.kategori)}</div>
+          <div class="sp-mini-name">${p.nama}</div>
+          <div class="sp-mini-rit">${p.ritase} ritase</div>
+          <div style="font-size:8px; color:var(--text4);">${fmtDate(p.tglPasang)}</div>
+        </div>
+      `).join('') || '<div style="text-align:center; grid-column:1/-1; padding:30px; color:var(--text3);">Tidak ada onderdil terpasang</div>'}
+    </div>
+  `;
+}
+
+function renderFleetHistory(f) {
+  const el = document.getElementById('f-sec-history');
+  const trips = transactions.filter(t => t.type==='inflow' && t.armada === f.nopol && t.muat).sort((a,b) => b.date.localeCompare(a.date));
+  
+  el.innerHTML = `
+    <div class="sec-title" style="margin-bottom:12px;">Timeline Perjalanan</div>
+    ${trips.map(t => `
+      <div class="hist-item">
+        <div class="hist-dot trip"></div>
+        <div style="flex:1">
+          <div class="hist-main">${t.muat} → ${t.bongkar}</div>
+          <div class="hist-sub">${fmtDate(t.date)} · ${t.driver}</div>
+        </div>
+        <div class="hist-amt in">+${fmt(t.amount)}</div>
+      </div>
+    `).join('') || '<div style="text-align:center; padding:30px; color:var(--text3);">Belum ada riwayat trip</div>'}
+  `;
+}
+
+function getSpCatIcon(cat) {
+  const map = {
+    'Ban': '🛞',
+    'Oli': '🛢️',
+    'Aki': '🔋',
+    'Filter': '🔍',
+    'Rem': '🛑',
+    'Mesin': '⚙️',
+    'Lampu': '💡',
+    'Body': '🚐',
+    'Lainnya': '📦'
+  };
+  return map[cat] || '🔧';
+}
   if(name==='ban'){renderFleetTires(f.id);}
   if(name==='perjalanan'){
     const trips=transactions.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).sort((a,b)=>b.date.localeCompare(a.date));
@@ -3219,6 +3713,21 @@ function openSmModal(type,val){
   }
   document.getElementById('sm-overlay').classList.add('open');
 }
+
+/** 
+ * Generic Sheet Modal for dynamic content (Admin Selection, Audit Details, etc)
+ */
+function openSm(title, html) {
+  closeFab();
+  const tEl = document.getElementById('sm-title-text');
+  const body = document.getElementById('sm-body');
+  if (tEl && body) {
+    tEl.textContent = title;
+    body.innerHTML = html;
+    document.getElementById('sm-overlay').classList.add('open');
+  }
+}
+
 function closeSm(){document.getElementById('sm-overlay').classList.remove('open');}
 function closeSmOuter(e){if(e.target===document.getElementById('sm-overlay'))closeSm();}
 
@@ -3427,7 +3936,7 @@ function submitInflow(){
   incrementRitaseForArmada(armada, statusSebelum);
   // Simpan ke server jika online
   if(_useAPI){
-    apiFetch('/api/transactions',{method:'POST',body:newTxn}).catch(e=>console.warn('Sync inflow gagal:',e));
+    apiFetch('/api/transactions',{method:'POST',body:newTxn}).then(()=>syncDataSilent()).catch(e=>console.warn('Sync inflow gagal:',e));
     apiFetch('/api/fleet/'+fUnit?.id,{method:'PUT',body:{nopol:armada,driver,status:antre,pajak:fUnit?.pajak||'',kir:fUnit?.kir||''}}).catch(e=>console.warn('Sync fleet gagal:',e));
   }
   closeModal();renderDashboard();applyTxnFilters();renderLaporanTable();
@@ -3471,7 +3980,7 @@ function submitOutflow(){
   const newOut={id:outId,type:'outflow',label:txnLabel,sub:`No.Nota: ${nota} · ${toko}${driver?' · '+driver:''}`,amount,date,armada,nota,toko,kategori:cat,driver,status:'lunas',sparepartId:spId||null};
   transactions.unshift(newOut);
   if(_useAPI){
-    apiFetch('/api/transactions',{method:'POST',body:newOut}).catch(e=>console.warn('Sync outflow gagal:',e));
+    apiFetch('/api/transactions',{method:'POST',body:newOut}).then(()=>syncDataSilent()).catch(e=>console.warn('Sync outflow gagal:',e));
   }
   closeModal();renderDashboard();applyTxnFilters();renderGudang();renderLaporanTable();
   if(!spId) showToast('Outflow '+fmt(amount)+' disimpan');
@@ -3626,31 +4135,31 @@ function renderTire(pos, tires){
 function openTireEditModal(fleetId, pos, data){
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent = 'Manajemen Ban - ' + pos;
-  body.innerHTML = \`
+  body.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div style="grid-column:1/-1;">
         <label class="form-label">Serial Number</label>
-        <input class="form-input" id="t-sn" value="\${data.serial_number||''}" placeholder="SN..."/>
+        <input class="form-input" id="t-sn" value="${data.serial_number||''}" placeholder="SN..."/>
       </div>
       <div style="grid-column:1/-1;">
         <label class="form-label">Merek</label>
-        <input class="form-input" id="t-brand" value="\${data.brand||''}" placeholder="Merek ban..."/>
+        <input class="form-input" id="t-brand" value="${data.brand||''}" placeholder="Merek ban..."/>
       </div>
       <div>
         <label class="form-label">Kondisi</label>
         <select class="form-select" id="t-cond">
-          <option value="baru" \${data.condition==='baru'?'selected':''}>🟢 Baru</option>
-          <option value="vulkanisir" \${data.condition==='vulkanisir'?'selected':''}>🟡 Vulkanisir</option>
-          <option value="tipis" \${data.condition==='tipis'?'selected':''}>🔴 Tipis / Perlu Ganti</option>
+          <option value="baru" ${data.condition==='baru'?'selected':''}>🟢 Baru</option>
+          <option value="vulkanisir" ${data.condition==='vulkanisir'?'selected':''}>🟡 Vulkanisir</option>
+          <option value="tipis" ${data.condition==='tipis'?'selected':''}>🔴 Tipis / Perlu Ganti</option>
         </select>
       </div>
       <div>
         <label class="form-label">Tgl Pasang</label>
-        <input type="date" class="form-input" id="t-date" value="\${data.installed_date || today()}"/>
+        <input type="date" class="form-input" id="t-date" value="${data.installed_date || today()}"/>
       </div>
     </div>
-    <button class="sm-btn orange" onclick="saveFleetTire('\${fleetId}', '\${pos}')">Simpan Perubahan</button>
-  \`;
+    <button class="sm-btn orange" onclick="saveFleetTire('${fleetId}', '${pos}')">Simpan Perubahan</button>
+  `;
   openSm();
 }
 
@@ -3899,13 +4408,28 @@ function generateFleetRekapPDF(){
             <div>Halaman 1 dari 1</div>
         </div>
     </div>
-    <script>setTimeout(() => { window.print(); }, 500);</script>
+    <script>setTimeout(() => { window.print(); }, 500);<\/script>
 </body>
 </html>`;
 
   const win = window.open('','_blank');
   win.document.write(html);
   win.document.close();
+}
+
+function resetAppSession() {
+  localStorage.removeItem('bhd_active_admin');
+  showToast('Sesi direset. Me-refresh halaman...');
+  setTimeout(() => location.reload(), 1000);
+}
+
+// FINAL INITIALIZATION
+window.jsReady = true;
+console.log("✅ BHD SmartFlow System Ready.");
+const badge = document.getElementById('js-init-badge');
+if(badge) {
+  badge.textContent = "Sistem Siap (JS Ready)";
+  badge.style.color = "#86EFAC";
 }
 
 </script>
