@@ -1355,16 +1355,16 @@ function getApiBase() {
   const host = window.location.hostname;
   const port = window.location.port;
 
-  // Local access (file, 127.0.0.1, localhost)
+  let base = '';
   if (proto === 'file:' || host === '127.0.0.1' || host === 'localhost') {
-    return 'http://127.0.0.1:3001';
+    base = 'http://127.0.0.1:3001';
+  } else if (/^192\.168\.|^10\.|^172\.(1[6-9]|2\d|3[01])\./.test(host)) {
+    base = `http://${host}:3001`;
+  } else {
+    base = `${proto}//${host}${port ? ':'+port : ''}`;
   }
-  // Local network access (192.168.x.x, etc.)
-  if (/^192\.168\.|^10\.|^172\.(1[6-9]|2\d|3[01])\./.test(host)) {
-    return `http://${host}:3001`;
-  }
-  // Public domain/Production
-  return `${proto}//${host}${port ? ':'+port : ''}`;
+  console.log('🌐 Detected API Base:', base);
+  return base;
 }
 const API_BASE = getApiBase();
 
@@ -4354,16 +4354,21 @@ function setConnectionStatus(status) {
 
 
 async function apiPing() {
+  const url = `${getApiBase()}/api/ping`;
   try {
-    const res = await fetch(`${getApiBase()}/api/ping`, {
+    const res = await fetch(url, {
       signal: AbortSignal.timeout(3000)
     });
+    console.log('📡 Ping Response:', res.status, res.ok);
     return res.ok;
-  } catch(e) { return false; }
+  } catch(e) { 
+    console.warn('❌ Ping Failed at:', url, e.message);
+    return false; 
+  }
 }
 
 function initRealtimeSync() {
-  const url = `${getApiBase()}/realtime`;
+  const url = `${getApiBase()}/api/realtime`;
   console.log('🔌 Memulai SSE di:', url);
   const es = new EventSource(url);
   

@@ -25,6 +25,7 @@ function broadcastChange(payload = { type: 'refresh' }) {
 // ── DATABASE INITIALIZATION PROMISE ──
 let dbInitPromise = null;
 const ensureDb = async () => {
+    if (!db) throw new Error('Database module not loaded. Check environment variables (POSTGRES_URL / SUPABASE_URL_POOLER).');
     if (!dbInitPromise) dbInitPromise = db.init();
     return dbInitPromise;
 };
@@ -43,6 +44,10 @@ app.use((req, res, next) => {
     };
     next();
 });
+
+// Serve static files from the root directory (to allow access via http://127.0.0.1:3001)
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../')));
 
 // ── HEALTH CHECK (tidak butuh DB) ────────────────────────────
 app.get('/api/ping', (req, res) => {
@@ -522,21 +527,33 @@ app.get('/api/sync/summary', async (req, res) => {
 // Di Vercel (serverless), app.listen() tidak diperlukan.
 // Jalankan hanya jika dieksekusi secara lokal langsung.
 if (require.main === module) {
-  db.init().then(() => {
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`
-  ╔══════════════════════════════════════════════════════════════╗
-  ║          BHD SmartFlow API - Force SQL Mode          ║
-  ╟──────────────────────────────────────────────────────────────╢
-  ║  ✅ PC/Laptop : http://127.0.0.1:${PORT}             ║
-  ║  🚀 Status    : Database SQL (WAJIB) Aktif                   ║
-  ╚══════════════════════════════════════════════════════════════╝
-      `);
+  if (db) {
+    db.init().then(() => {
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`
+    ╔══════════════════════════════════════════════════════════════╗
+    ║          BHD SmartFlow API - Running Locally             ║
+    ╟──────────────────────────────────────────────────────────────╢
+    ║  ✅ PC/Laptop : http://127.0.0.1:${PORT}             ║
+    ║  🚀 Status    : Database Engine Active                       ║
+    ╚══════════════════════════════════════════════════════════════╝
+        `);
+      });
+    }).catch(err => {
+      console.error('❌ Gagal inisialisasi database:', err.message);
+      process.exit(1);
     });
-  }).catch(err => {
-    console.error('❌ Gagal inisialisasi database:', err.message);
-    process.exit(1);
-  });
+  } else {
+    console.error(`
+    ❌ ERROR: Database module failed to load.
+    Silakan periksa variabel lingkungan (POSTGRES_URL atau SUPABASE_URL_POOLER).
+    Pastikan file .env tersedia di root folder.
+    Server akan tetap berjalan dalam mode API-only (berisiko error pada request database).
+    `);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`📡 Server listening on port ${PORT} (Reduced functionality)`);
+    });
+  }
 }
 
 module.exports = app;
