@@ -1389,6 +1389,7 @@ async function apiFetch(path, opts={}){
   }
   const r = await fetch(API_BASE + path, {
     headers,
+    signal: AbortSignal.timeout(5000),
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
@@ -1784,7 +1785,13 @@ function deleteKategori(nama){
 }
 
 function renderGudangFilterChips(){
-  const el=document.gfunction openAddStockModal(editId){
+  const el=document.getElementById('gudang-filter-chips');
+  if(!el) return;
+  el.innerHTML='<button class="fs-chip filter-chip'+(gudangFilter==='all'?' active':'')+'" onclick="setGudangFilter(\'all\',this)">Semua</button>'
+    +gudangKategori.map(k=>'<button class="fs-chip filter-chip'+(gudangFilter===k?' active':'')+'" onclick="setGudangFilter(\''+k+'\',this)">'+getSpCatIcon(k)+' '+k+'</button>').join('');
+}
+
+function openAddStockModal(editId){
   const sp=editId?sparepartStock.find(s=>s.id===editId):null;
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent=sp?'Edit Item Stok':'Tambah Stok Baru';
