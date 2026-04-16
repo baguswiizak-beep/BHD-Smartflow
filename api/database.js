@@ -80,7 +80,8 @@ CREATE TABLE IF NOT EXISTS admins (
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    role TEXT
+    role TEXT,
+    active BOOLEAN DEFAULT TRUE
 );
 
 -- Transactions
@@ -88,6 +89,8 @@ CREATE TABLE IF NOT EXISTS transactions (
     id TEXT PRIMARY KEY,
     type TEXT NOT NULL,
     amount BIGINT DEFAULT 0,
+    muat TEXT,
+    bongkar TEXT,
     label TEXT,
     sub TEXT,
     date TEXT,
@@ -97,7 +100,8 @@ CREATE TABLE IF NOT EXISTS transactions (
     nota TEXT,
     kategori TEXT,
     status TEXT,
-    sparepart_id TEXT
+    sparepart_id TEXT,
+    posisi TEXT
 );
 
 -- Fleet (Armada)
@@ -192,7 +196,7 @@ async function init() {
         if (parseInt(adminCheck.rows[0].count) === 0) {
             console.log('🌱 Seeding default admin...');
             await query(
-                "INSERT INTO admins (id, username, password, role) VALUES ('admin-1', 'admin', 'bhd2024', 'superadmin')"
+                "INSERT INTO admins (id, username, password, role, active) VALUES ('admin-1', 'admin', 'bhd2024', 'superadmin', true)"
             );
         }
 
@@ -204,7 +208,8 @@ async function init() {
                 ['company_name', 'PT. BAGUS HARYA DWIPRIMA'],
                 ['fleet_count', '6'],
                 ['login_username', 'admin'],
-                ['login_password', 'bhd2024']
+                ['login_password', 'bhd2024'],
+                ['admin_reg_code', 'BHD2024']
             ];
             for (const [key, val] of defaults) {
                 await query('INSERT INTO settings (key, value) VALUES ($1, $2)', [key, val]);
@@ -229,7 +234,7 @@ const db = {
 
     updateSetting: async (key, value) => {
         await query(
-            'INSERT INTO settings (key, value) ON CONFLICT (key) DO UPDATE SET value = $2',
+            'INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
             [key, value]
         );
     },
@@ -239,16 +244,20 @@ const db = {
             'SELECT * FROM admins WHERE username = $1 AND password = $2',
             [username, password]
         );
-        return rows[0] || null;
+        const user = rows[0] || null;
+        if (user && user.active === false) {
+            throw new Error('Akun ditangguhkan (Blokir). Hubungi Superadmin.');
+        }
+        return user;
     },
 
 registerAdmin: async (username, password, role = 'admin') => {
         const id = 'admin-' + Date.now();
         await query(
-            'INSERT INTO admins (id, username, password, role) VALUES ($1, $2, $3, $4)',
-            [id, username, password, role]
+            'INSERT INTO admins (id, username, password, role, active) VALUES ($1, $2, $3, $4, $5)',
+            [id, username, password, role, true]
         );
-        return { id, username, role };
+        return { id, username, role, active: true };
     },
 
     updateAdminPassword: async (username, newPassword) => {
@@ -260,7 +269,7 @@ registerAdmin: async (username, password, role = 'admin') => {
     },
 
     getAdmins: async () => {
-        const { rows } = await query('SELECT id, username, role FROM admins ORDER BY username ASC');
+        const { rows } = await query('SELECT id, username, role, active FROM admins ORDER BY username ASC');
         return rows;
     },
 
