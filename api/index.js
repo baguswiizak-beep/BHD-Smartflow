@@ -223,7 +223,15 @@ app.put('/api/settings', async (req, res) => {
   const { key, value } = req.body || {};
   if (!key) return res.status(400).json({ error: 'key diperlukan' });
   await db.updateSetting(key, String(value));
-  broadcastChange({ type: 'settings', key });
+  broadcastChange({ type: 'settings', action: 'update', key });
+  res.json({ ok: true });
+});
+
+app.put('/api/settings/admin_reg_code', async (req, res) => {
+  const { value } = req.body || {};
+  if (!value) return res.status(400).json({ error: 'Kode registrasi diperlukan' });
+  await db.updateSetting('admin_reg_code', String(value));
+  broadcastChange({ type: 'settings', action: 'update', key: 'admin_reg_code' });
   res.json({ ok: true });
 });
 
@@ -312,9 +320,19 @@ app.delete('/api/transactions/:id', async (req, res) => {
   }
 });
 
+app.delete('/api/transactions/reset', async (req, res) => {
+  try {
+    await db.resetTransactions();
+    broadcastChange({ type: 'refresh' });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.delete('/api/transactions-all', async (req, res) => {
-  await db.deleteAllTransactions();
-  res.json({ ok: true });
+    await db.resetTransactions();
+    res.json({ ok: true });
 });
 
 // ── FLEET (ARMADA) ───────────────────────────────────────────

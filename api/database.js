@@ -567,6 +567,10 @@ registerAdmin: async (username, password, role = 'admin') => {
             client.release();
         }
     },
+    resetTransactions: async () => {
+        await query('DELETE FROM transactions');
+        return true;
+    },
 
 };
 

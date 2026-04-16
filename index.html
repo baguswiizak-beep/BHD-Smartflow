@@ -1369,16 +1369,7 @@ function getApiBase() {
 const API_BASE = getApiBase();
 
 
-let _useAPI = false; // akan di-set true setelah ping berhasil
 
-// SUPABASE REST helper was here, but we now use API_BASE
-async function apiPing(){
-  try{
-    const r = await fetch(API_BASE+'/api/ping',{signal:AbortSignal.timeout(2000)});
-    _useAPI = r.ok;
-  } catch(e){ _useAPI = false; }
-  return _useAPI;
-}
 
 async function apiFetch(path, opts={}){
   const headers = { 'Content-Type': 'application/json' };
@@ -1461,7 +1452,8 @@ function switchLoginTab(tab){
 }
 
 // Kode rahasia untuk daftar admin — superadmin bisa lihat/ubah di Pengaturan
-const ADMIN_REG_CODE='BHD2024';
+// Hapus hardcoded fallback agar sistem sepenuhnya bergantung pada Database Central (Fix 4.3)
+// const ADMIN_REG_CODE='BHD2024';
 
 async function doRegister(){
   const username=document.getElementById('reg-user')?.value?.trim();
@@ -1469,17 +1461,28 @@ async function doRegister(){
   const pass2=document.getElementById('reg-pass2')?.value;
   const code=document.getElementById('reg-code')?.value;
   const errEl=document.getElementById('login-err');
-  if(!username||!pass){errEl.textContent='Username & password wajib diisi';errEl.style.color='#FCA5A5';return;}
+  if(!username||!pass||!code){errEl.textContent='Username, password & kode wajib diisi';errEl.style.color='#FCA5A5';return;}
   if(pass!==pass2){errEl.textContent='Password tidak cocok';errEl.style.color='#FCA5A5';return;}
   if(pass.length<6){errEl.textContent='Password minimal 6 karakter';errEl.style.color='#FCA5A5';return;}
-  // Validasi kode admin live dari database
-  let validCode = window._ADMIN_REG_CODE || ADMIN_REG_CODE;
+
+  // Validasi kode admin live dari database (Fix 4.3)
+  let validCode = null;
   try {
     const sdata = await apiFetch('/api/settings');
     if(sdata && sdata.admin_reg_code) validCode = sdata.admin_reg_code;
-  } catch(e){ console.warn('Fetch live regcode fail, using last known'); }
+  } catch(e){
+    errEl.textContent = 'Tidak dapat memverifikasi kode. Periksa koneksi server.';
+    errEl.style.color = '#FCA5A5';
+    return;
+  }
 
-  if(code !== validCode){errEl.textContent='Kode admin tidak valid. Hubungi Superadmin.';errEl.style.color='#FCA5A5';return;}
+  if(!validCode){
+    errEl.textContent = 'Kode registrasi belum dikonfigurasi. Hubungi Superadmin.';
+    errEl.style.color = '#FCA5A5';
+    return;
+  }
+  if(code !== validCode){errEl.textContent='Kode registrasi salah!';errEl.style.color='#FCA5A5';return;}
+
   errEl.textContent='Mendaftar...';errEl.style.color='var(--orange)';
   try{
     const response = await apiFetch('/api/auth/register', {
@@ -1490,7 +1493,6 @@ async function doRegister(){
     errEl.textContent='✅ Berhasil! Silakan masuk dengan akun baru.';errEl.style.color='#86EFAC';
     setTimeout(()=>switchLoginTab('masuk'),1500);
   }catch(e){errEl.textContent='Gagal: '+e.message;errEl.style.color='#FCA5A5';}
-
 }
 
 // Keuangan stats renderer
@@ -1837,7 +1839,7 @@ async function saveSparepart(editId){
     vibrate(30);
   } catch(e) {
     console.warn('Sync sparepart gagal:', e);
-    showToast('❌ Gagal menyimpan data. Periksa koneksi server.');
+    showToast('❌ Gagal menyimpan data gudang. Periksa koneksi server.');
   }
 
 }
@@ -1871,6 +1873,18 @@ function openPasangModal(spId){
     +'<div><label class="form-label">Pilih Armada</label><select class="form-select" id="pasang-armada">'+opts+'</select></div>'
     +'<div><label class="form-label">Tanggal Pasang</label><input type="date" class="form-input" id="pasang-tgl" value="'+today()+'"/></div>'
     +'<div><label class="form-label">Jumlah Dipasang</label><input class="form-input" id="pasang-jml" type="number" value="1" min="1" max="'+sp.stokSisa+'"/></div>'
+    +(sp.kategori==='Ban' ? `<div><label class="form-label">Posisi Ban</label><select class="form-select" id="pasang-posisi">
+        <option value="Depan Kiri">Depan Kiri</option>
+        <option value="Depan Kanan">Depan Kanan</option>
+        <option value="Tengah Kiri Dalam">Tengah Kiri Dalam</option>
+        <option value="Tengah Kiri Luar">Tengah Kiri Luar</option>
+        <option value="Tengah Kanan Dalam">Tengah Kanan Dalam</option>
+        <option value="Tengah Kanan Luar">Tengah Kanan Luar</option>
+        <option value="Belakang Kiri Dalam">Belakang Kiri Dalam</option>
+        <option value="Belakang Kiri Luar">Belakang Kiri Luar</option>
+        <option value="Belakang Kanan Dalam">Belakang Kanan Dalam</option>
+        <option value="Belakang Kanan Luar">Belakang Kanan Luar</option>
+      </select></div>` : '')
     +'<div style="font-size:10.5px;color:var(--text3);background:var(--orange-bg);border:1px solid var(--orange-bd);border-radius:10px;padding:9px 11px;">Pasang = potong stok + buat outflow Onderdil + tracking ritase.</div>'
     +'<button class="sm-btn orange" onclick="confirmPasang(\''+spId+'\')">Konfirmasi Pasang</button>';
   document.getElementById('sm-overlay').classList.add('open');
@@ -1881,10 +1895,10 @@ async function confirmPasang(spId){
   const armada=document.getElementById('pasang-armada')?.value, tgl=document.getElementById('pasang-tgl')?.value, jml=parseInt(document.getElementById('pasang-jml')?.value||'1'), posisi=document.getElementById('pasang-posisi')?.value||'';
   if(jml<1){showToast('Jumlah minimal 1');return;}
   if(jml>sp.stokSisa){showToast('Jumlah melebihi stok (sisa: '+sp.stokSisa+')');return;}
-  const driver=fleetData.find(f=>f.nopol===armada)?.driver||'', txnId='txn_'+Date.now();
-  const newTxn={ id:txnId, type:'outflow', label:sp.nama+' ('+sp.spek+') — '+jml+' unit'+(posisi?' ['+posisi+']':''), sub:'No.Nota: '+sp.nota+' · '+sp.toko+' · '+driver, amount:sp.hargaSatuan*jml, date:tgl, armada, nota:sp.nota, toko:sp.toko, kategori:'Onderdil', driver, status:'lunas', sparepartId:spId, jmlPasang:jml, posisi };
+  const driver=fleetData.find(f=>f.nopol===armada)?.driver||'', outId='txn_'+Date.now();
+  const newTxn={ id:outId, type:'outflow', label:sp.nama+' ('+sp.spek+') — '+jml+' unit'+(posisi?' ['+posisi+']':''), sub:'No.Nota: '+sp.nota+' · '+sp.toko+' · '+driver, amount:sp.hargaSatuan*jml, date:tgl, armada, nota:sp.nota, toko:sp.toko, kategori:'Onderdil', driver, status:'lunas', sparepartId:spId, jmlPasang:jml, posisi };
   const newInstalled = [...sp.installed];
-  for(let i=0;i<jml;i++) newInstalled.push({ armada, tglPasang:tgl, ritase:0, txnId:txnId+'_'+i, posisi: posisi||(jml>1?'Unit '+(i+1):'') });
+  for(let i=0;i<jml;i++) newInstalled.push({ armada, tglPasang:tgl, ritase:0, txnId:outId, posisi: posisi||(jml>1?'Unit '+(i+1):'') });
   try {
     const dbTxn = {...newTxn, sparepart_id: newTxn.sparepartId}; delete dbTxn.sparepartId;
     await sbFetch('transactions', {method:'POST', body:dbTxn});
@@ -2400,7 +2414,13 @@ function deleteTxn(id){
           const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
           if(sp) {
             const newStok = Math.min(sp.stokAwal,(sp.stokSisa||0)+jml);
-            const newInstalled = sp.installed.filter(i=>!String(i.txnId).startsWith(String(id)));
+            const newInstalled = sp.installed.filter(i => {
+              const txnIdStr = String(i.txnId);
+              const idStr = String(id);
+              return txnIdStr !== idStr &&
+                     !txnIdStr.startsWith(idStr) &&
+                     !idStr.startsWith(txnIdStr.replace('txn_', ''));
+            });
             await sbFetch('inventory', {method:'PATCH', filters:{id:txn.sparepartId}, body:{stok_sisa:newStok, installed:newInstalled}});
           }
         }
@@ -2460,16 +2480,16 @@ function editTxn(id){
       <label class="form-label">📍 Posisi Ban (Sumbu)</label>
       <select class="form-select" id="et-pos">
         <option value="">— Pilih Posisi —</option>
-        <option value="SKR 1" ${txn.posisi==='SKR 1'?'selected':''}>Sumbu 1 Kiri (SKR 1)</option>
-        <option value="SKN 1" ${txn.posisi==='SKN 1'?'selected':''}>Sumbu 1 Kanan (SKN 1)</option>
-        <option value="SKR D 2" ${txn.posisi==='SKR D 2'?'selected':''}>Sumbu 2 Kiri Dalam (SKR D 2)</option>
-        <option value="SKR L 2" ${txn.posisi==='SKR L 2'?'selected':''}>Sumbu 2 Kiri Luar (SKR L 2)</option>
-        <option value="SKN D 2" ${txn.posisi==='SKN D 2'?'selected':''}>Sumbu 2 Kanan Dalam (SKN D 2)</option>
-        <option value="SKN L 2" ${txn.posisi==='SKN L 2'?'selected':''}>Sumbu 2 Kanan Luar (SKN L 2)</option>
-        <option value="SKR D 3" ${txn.posisi==='SKR D 3'?'selected':''}>Sumbu 2 Kiri Dalam (SKR D 3)</option>
-        <option value="SKR L 3" ${txn.posisi==='SKR L 3'?'selected':''}>Sumbu 2 Kiri Luar (SKR L 3)</option>
-        <option value="SKN D 3" ${txn.posisi==='SKN D 3'?'selected':''}>Sumbu 2 Kanan Dalam (SKN D 3)</option>
-        <option value="SKN L 3" ${txn.posisi==='SKN L 3'?'selected':''}>Sumbu 2 Kanan Luar (SKN L 3)</option>
+        <option value="Depan Kiri" ${txn.posisi==='Depan Kiri'?'selected':''}>Depan Kiri</option>
+        <option value="Depan Kanan" ${txn.posisi==='Depan Kanan'?'selected':''}>Depan Kanan</option>
+        <option value="Tengah Kiri Dalam" ${txn.posisi==='Tengah Kiri Dalam'?'selected':''}>Tengah Kiri Dalam</option>
+        <option value="Tengah Kiri Luar" ${txn.posisi==='Tengah Kiri Luar'?'selected':''}>Tengah Kiri Luar</option>
+        <option value="Tengah Kanan Dalam" ${txn.posisi==='Tengah Kanan Dalam'?'selected':''}>Tengah Kanan Dalam</option>
+        <option value="Tengah Kanan Luar" ${txn.posisi==='Tengah Kanan Luar'?'selected':''}>Tengah Kanan Luar</option>
+        <option value="Belakang Kiri Dalam" ${txn.posisi==='Belakang Kiri Dalam'?'selected':''}>Belakang Kiri Dalam</option>
+        <option value="Belakang Kiri Luar" ${txn.posisi==='Belakang Kiri Luar'?'selected':''}>Belakang Kiri Luar</option>
+        <option value="Belakang Kanan Dalam" ${txn.posisi==='Belakang Kanan Dalam'?'selected':''}>Belakang Kanan Dalam</option>
+        <option value="Belakang Kanan Luar" ${txn.posisi==='Belakang Kanan Luar'?'selected':''}>Belakang Kanan Luar</option>
       </select>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -3269,7 +3289,7 @@ async function saveDocs(id){
     openUnitDetail(id);
   } catch(e) {
     console.warn('Gagal simpan dokumen:', e);
-    showToast('❌ Gagal menyimpan dokumen. Periksa koneksi.');
+    showToast('❌ Gagal menyimpan dokumen armada. Periksa koneksi server.');
   }
 }
 
@@ -3455,7 +3475,10 @@ async function saveDriver(old){
     closeSm();
     showToast(old?'Supir diperbarui':'Supir ditambahkan');
     vibrate(30);
-  } catch(e) { console.warn('Gagal simpan supir:', e); }
+  } catch(e) {
+    console.warn('Gagal simpan supir:', e);
+    showToast('❌ Gagal menyimpan supir. Periksa koneksi server.');
+  }
 }
 
 async function deleteDriver(name){
@@ -3467,7 +3490,10 @@ async function deleteDriver(name){
     await syncFromSupabase();
     showToast('Supir dihapus');
     vibrate(40);
-  } catch(e) { console.warn('Gagal hapus supir:', e); }
+  } catch(e) {
+    console.warn('Gagal hapus supir:', e);
+    showToast('❌ Gagal menghapus supir. Periksa koneksi server.');
+  }
 }
 
 async function saveUnit(existId){
@@ -3493,7 +3519,10 @@ async function saveUnit(existId){
     closeSm();
     showToast(existId?'Unit diperbarui':'Unit '+nopol+' ditambahkan');
     vibrate(30);
-  } catch(e) { console.warn('Gagal simpan armada:', e); }
+  } catch(e) {
+    console.warn('Gagal simpan armada:', e);
+    showToast('❌ Gagal menyimpan unit armada. Periksa koneksi server.');
+  }
 }
 
 async function deleteUnit(id){
@@ -3506,7 +3535,10 @@ async function deleteUnit(id){
     await syncFromSupabase();
     showToast('Unit '+u.nopol+' dihapus');
     vibrate(40);
-  } catch(e) { console.warn('Gagal hapus armada:', e); }
+  } catch(e) {
+    console.warn('Gagal hapus armada:', e);
+    showToast('❌ Gagal menghapus unit armada. Periksa koneksi server.');
+  }
 }
 
 
@@ -3637,6 +3669,22 @@ function onGudangItemSelect(){
     info.style.display='block';
     info.innerHTML='<b>'+sp.nama+'</b> · Sisa stok: <b style="color:var(--'+(sp.stokSisa>0?'success':'danger')+')">'+sp.stokSisa+' unit</b>'
       +' · Harga: '+fmt(sp.hargaSatuan)
+      +(sp.kategori==='Ban' ? `
+        <div style="margin-top:8px;">
+          <label class="form-label" style="font-size:9px;">Posisi Pasang Ban</label>
+          <select class="form-select" id="out-pos-select" style="padding:7px 10px;font-size:12px;">
+            <option value="Depan Kiri">Depan Kiri</option>
+            <option value="Depan Kanan">Depan Kanan</option>
+            <option value="Tengah Kiri Dalam">Tengah Kiri Dalam</option>
+            <option value="Tengah Kiri Luar">Tengah Kiri Luar</option>
+            <option value="Tengah Kanan Dalam">Tengah Kanan Dalam</option>
+            <option value="Tengah Kanan Luar">Tengah Kanan Luar</option>
+            <option value="Belakang Kiri Dalam">Belakang Kiri Dalam</option>
+            <option value="Belakang Kiri Luar">Belakang Kiri Luar</option>
+            <option value="Belakang Kanan Dalam">Belakang Kanan Dalam</option>
+            <option value="Belakang Kanan Luar">Belakang Kanan Luar</option>
+          </select>
+        </div>` : '')
       +'<br>🔄 Ritase akan mulai dihitung dari 0 setelah dipasang ke armada (threshold: '+threshold+' trip)';
   }
 }
@@ -3677,13 +3725,34 @@ async function submitInflow(){
     
     await syncFromSupabase();
     
+    // Increment ritase di memori
     incrementRitaseForArmada(armada, statusSebelum);
+
+    // Bug 2 Fix: Simpan ritase yang sudah diupdate ke database
+    const affectedParts = sparepartStock.filter(sp =>
+      sp.installed.some(i => i.armada === armada)
+    );
+    for(const sp of affectedParts) {
+      try {
+        await sbFetch('inventory', {
+          method: 'PATCH',
+          filters: { id: sp.id },
+          body: { installed: sp.installed }
+        });
+      } catch(e) {
+        console.warn('Gagal simpan ritase untuk', sp.nama, e);
+      }
+    }
+
     logAudit('create','transaksi',`Inflow ${fmt(amount)} - ${armada}`);
     closeModal();
     refreshDetailHero();
     showToast(amount > 0 ? 'Inflow ' + fmt(amount) + ' berhasil disimpan' : 'Status armada '+armada+' diperbarui ke Antre');
     vibrate(30);
-  } catch(e) { console.warn('Gagal submit inflow:', e); }
+  } catch(e) {
+    console.warn('Gagal submit inflow:', e);
+    showToast('❌ Gagal menyimpan transaksi. Periksa koneksi server.');
+  }
 }
 
 async function submitOutflow(){
@@ -3699,6 +3768,7 @@ async function submitOutflow(){
   if(!label){showToast('Masukkan keterangan pengeluaran');return;}
   if(!amount||amount<=0){showToast('Masukkan jumlah yang valid');return;}
   
+  const outId='txn_'+Date.now();
   let spId=null;
   let spCopy=null;
   if(cat==='Onderdil'){
@@ -3714,14 +3784,13 @@ async function submitOutflow(){
           armada:armada||'UMUM',
           tglPasang:date,
           ritase:0,
-          txnId:Date.now()
+          txnId:outId
         }];
       }
     }
   }
 
   const txnLabel=label||(spId?sparepartStock.find(s=>s.id===spId)?.nama||'Onderdil':'Pengeluaran');
-  const outId='txn_'+Date.now();
   const newOut={id:outId,type:'outflow',label:txnLabel,sub:`No.Nota: ${nota} · ${toko}${driver?' · '+driver:''}`,amount,date,armada,nota,toko,kategori:cat,driver,status:'lunas',sparepartId:spId||null};
 
   try {
@@ -3747,7 +3816,10 @@ async function submitOutflow(){
     if(spId) showToast('✅ Onderdil terpasang & stok terpotong');
     else showToast('Outflow '+fmt(amount)+' disimpan');
     vibrate(30);
-  } catch(e) { console.warn('Gagal submit outflow:', e); }
+  } catch(e) {
+    console.warn('Gagal submit outflow:', e);
+    showToast('❌ Gagal menyimpan transaksi. Periksa koneksi server.');
+  }
 }
 
 
@@ -3789,7 +3861,20 @@ function toggleTheme(){setTheme(isDark?'light':'dark');}
 
 // ═══════════════════════════════ OTHER ═══════════════════════════
 function updateFleetCount(v){const n=parseInt(v);if(n>0){FLEET_COUNT=n;renderDashboard();}}
-function confirmReset(){if(confirm('Yakin hapus SEMUA transaksi?')){transactions=[];renderDashboard();applyTxnFilters();renderLaporanTable();showToast('Semua transaksi dihapus');}}
+async function confirmReset(){
+  if(confirm('Yakin hapus SEMUA transaksi? Data akan dihapus permanen dari database.')){
+    try {
+      await apiFetch('/api/transactions/reset', { method: 'DELETE' });
+      transactions = [];
+      renderDashboard();
+      applyTxnFilters();
+      renderLaporanTable();
+      showToast('Semua transaksi dihapus dari database');
+    } catch(e) {
+      showToast('❌ Gagal menghapus. Periksa koneksi server.');
+    }
+  }
+}
 
 document.getElementById('bg-upload').addEventListener('change',function(e){
   const r=new FileReader();r.onload=ev=>{document.getElementById('bg-layer').style.backgroundImage=`url(${ev.target.result})`;applyBg();};r.readAsDataURL(e.target.files[0]);
@@ -3844,10 +3929,6 @@ async function sbFetch(table, opts={}){
     return result;
   } catch(e) {
     console.error(`sbFetch API Error [${endpoint}]:`, e);
-    // Notify user on write failures (POST, PUT, DELETE)
-    if (fetchMethod !== 'GET') {
-      showToast(`❌ Gagal: ${e.message || 'Periksa koneksi server.'}`);
-    }
     if (fetchMethod === 'GET') return [];
     throw e;
   }
@@ -3952,9 +4033,7 @@ async function loadSAAdminList(){
   const el=document.getElementById('sa-admin-list');if(!el)return;
   el.innerHTML='<div style="font-size:11px;color:var(--text3);">Memuat...</div>';
   try{
-    const res=await fetch(`${SB_URL}/rest/v1/admins?select=id,username,role&order=username.asc`,
-      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-    const admins=await res.json();
+    const admins=await apiFetch('/api/admins');
     if(!Array.isArray(admins)||admins.length===0){el.innerHTML='<div style="font-size:11px;color:var(--text3);">Belum ada admin</div>';return;}
     el.innerHTML=admins.map(a=>`
       <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);padding:10px 12px;border-radius:11px;border:1px solid var(--card-b);">
@@ -3994,12 +4073,10 @@ async function saveSANewAdmin(){
   if(password.length<6){showToast('Password minimal 6 karakter');return;}
   try{
     const id='adm_'+Date.now();
-    const res=await fetch(`${SB_URL}/rest/v1/admins`,{
-      method:'POST',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({id,username,password,role,active:true,created_at:new Date().toISOString()})
+    await sbFetch('admins', {
+      method: 'POST',
+      body: {id,username,password,role,active:true,created_at:new Date().toISOString()}
     });
-    if(!res.ok){const e=await res.json();throw new Error(e.message||'Gagal');}
     const waktu=new Date().toLocaleString('id-ID');
     logAudit('create','admin',`[${waktu}] - [${window.activeAdmin?.name}] - [Tambah Admin] - [${username}, role: ${role}]`);
     closeSm();loadSAAdminList();showToast('Admin '+username+' ditambahkan ✅');
@@ -4031,12 +4108,11 @@ async function saveSAEditAdmin(id, username){
   const body={role};
   if(pass&&pass.length>=6) body.password=pass;
   try{
-    const res=await fetch(`${SB_URL}/rest/v1/admins?id=eq.${id}`,{
-      method:'PATCH',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify(body)
+    await sbFetch('admins', {
+      method: 'PUT',
+      filters: { id: id },
+      body: body
     });
-    if(!res.ok) throw new Error('Gagal update');
     const waktu=new Date().toLocaleString('id-ID');
     logAudit('update','admin',`[${waktu}] - [${window.activeAdmin?.name}] - [Edit Admin] - [${username}, role: ${role}]`);
     closeSm();loadSAAdminList();showToast('Admin '+username+' diperbarui ✅');
@@ -4048,7 +4124,7 @@ async function deleteSAAdmin(id, username){
     `Hapus admin <b>${username}</b>? Aksi ini tidak dapat dibatalkan.`,
     async()=>{
       try{
-        await fetch(`${SB_URL}/rest/v1/admins?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+        await sbFetch('admins', { method:'DELETE', filters:{id:id} });
         const waktu=new Date().toLocaleString('id-ID');
         logAudit('delete','admin',`[${waktu}] - [${window.activeAdmin?.name}] - [Hapus Admin] - [${username}]`);
         loadSAAdminList();showToast('Admin '+username+' dihapus');
@@ -4072,12 +4148,10 @@ async function saveRegCode(){
   const code=document.getElementById('new-reg-code')?.value?.trim();
   if(!code){showToast('Kode tidak boleh kosong');return;}
   try{
-    const res=await fetch(`${SB_URL}/rest/v1/settings?key=eq.admin_reg_code`,{
-      method:'PATCH',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({value:code})
+    await apiFetch('/api/settings/admin_reg_code', {
+      method: 'PUT',
+      body: { value: code }
     });
-    if(!res.ok) throw new Error('Gagal simpan ke database');
     window._ADMIN_REG_CODE=code;
     const display=document.getElementById('reg-code-display');
     if(display) display.textContent=code;
@@ -4085,67 +4159,7 @@ async function saveRegCode(){
   }catch(e){showToast('Gagal simpan: '+e.message);}
 }
 
-// Sync indicator — tampilkan status di topbar
-let _lastSyncTime = null;
-// Realtime Sync — establishment
-function initRealtimeSync() {
-  try {
-    const evtSource = new EventSource(API_BASE + '/api/realtime');
-    evtSource.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      console.log('📡 Realtime update received:', data);
-      syncFromSupabase(); // refresh data
-    };
-    evtSource.onerror = () => {
-      console.warn('⚠️ Realtime link lost, falling back to 15s polling');
-      setConnectionStatus('error');
-    };
-    evtSource.onopen = () => {
-      console.log('✅ Realtime connected');
-      setConnectionStatus('ok');
-    };
-    window._realtime = evtSource;
-  } catch(e) { console.warn('Realtime init fail:', e); }
-}
 
-function setConnectionStatus(status) {
-  const el = document.getElementById('conn-status');
-  if (!el) return;
-  if (status === 'ok') {
-    el.textContent = '● ONLINE';
-    el.style.color = 'var(--success)';
-  } else if (status === 'error') {
-    el.textContent = '● OFFLINE';
-    el.style.color = 'var(--danger)';
-  } else {
-    el.textContent = '● SYNCING...';
-    el.style.color = 'var(--warning)';
-  }
-}
-
-function setSyncStatus(status){
-  const dot = document.querySelector('.sync-dot');
-  const txt = document.getElementById('sync-text');
-  if(!dot||!txt) return;
-  if(status==='syncing'){ 
-    dot.style.background='var(--warning)'; 
-    txt.textContent='Syncing...'; 
-    dot.style.animation='ap 1s infinite';
-    setConnectionStatus('syncing');
-  } else if(status==='ok'){ 
-    dot.style.background='var(--success)'; 
-    const t=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); 
-    txt.textContent='Sync '+t; 
-    dot.style.animation=''; 
-    _lastSyncTime=new Date();
-    setConnectionStatus('ok');
-  } else if(status==='error'){ 
-    dot.style.background='var(--danger)'; 
-    txt.textContent='Offline'; 
-    dot.style.animation='';
-    setConnectionStatus('error');
-  }
-}
 
 
 // Auto-sync data dari Supabase setiap 60 detik
@@ -4155,7 +4169,6 @@ async function syncFromSupabase(){
   _isSyncing = true;
   setSyncStatus('syncing');
   try{
-    // Sync transaksi
     const txns = await sbFetch('transactions',{select:'*',limit:500,order:'created_at.desc'});
     if(Array.isArray(txns)&&txns.length>0){
       transactions = txns.map(t=>({
@@ -4310,6 +4323,7 @@ function setSyncStatus(status) {
     dot.style.background = 'var(--text4)';
     txt.textContent = 'Belum sync';
     dot.classList.remove('pulse-sync');
+    setConnectionStatus('offline');
   }
 }
 
@@ -4341,7 +4355,9 @@ function setConnectionStatus(status) {
 
 async function apiPing() {
   try {
-    const res = await fetch(`${getApiBase()}/realtime?ping=1`, {method:'HEAD'});
+    const res = await fetch(`${getApiBase()}/api/ping`, {
+      signal: AbortSignal.timeout(3000)
+    });
     return res.ok;
   } catch(e) { return false; }
 }
@@ -4358,7 +4374,6 @@ function initRealtimeSync() {
   
   es.onerror = (err) => {
     console.warn('❌ SSE Error:', err);
-    setConnectionStatus('error');
     es.close();
     setTimeout(initRealtimeSync, 5000); // Reconnect after 5s
   };
@@ -4420,8 +4435,4 @@ async function _appInit(){
 
 </script>
 </body>
-</html> 
-
-/ /   B u i l d   t r i g g e r :   0 4 / 1 5 / 2 0 2 6   1 9 : 4 8 : 1 1  
- 
- 
+</html>
