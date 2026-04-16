@@ -847,9 +847,13 @@ input,select,textarea{font-size:16px!important;}
     <!-- Sync indicator di sidebar -->
     <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;margin:8px 10px 0;border-radius:10px;background:var(--bg3);border:1px solid var(--card-b);">
       <span class="sync-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text4);flex-shrink:0;transition:background .3s;"></span>
-      <span id="sync-text" style="font-size:10px;font-weight:600;color:var(--text3);flex:1;">Belum sync</span>
+      <div style="flex:1; display:flex; flex-direction:column; gap:1px;">
+        <span id="sync-text" style="font-size:10px;font-weight:700;color:var(--text3);">Belum sync</span>
+        <span id="conn-status" style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;">Menghubungkan...</span>
+      </div>
       <button onclick="syncFromSupabase()" title="Sync sekarang" style="background:none;border:none;cursor:pointer;padding:0;color:var(--text3);font-size:12px;">🔄</button>
     </div>
+
   </div>
   <div class="sb-foot">
     <div class="user-chip" onclick="showPage('settings',document.getElementById('sb-settings'),'bn-settings')">
@@ -1345,22 +1349,29 @@ input,select,textarea{font-size:16px!important;}
 // API CLIENT — BHD SmartFlow Backend
 // ═══════════════════════════════════════════════════════
 // Deteksi apakah diakses dari localhost atau IP jaringan
-const API_BASE = window.location.protocol === 'file:' || window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
-  ? 'http://127.0.0.1:3001'
-  : (window.location.port ? `http://${window.location.hostname}:3001` : "");
+// Robust API_BASE detection
+function getApiBase() {
+  const proto = window.location.protocol;
+  const host = window.location.hostname;
+  const port = window.location.port;
+
+  // Local access (file, 127.0.0.1, localhost)
+  if (proto === 'file:' || host === '127.0.0.1' || host === 'localhost') {
+    return 'http://127.0.0.1:3001';
+  }
+  // Local network access (192.168.x.x, etc.)
+  if (/^192\.168\.|^10\.|^172\.(1[6-9]|2\d|3[01])\./.test(host)) {
+    return `http://${host}:3001`;
+  }
+  // Public domain/Production
+  return `${proto}//${host}${port ? ':'+port : ''}`;
+}
+const API_BASE = getApiBase();
+
 
 let _useAPI = false; // akan di-set true setelah ping berhasil
 
-// SUPABASE direct REST (works with file://)
-const SB_URL = 'https://fwuuhtmwhgisrkbtmasi.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3dXVodG13aGdpc3JrYnRtYXNpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjE1MTA1MywiZXhwIjoyMDkxNzI3MDUzfQ.6fQEKUdUtepUsykCWlTMDRQRCqcIugwYr0kWPt3A5FU';
-async function sbQuery(table, col, val){
-  const res = await fetch(`${SB_URL}/rest/v1/${table}?select=id,username,password,role&${col}=eq.${encodeURIComponent(val)}&limit=1`,
-    {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
-}
-
+// SUPABASE REST helper was here, but we now use API_BASE
 async function apiPing(){
   try{
     const r = await fetch(API_BASE+'/api/ping',{signal:AbortSignal.timeout(2000)});
@@ -1370,8 +1381,14 @@ async function apiPing(){
 }
 
 async function apiFetch(path, opts={}){
+  const headers = { 'Content-Type': 'application/json' };
+  if (window.activeAdmin) {
+    headers['x-admin-id'] = window.activeAdmin.id || 'system';
+    headers['x-admin-name'] = window.activeAdmin.name || 'System';
+    headers['x-admin-role'] = window.activeAdmin.role || 'admin';
+  }
   const r = await fetch(API_BASE + path, {
-    headers: {'Content-Type':'application/json'},
+    headers,
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
@@ -1393,10 +1410,9 @@ async function doLogin(){
   if(btn){btn.textContent='Memeriksa...';btn.disabled=true;}
   let ok=false, adminData=null;
   try{
-    const rows=await sbQuery('admins','username',u);
-    if(rows.length>0&&rows[0].password===p){ok=true;adminData={id:rows[0].id,name:rows[0].username,role:rows[0].role};}
-    else if(rows.length===0) throw new Error('Username tidak ditemukan.');
-    else throw new Error('Password salah.');
+    const response = await apiFetch('/api/auth/login', { method: 'POST', body: { username: u, password: p } });
+    if(response.ok) { ok=true; adminData={id:response.id, name:response.username, role:response.role}; }
+    else throw new Error(response.error || 'Login gagal.');
   } catch(e){
     if(u===LOGIN_USERNAME&&p===LOGIN_PASSWORD){ok=true;adminData={id:'admin-local',name:u,role:'superadmin'};}
     else{
@@ -1413,6 +1429,14 @@ async function doLogin(){
     const app=document.getElementById('app');
     if(overlay){overlay.style.opacity='0';overlay.style.transition='opacity .4s';setTimeout(()=>{overlay.style.display='none';},400);}
     if(app){app.style.display='flex';}
+    // Set cached data immediately so UI renders instantly while sync background fetches
+    const cachedTxns = localStorage.getItem('bhd_cache_transactions');
+    if (cachedTxns) transactions = JSON.parse(cachedTxns);
+    const cachedFleet = localStorage.getItem('bhd_cache_fleet');
+    if (cachedFleet) { fleetData.length=0; JSON.parse(cachedFleet).forEach(f=>fleetData.push(f)); }
+    const cachedSp = localStorage.getItem('bhd_cache_inventory');
+    if (cachedSp) { sparepartStock.length=0; JSON.parse(cachedSp).forEach(s=>sparepartStock.push(s)); }
+
     setTimeout(()=>{_appInit();},100);
   }
 }
@@ -1450,25 +1474,22 @@ async function doRegister(){
   // Validasi kode admin live dari database
   let validCode = window._ADMIN_REG_CODE || ADMIN_REG_CODE;
   try {
-    const sres = await fetch(`${SB_URL}/rest/v1/settings?key=eq.admin_reg_code&select=value`,
-      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-    const sdata = await sres.json();
-    if(Array.isArray(sdata) && sdata[0]) validCode = sdata[0].value;
+    const sdata = await apiFetch('/api/settings');
+    if(sdata && sdata.admin_reg_code) validCode = sdata.admin_reg_code;
   } catch(e){ console.warn('Fetch live regcode fail, using last known'); }
 
   if(code !== validCode){errEl.textContent='Kode admin tidak valid. Hubungi Superadmin.';errEl.style.color='#FCA5A5';return;}
   errEl.textContent='Mendaftar...';errEl.style.color='var(--orange)';
   try{
-    const id='adm_'+Date.now();
-    const res=await fetch(`${SB_URL}/rest/v1/admins`,{
-      method:'POST',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({id,username,password:pass,role:'admin',active:true,created_at:new Date().toISOString()})
+    const response = await apiFetch('/api/auth/register', {
+      method: 'POST',
+      body: { username, password: pass, role: 'admin' }
     });
-    if(!res.ok){const e=await res.json();throw new Error(e.message||'Username sudah dipakai');}
+    if(!response.ok && response.error) throw new Error(response.error);
     errEl.textContent='✅ Berhasil! Silakan masuk dengan akun baru.';errEl.style.color='#86EFAC';
     setTimeout(()=>switchLoginTab('masuk'),1500);
   }catch(e){errEl.textContent='Gagal: '+e.message;errEl.style.color='#FCA5A5';}
+
 }
 
 // Keuangan stats renderer
@@ -1763,82 +1784,7 @@ function deleteKategori(nama){
 }
 
 function renderGudangFilterChips(){
-  const el=document.getElementById('gudang-filter-chips');
-  if(!el)return;
-  let html=`<div class="fs-chip active" onclick="setGudangFilter('all',this)">Semua</div>`;
-  gudangKategori.forEach(k=>{
-    html+=`<div class="fs-chip" onclick="setGudangFilter('${k}',this)">${getSpCatIcon(k)} ${k}</div>`;
-  });
-  html+=`<div class="fs-chip" onclick="openKategoriModal()" style="background:var(--orange-bg);color:var(--orange);border-color:var(--orange-bd);">⚙️ Kelola</div>`;
-  el.innerHTML=html;
-}
-
-function renderGudang(){
-  const el=document.getElementById('sp-grid');if(!el)return;
-  // Apply sort & filter
-  let list=gudangFilter==='all'?[...sparepartStock]:sparepartStock.filter(s=>s.kategori===gudangFilter);
-  if(window._gudangSearch) list=list.filter(s=>s.nama.toLowerCase().includes(_gudangSearch)||s.kategori.toLowerCase().includes(_gudangSearch));
-  if(window._gudangStokFilter){
-    if(_gudangStokFilter==='habis') list=list.filter(s=>s.stokSisa<=0);
-    else if(_gudangStokFilter==='rendah') list=list.filter(s=>s.stokSisa>0&&spStatus(s)!=='fresh');
-    else if(_gudangStokFilter==='cukup') list=list.filter(s=>spStatus(s)==='fresh');
-  }
-  const sortBy=window._gudangSortBy||'nama';
-  const sortDir=window._gudangSortDir||'asc';
-  list.sort((a,b)=>{
-    let va,vb;
-    if(sortBy==='stok'){va=a.stokSisa;vb=b.stokSisa;}
-    else if(sortBy==='kategori'){va=a.kategori;vb=b.kategori;}
-    else{va=a.nama;vb=b.nama;}
-    if(typeof va==='string') return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
-    return sortDir==='asc'?va-vb:vb-va;
-  });
-  const tot=sparepartStock.length;
-  const inst=sparepartStock.filter(s=>s.installed.length>0).length;
-  const crit=sparepartStock.filter(s=>spStatus(s)==='critical').length;
-  const nilaiTotal=sparepartStock.reduce((s,sp)=>s+sp.stokSisa*sp.hargaSatuan,0);
-  const ids=['gh-total','gh-installed','gh-critical'];
-  [tot,inst,crit].forEach((v,i)=>{const e=document.getElementById(ids[i]);if(e)e.textContent=v;});
-  const nilaiEl=document.getElementById('gh-nilai');if(nilaiEl)nilaiEl.textContent=fmt(nilaiTotal);
-  ['sb-gudang-badge','bn-gudang-badge'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=crit>0?'':'none';});
-  el.innerHTML=list.length===0?'<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px;">Tidak ada item</div>':list.map(sp=>{
-    const st=spStatus(sp);
-    const ico=getSpCatIcon(sp.kategori)||'📦';
-    const pct=Math.round(sp.stokSisa/sp.stokAwal*100);
-    const nilaiSisa=sp.stokSisa*sp.hargaSatuan;
-    // Chips armada (ganti teks crowded)
-    const armadaChips=sp.installed.length>0
-      ?'<div style="margin-bottom:8px;"><div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">Terpasang di:</div>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:5px;">'
-        +sp.installed.map((i,idx)=>`<button onclick="openArmadaUsagePopup('${sp.id}',${idx})" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;" onmouseover="this.style.background='var(--green-bg)';this.style.color='var(--green2)'" onmouseout="this.style.background='var(--bg3)';this.style.color='var(--text2)'">${i.armada} ×1</button>`).join('')
-        +'</div></div>'
-      :'';
-    return '<div class="sp-card '+st+'">'
-      +'<div class="sp-header"><div class="sp-icon-wrap '+st+'">'+ico+'</div>'+spStatusLabel(sp)+'</div>'
-      +'<div class="sp-name">'+sp.nama+'</div>'
-      +'<div class="sp-spec">🏷️ '+sp.spek+' · 🏪 '+sp.toko+'</div>'
-      +armadaChips
-      +'<div class="sp-meta-grid">'
-      +'<div class="sp-meta-item"><div class="sp-meta-label">📦 Sisa/Total</div><div class="sp-meta-val" style="color:'+(st==='fresh'?'var(--success)':st==='warn'?'var(--warning)':'var(--danger)')+';">'+sp.stokSisa+' / '+sp.stokAwal+'</div></div>'
-      +'<div class="sp-meta-item"><div class="sp-meta-label">💰 Harga/unit</div><div class="sp-meta-val">'+fmt(sp.hargaSatuan)+'</div></div>'
-      +'<div class="sp-meta-item"><div class="sp-meta-label">💵 Nilai Sisa</div><div class="sp-meta-val" style="color:var(--info);">'+fmt(nilaiSisa)+'</div></div>'
-      +'<div class="sp-meta-item"><div class="sp-meta-label">📅 Tgl Masuk</div><div class="sp-meta-val">'+fmtDate(sp.tglMasuk)+'</div></div>'
-      +'</div>'
-      +'<div class="sp-progress-wrap">'
-      +'<div class="sp-progress-label"><span>Sisa Stok</span><span>'+pct+'%</span></div>'
-      +'<div class="sp-progress-bar"><div class="sp-progress-fill '+st+'" style="width:'+pct+'%"></div></div>'
-      +'</div>'
-      +(sp.catatan?'<div style="font-size:10px;color:var(--text3);background:var(--bg3);border-radius:8px;padding:6px 9px;margin-top:8px;">📝 '+sp.catatan+'</div>':'')
-      +'<div class="sp-actions">'
-      +(sp.stokSisa>0?'<div class="sp-act pasang" onclick="openPasangModal(\''+sp.id+'\')">🚛 Pasang</div>':'<div class="sp-act" style="opacity:.4;cursor:not-allowed;">🚫 Habis</div>')
-      +'<div class="sp-act edit" onclick="openAddStockModal(\''+sp.id+'\')">✏️ Edit</div>'
-      +'<div class="sp-act del" onclick="deleteSparepart(\''+sp.id+'\')">🗑️</div>'
-      +'</div>'
-      +'</div>';
-  }).join('');
-}
-
-function openAddStockModal(editId){
+  const el=document.gfunction openAddStockModal(editId){
   const sp=editId?sparepartStock.find(s=>s.id===editId):null;
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent=sp?'Edit Item Stok':'Tambah Stok Baru';
@@ -1861,60 +1807,48 @@ function openAddStockModal(editId){
   document.getElementById('sm-overlay').classList.add('open');
 }
 
-function saveSparepart(editId){
-  const nama=document.getElementById('sp-nama')?.value?.trim();
-  const spek=document.getElementById('sp-spek')?.value?.trim();
-  const kat=document.getElementById('sp-kat')?.value||'Spare';
-  const toko=document.getElementById('sp-toko')?.value?.trim()||'';
-  const nota=document.getElementById('sp-nota')?.value?.trim()||'';
-  const tgl=document.getElementById('sp-tgl')?.value||today();
-  // Parse jumlah: strip non-digits first then parseInt, fallback 0
-  const jmlRaw=document.getElementById('sp-jml')?.value||'';
-  const jml=parseInt(jmlRaw.toString().replace(/\D/g,''))||0;
-  // Parse harga: use getRaw which already strips formatting
-  const harga=getRaw('sp-harga')||0;
+async function saveSparepart(editId){
+  const nama=document.getElementById('sp-nama')?.value?.trim(),spek=document.getElementById('sp-spek')?.value?.trim(),kat=document.getElementById('sp-kat')?.value||'Spare',toko=document.getElementById('sp-toko')?.value?.trim()||'',nota=document.getElementById('sp-nota')?.value?.trim()||'',tgl=document.getElementById('sp-tgl')?.value||today(),jmlRaw=document.getElementById('sp-jml')?.value||'',jml=parseInt(jmlRaw.toString().replace(/\D/g,''))||0,harga=getRaw('sp-harga')||0;
   if(!nama){showToast('Nama barang tidak boleh kosong');return;}
   if(!spek){showToast('Spek/tipe tidak boleh kosong');return;}
   if(jml<=0){showToast('Jumlah harus lebih dari 0');return;}
-  if(editId){
-    const sp=sparepartStock.find(s=>s.id===editId);
-    if(sp){
-      sp.nama=nama;sp.spek=spek;sp.kategori=kat;sp.toko=toko;
-      sp.nota=nota;sp.tglMasuk=tgl;
-      sp.stokAwal=jml;
-      sp.stokSisa=Math.min(isNaN(sp.stokSisa)?jml:sp.stokSisa,jml);
-      sp.hargaSatuan=isNaN(harga)?0:harga;
-      const dbData = {
-        nama: sp.nama, spek: sp.spek, kategori: sp.kategori, toko: sp.toko,
-        nota: sp.nota, tgl_masuk: sp.tglMasuk, stok_awal: sp.stokAwal,
-        stok_sisa: sp.stokSisa, harga_satuan: sp.hargaSatuan, catatan: sp.catatan
-      };
-      sbFetch('inventory',{method:'PATCH',filters:{id:editId},body:dbData}).then(() => syncFromSupabase()).catch(e=>console.warn(e));
+  try {
+    if(editId){
+      const sp=sparepartStock.find(s=>s.id===editId);
+      if(sp){
+        const dbData = { nama, spek, kategori: kat, toko, nota, tgl_masuk: tgl, stok_awal: jml, stok_sisa: Math.min(isNaN(sp.stokSisa)?jml:sp.stokSisa,jml), harga_satuan: isNaN(harga)?0:harga, catatan: sp.catatan };
+        await sbFetch('inventory',{method:'PATCH',filters:{id:editId},body:dbData});
+      }
+    } else {
+      const spId = 'sp'+Date.now();
+      const dbData = { id: spId, nama, spek, kategori: kat, toko, nota, tgl_masuk: tgl, stok_awal: jml, stok_sisa: jml, harga_satuan: isNaN(harga)?0:harga, catatan: '', installed: [] };
+      await sbFetch('inventory',{method:'POST',body:dbData});
     }
-  } else {
-    const spId = 'sp'+Date.now();
-    const spNew = {
-      id:spId,nama,spek,kategori:kat,toko,nota,
-      tglMasuk:tgl,stokAwal:jml,stokSisa:jml,
-      hargaSatuan:isNaN(harga)?0:harga,
-      installed:[],catatan:''
-    };
-    sparepartStock.push(spNew);
-    const dbData = {
-      id: spId, nama: spNew.nama, spek: spNew.spek, kategori: spNew.kategori, toko: spNew.toko,
-      nota: spNew.nota, tgl_masuk: spNew.tglMasuk, stok_awal: spNew.stokAwal,
-      stok_sisa: spNew.stokSisa, harga_satuan: spNew.hargaSatuan, catatan: spNew.catatan,
-      installed: []
-    };
-    sbFetch('inventory',{method:'POST',body:dbData}).then(() => syncFromSupabase()).catch(e=>console.warn(e));
+    await syncFromSupabase();
+    closeSm();
+    showToast(editId?'Item diperbarui':'Stok ditambahkan');
+    vibrate(30);
+  } catch(e) {
+    console.warn('Sync sparepart gagal:', e);
+    showToast('❌ Gagal menyimpan data. Periksa koneksi server.');
   }
-  closeSm();renderGudang();showToast(editId?'Item diperbarui':'Stok ditambahkan');vibrate(30);
+
 }
 
-function deleteSparepart(id){
-  const i=sparepartStock.findIndex(s=>s.id===id);if(i>-1)sparepartStock.splice(i,1);
-  sbFetch('inventory',{method:'DELETE',filters:{id:id}}).then(() => syncFromSupabase()).catch(e=>console.warn(e));
-  renderGudang();showToast('Item dihapus');vibrate(40);
+async function deleteSparepart(id){
+  const sp = sparepartStock.find(s=>s.id===id);
+  if(!sp) return;
+  if(!confirm(`Hapus ${sp.nama}?`)) return;
+  try {
+    await sbFetch('inventory',{method:'DELETE',filters:{id:id}});
+    await syncFromSupabase();
+    showToast('Item dihapus');
+    vibrate(40);
+  } catch(e) {
+    console.warn('Gagal hapus sparepart:', e);
+    showToast('❌ Gagal menghapus data. Periksa koneksi server.');
+  }
+
 }
 
 function openPasangModal(spId){
@@ -1935,49 +1869,35 @@ function openPasangModal(spId){
   document.getElementById('sm-overlay').classList.add('open');
 }
 
-function confirmPasang(spId){
+async function confirmPasang(spId){
   const sp=sparepartStock.find(s=>s.id===spId);if(!sp)return;
-  const armada=document.getElementById('pasang-armada')?.value;
-  const tgl=document.getElementById('pasang-tgl')?.value;
-  const jml=parseInt(document.getElementById('pasang-jml')?.value||'1');
-  const posisi=document.getElementById('pasang-posisi')?.value||'';
+  const armada=document.getElementById('pasang-armada')?.value, tgl=document.getElementById('pasang-tgl')?.value, jml=parseInt(document.getElementById('pasang-jml')?.value||'1'), posisi=document.getElementById('pasang-posisi')?.value||'';
   if(jml<1){showToast('Jumlah minimal 1');return;}
   if(jml>sp.stokSisa){showToast('Jumlah melebihi stok (sisa: '+sp.stokSisa+')');return;}
-  const driver=fleetData.find(f=>f.nopol===armada)?.driver||'';
-  const txnId='txn_'+Date.now();
-  sp.stokSisa-=jml;
-  for(let i=0;i<jml;i++){
-    sp.installed.push({
-      armada, tglPasang:tgl, ritase:0,
-      txnId:txnId+'_'+i,
-      posisi: posisi||(jml>1?'Unit '+(i+1):'')
-    });
+  const driver=fleetData.find(f=>f.nopol===armada)?.driver||'', txnId='txn_'+Date.now();
+  const newTxn={ id:txnId, type:'outflow', label:sp.nama+' ('+sp.spek+') — '+jml+' unit'+(posisi?' ['+posisi+']':''), sub:'No.Nota: '+sp.nota+' · '+sp.toko+' · '+driver, amount:sp.hargaSatuan*jml, date:tgl, armada, nota:sp.nota, toko:sp.toko, kategori:'Onderdil', driver, status:'lunas', sparepartId:spId, jmlPasang:jml, posisi };
+  const newInstalled = [...sp.installed];
+  for(let i=0;i<jml;i++) newInstalled.push({ armada, tglPasang:tgl, ritase:0, txnId:txnId+'_'+i, posisi: posisi||(jml>1?'Unit '+(i+1):'') });
+  try {
+    const dbTxn = {...newTxn, sparepart_id: newTxn.sparepartId}; delete dbTxn.sparepartId;
+    await sbFetch('transactions', {method:'POST', body:dbTxn});
+    await sbFetch('inventory', {method:'PATCH', filters:{id:spId}, body:{stok_sisa:sp.stokSisa-jml, installed:newInstalled}});
+    await syncFromSupabase();
+    logAudit('create','gudang',`Pasang ${sp.nama} ${jml}unit ke ${armada}${posisi?' pos:'+posisi:''}`);
+    closeSm();
+    refreshDetailHero();
+    if(currentDetailUnit?.nopol===armada){
+      const tv=document.getElementById('tab-truck');
+      if(tv&&tv.style.display!=='none')renderTruckTab(currentDetailUnit);
+    }
+    showToast('Pemasangan terekam ✅');
+  } catch(e) {
+    console.warn('Gagal pasang sparepart:', e);
+    showToast('❌ Gagal menyimpan pemasangan. Periksa koneksi server.');
   }
-  const newTxn={
-    id:txnId, type:'outflow',
-    label:sp.nama+' ('+sp.spek+') — '+jml+' unit'+(posisi?' ['+posisi+']':''),
-    sub:'No.Nota: '+sp.nota+' · '+sp.toko+' · '+driver,
-    amount:sp.hargaSatuan*jml, date:tgl,
-    armada, nota:sp.nota, toko:sp.toko,
-    kategori:'Onderdil', driver, status:'lunas',
-    sparepartId:spId, jmlPasang:jml, posisi
-  };
-  transactions.unshift(newTxn);
-  // Sync to Supabase
-  const dbTxn = {...newTxn, sparepart_id: newTxn.sparepartId}; // Map camelCase TO snake_case for Supabase
-  delete dbTxn.sparepartId;
-  sbFetch('transactions', {method:'POST', body:dbTxn}).catch(e=>console.warn('Supabase pasang txn:',e));
-  sbFetch('inventory', {method:'PATCH', filters:{id:spId}, body:{stok_sisa:sp.stokSisa, installed:sp.installed}}).then(() => syncFromSupabase()).catch(e=>console.warn('Supabase pasang inv:',e));
-  
-  logAudit('create','gudang',`Pasang ${sp.nama} ${jml}unit ke ${armada}${posisi?' pos:'+posisi:''}`);
-  closeSm();renderGudang();renderDashboard();applyTxnFilters();renderLaporanTable();
-  refreshDetailHero();
-  if(currentDetailUnit?.nopol===armada){
-    const tv=document.getElementById('tab-truck');
-    if(tv&&tv.style.display!=='none')renderTruckTab(currentDetailUnit);
-  }
-  showToast(sp.nama+' ('+jml+' unit) dipasang ke '+armada+(posisi?' - '+posisi:''));vibrate([30,50,30]);
+
 }
+
 
 // Ritase thresholds per kategori
 const RITASE_THRESHOLDS={Ban:100,Oli:50,Filter:80,Spare:60};
@@ -2459,34 +2379,38 @@ function deleteTxn(id){
   showConfirmPopup('🗑️ Hapus Transaksi',
     `<b>${txn.type==='inflow'?'Pemasukan':'Pengeluaran'}</b>: ${txn.label||''}<br>
      Nominal: <b>${fmt(txn.amount)}</b> · ${fmtDate(txn.date)}${stockMsg}`,
-    ()=>{
+    async ()=>{
       const waktu=new Date().toLocaleString('id-ID');
       const adminName=window.activeAdmin?.name||'System';
       const jml=txn.jmlPasang||1;
-      // === STOCK REVERSAL: Stok Baru = Stok Sekarang + Jumlah Transaksi ===
-      if(txn.type==='outflow'&&txn.sparepartId){
-        const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
-        if(sp){
-          sp.stokSisa=Math.min(sp.stokAwal,(sp.stokSisa||0)+jml);
-          sp.installed=sp.installed.filter(i=>!String(i.txnId).startsWith(String(id)));
-        }
-      }
-      transactions=transactions.filter(t=>t.id!==id);
-      sbFetch('transactions', {method:'DELETE', filters:{id:id}}).then(() => syncFromSupabase()).catch(e=>console.warn('Sync delete txn fail:',e));
       
-      // Update inventory record in Supabase (Stock Reversal)
-      if(txn.type==='outflow'&&txn.sparepartId){
-        const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
-        if(sp) sbFetch('inventory', {method:'PATCH', filters:{id:txn.sparepartId}, body:{stok_sisa:sp.stokSisa, installed:sp.installed}}).catch(e=>console.warn('Sync inventory reversal fail:',e));
+      try {
+        // 1. Delete the transaction
+        await sbFetch('transactions', {method:'DELETE', filters:{id:id}});
+        
+        // 2. Handle Stock Reversal in Supabase if needed
+        if(txn.type==='outflow'&&txn.sparepartId){
+          const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
+          if(sp) {
+            const newStok = Math.min(sp.stokAwal,(sp.stokSisa||0)+jml);
+            const newInstalled = sp.installed.filter(i=>!String(i.txnId).startsWith(String(id)));
+            await sbFetch('inventory', {method:'PATCH', filters:{id:txn.sparepartId}, body:{stok_sisa:newStok, installed:newInstalled}});
+          }
+        }
+        
+        await syncFromSupabase();
+        
+        logAudit('delete','transaksi', `[${waktu}] - [${adminName}] - [Hapus Transaksi] - [${txn.label}, Rp ${fmt(txn.amount)}${txn.sparepartId?', Qty '+jml+' unit dikembalikan':''}]`);
+        refreshDetailHero();
+        vibrate(40);
+        showToast('Transaksi dihapus'+(txn.sparepartId?' · Stok +'+jml+' dikembalikan':''));
+      } catch(e) {
+        console.warn('Gagal hapus transaksi:', e);
+        showToast('❌ Gagal menghapus transaksi. Periksa koneksi server.');
       }
-      // Audit log: [Waktu] - [Admin] - [Aksi] - [Detail]
-      logAudit('delete','transaksi',
-        `[${waktu}] - [${adminName}] - [Hapus Transaksi] - [${txn.label}, Rp ${fmt(txn.amount)}${txn.sparepartId?', Qty '+jml+' unit dikembalikan':''}]`
-      );
-      renderGudang();renderDashboard();applyTxnFilters();renderLaporanTable();
-      renderKeuanganStats?.();refreshDetailHero();vibrate(40);
-      showToast('Transaksi dihapus'+(txn.sparepartId?' · Stok +'+jml+' dikembalikan':''));
+
     }
+
   );
 }
 
@@ -2574,58 +2498,60 @@ function confirmSaveEditTxn(id){
   showConfirmPopup('💾 Konfirmasi Perubahan',
     `<b>${txn.type==='inflow'?'Pemasukan':'Pengeluaran'}</b><br>
      Nominal: ${fmt(oldAmount)} → <b>${fmt(newAmount)}</b>${stockMsg}`,
-    ()=>{
-      // === STOCK REVERSAL LOGIC ===
-      if(txn.sparepartId && newJml!==oldJml){
-        const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
-        if(sp){
-          const selisih=oldJml-newJml;
-          sp.stokSisa=Math.min(sp.stokAwal, Math.max(0, sp.stokSisa+selisih));
-          // Adjust installed entries if reducing
-          if(selisih>0){
-            // Remove excess installed entries for this txnId
-            let removed=0;
-            sp.installed=sp.installed.filter(i=>{
-              if(removed<selisih && String(i.txnId).startsWith(String(id))){removed++;return false;}
-              return true;
-            });
-          } else if(selisih<0){
-            // Add more installed entries
-            for(let i=0;i<Math.abs(selisih);i++){
-              sp.installed.push({armada:txn.armada,tglPasang:txn.date,ritase:0,txnId:id+'_extra_'+i,posisi:txn.posisi||''});
-            }
-          }
-        }
-        txn.jmlPasang=newJml;
-        txn.amount=newJml*(newAmount/oldJml);
-      } else {
-        txn.amount=newAmount;
-      }
-      txn.label=newLabel; txn.date=newDate; txn.armada=newArmada;
-
-      // Audit log format: [Waktu] - [Admin] - [Aksi] - [Detail]
+    async ()=>{
       const waktu=new Date().toLocaleString('id-ID');
       const adminName=window.activeAdmin?.name||'System';
-      logAudit('update','transaksi',
-        `[${waktu}] - [${adminName}] - [Edit Transaksi] - [${txn.label}, Rp ${fmt(oldAmount)}→${fmt(txn.amount)}${newJml!==oldJml?', Qty '+oldJml+'→'+newJml:''}]`
-      );
-
-            // Update local object with new fields
-      txn.posisi = (txn.sparepartId || txn.label.toLowerCase().includes('ban')) ? (document.getElementById('et-pos')?.value || txn.posisi) : '';
       
-      const dbData = {
-        label:newLabel,
-        amount:txn.amount,
-        date:newDate,
-        armada:newArmada,
-        posisi:txn.posisi,
-        sparepart_id:txn.sparepartId
-      };
-      sbFetch('transactions',{method:'PATCH', filters:{id:id}, body:dbData}).then(() => syncFromSupabase()).catch(e=>console.warn(e));
-      renderGudang();renderDashboard();applyTxnFilters();renderLaporanTable();
-      renderKeuanganStats?.();refreshDetailHero();
-      showToast('Transaksi diperbarui'+(txn.sparepartId&&newJml!==oldJml?' · Stok disesuaikan':''));
+      try {
+        // Update local object logically (calculations)
+        let finalAmount = newAmount;
+        let finalPosisi = (txn.sparepartId || txn.label.toLowerCase().includes('ban')) ? (document.getElementById('et-pos')?.value || txn.posisi) : '';
+        
+        // Handle Stock Reversal in Database if Qty changed
+        if(txn.sparepartId && newJml!==oldJml){
+          const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
+          if(sp){
+            const selisih=oldJml-newJml;
+            const newStok = Math.min(sp.stokAwal, Math.max(0, sp.stokSisa+selisih));
+            let newInstalled = [...sp.installed];
+            if(selisih>0){
+              let removed=0;
+              newInstalled = newInstalled.filter(i=>{
+                if(removed<selisih && String(i.txnId).startsWith(String(id))){removed++;return false;}
+                return true;
+              });
+            } else if(selisih<0){
+              for(let i=0;i<Math.abs(selisih);i++){
+                newInstalled.push({armada:newArmada,tglPasang:newDate,ritase:0,txnId:id+'_extra_'+i,posisi:finalPosisi});
+              }
+            }
+            await sbFetch('inventory', {method:'PATCH', filters:{id:txn.sparepartId}, body:{stok_sisa:newStok, installed:newInstalled}});
+          }
+          finalAmount = newJml*(newAmount/oldJml);
+        }
+
+        const dbData = {
+          label:newLabel,
+          amount:finalAmount,
+          date:newDate,
+          armada:newArmada,
+          posisi:finalPosisi,
+          sparepart_id:txn.sparepartId
+        };
+
+        await sbFetch('transactions',{method:'PATCH', filters:{id:id}, body:dbData});
+        await syncFromSupabase();
+
+        logAudit('update','transaksi', `[${waktu}] - [${adminName}] - [Edit Transaksi] - [${newLabel}, Rp ${fmt(oldAmount)}→${fmt(finalAmount)}${newJml!==oldJml?', Qty '+oldJml+'→'+newJml:''}]`);
+        refreshDetailHero();
+        showToast('Transaksi diperbarui'+(txn.sparepartId&&newJml!==oldJml?' · Stok disesuaikan':''));
+      } catch(e) {
+        console.warn('Gagal update transaksi:', e);
+        showToast('❌ Gagal memperbarui transaksi. Periksa koneksi server.');
+      }
+
     }
+
   );
 }
 
@@ -3324,13 +3250,22 @@ function showTab(name,btnEl){
   }
 }
 
-function saveDocs(id){
+async function saveDocs(id){
   const f=fleetData.find(x=>x.id===id);if(!f)return;
-  f.pajak=document.getElementById('edit-pajak')?.value||f.pajak;
-  f.kir=document.getElementById('edit-kir')?.value||f.kir;
-  sbFetch('fleet', {method:'PATCH', filters:{id:id}, body:{pajak:f.pajak, kir:f.kir}}).catch(e=>console.warn('Supabase docs:',e));
-  showToast('Dokumen berhasil disimpan');openUnitDetail(id);checkDocWarnings();
+  const newPajak=document.getElementById('edit-pajak')?.value||f.pajak;
+  const newKir=document.getElementById('edit-kir')?.value||f.kir;
+  
+  try {
+    await sbFetch('fleet', {method:'PATCH', filters:{id:id}, body:{pajak:newPajak, kir:newKir}});
+    await syncFromSupabase();
+    showToast('Dokumen berhasil disimpan');
+    openUnitDetail(id);
+  } catch(e) {
+    console.warn('Gagal simpan dokumen:', e);
+    showToast('❌ Gagal menyimpan dokumen. Periksa koneksi.');
+  }
 }
+
 
 // ─── TRUCK VISUALIZATION (#4) ───
 function renderTruckTab(f){
@@ -3494,31 +3429,41 @@ function openSmModal(type,val){
 function closeSm(){document.getElementById('sm-overlay').classList.remove('open');}
 function closeSmOuter(e){if(e.target===document.getElementById('sm-overlay'))closeSm();}
 
-function saveDriver(old){
+async function saveDriver(old){
   const name=document.getElementById('sm-driver-name')?.value?.trim();
   if(!name){showToast('Nama tidak boleh kosong');return;}
-  if(old&&old!==name){const i=driverList.indexOf(old);if(i>-1)driverList[i]=name;else driverList.push(name);fleetData.forEach(f=>{if(f.driver===old)f.driver=name;});}
-  else if(!old&&!driverList.includes(name))driverList.push(name);
   
-  // Sync to Supabase
-  if(old && old !== name) {
-    // Delete old and add new or just add new? Supabase REST based on PK (nama)
-    sbFetch('drivers',{method:'DELETE',filters:{nama:old}}).then(() => {
-      sbFetch('drivers',{method:'POST',body:{nama:name}}).then(() => syncFromSupabase());
-    });
-  } else {
-    sbFetch('drivers',{method:'POST',body:{nama:name}}).then(() => syncFromSupabase());
-  }
+  try {
+    if(old && old !== name) {
+      // 1. Delete old driver record
+      await sbFetch('drivers',{method:'DELETE',filters:{nama:old}});
+      // 2. Insert new driver record
+      await sbFetch('drivers',{method:'POST',body:{nama:name}});
+    } else if(!old) {
+      // New driver
+      await sbFetch('drivers',{method:'POST',body:{nama:name}});
+    }
 
-  closeSm();renderDriverList();renderDashboard();showToast(old?'Supir diperbarui':'Supir ditambahkan');vibrate(30);
+    await syncFromSupabase();
+    closeSm();
+    showToast(old?'Supir diperbarui':'Supir ditambahkan');
+    vibrate(30);
+  } catch(e) { console.warn('Gagal simpan supir:', e); }
 }
-function deleteDriver(name){
+
+async function deleteDriver(name){
   if(fleetData.some(f=>f.driver===name)){showToast('Supir sedang bertugas');return;}
-  driverList=driverList.filter(d=>d!==name);
-  sbFetch('drivers',{method:'DELETE',filters:{nama:name}}).then(() => syncFromSupabase());
-  renderDriverList();showToast('Supir dihapus');vibrate(40);
+  if(!confirm(`Hapus supir ${name}?`)) return;
+  
+  try {
+    await sbFetch('drivers',{method:'DELETE',filters:{nama:name}});
+    await syncFromSupabase();
+    showToast('Supir dihapus');
+    vibrate(40);
+  } catch(e) { console.warn('Gagal hapus supir:', e); }
 }
-function saveUnit(existId){
+
+async function saveUnit(existId){
   const nopol=(document.getElementById('sm-nopol')?.value||'').trim().toUpperCase();
   const driver=document.getElementById('sm-unit-driver')?.value||'';
   const status=document.getElementById('sm-status')?.value||'jalan';
@@ -3530,30 +3475,33 @@ function saveUnit(existId){
   
   const unitData = {nopol,driver,status,pajak,kir};
 
-  if(existId){
-    const u=fleetData.find(f=>f.id===existId);
-    if(u){u.nopol=nopol;u.driver=driver;u.status=status;u.pajak=pajak;u.kir=kir;}
-    sbFetch('fleet',{method:'PATCH',filters:{id:existId},body:unitData}).then(() => syncFromSupabase()).catch(e=>console.warn('Sync fleet gagal:',e));
-  } else {
-    const newId='f'+Date.now();
-    const newUnit = {id:newId, ...unitData};
-    fleetData.push(newUnit);
-    sbFetch('fleet',{method:'POST',body:newUnit}).then(() => syncFromSupabase()).catch(e=>console.warn('Sync fleet gagal:',e));
-  }
-  FLEET_COUNT=fleetData.length;
-  const fi=document.getElementById('fleet-count-input');if(fi)fi.value=FLEET_COUNT;
-  closeSm();renderFleetUnits();renderDashboard();renderLaporanTable();checkDocWarnings();
-  showToast(existId?'Unit diperbarui':'Unit '+nopol+' ditambahkan');vibrate(30);
+  try {
+    if(existId){
+      await sbFetch('fleet',{method:'PATCH',filters:{id:existId},body:unitData});
+    } else {
+      const newId='f'+Date.now();
+      await sbFetch('fleet',{method:'POST',body:{id:newId, ...unitData}});
+    }
+    await syncFromSupabase();
+    closeSm();
+    showToast(existId?'Unit diperbarui':'Unit '+nopol+' ditambahkan');
+    vibrate(30);
+  } catch(e) { console.warn('Gagal simpan armada:', e); }
 }
-function deleteUnit(id){
+
+async function deleteUnit(id){
   const u=fleetData.find(f=>f.id===id);
-  const i=fleetData.findIndex(f=>f.id===id);if(i>-1)fleetData.splice(i,1);
-  sbFetch('fleet',{method:'DELETE',filters:{id:id}}).then(() => syncFromSupabase()).catch(e=>console.warn('Sync fleet delete gagal:',e));
-  FLEET_COUNT=fleetData.length;
-  const fi=document.getElementById('fleet-count-input');if(fi)fi.value=FLEET_COUNT;
-  renderFleetUnits();renderDashboard();renderLaporanTable();checkDocWarnings();
-  showToast(u?'Unit '+u.nopol+' dihapus':'Unit dihapus');vibrate(40);
+  if(!u) return;
+  if(!confirm(`Hapus armada ${u.nopol}?`)) return;
+
+  try {
+    await sbFetch('fleet',{method:'DELETE',filters:{id:id}});
+    await syncFromSupabase();
+    showToast('Unit '+u.nopol+' dihapus');
+    vibrate(40);
+  } catch(e) { console.warn('Gagal hapus armada:', e); }
 }
+
 
 // ═══════════════════════════════ INPUT MODAL ══════════════════════
 function buildGudangOpts(){
@@ -3695,7 +3643,7 @@ function syncOutDriver(){const a=document.getElementById('out-armada')?.value;co
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
 function closeModalOuter(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
 
-function submitInflow(){
+async function submitInflow(){
   const armada=document.getElementById('inf-armada')?.value;
   const driver=document.getElementById('inf-driver')?.value||'';
   const amount=getRaw('inf-amount');
@@ -3704,25 +3652,34 @@ function submitInflow(){
   const date=document.getElementById('inf-date')?.value;
   const antre=document.getElementById('inf-antre')?.value;
   if(antre!=='antre' && (!amount||amount<=0)){showToast('Masukkan jumlah yang valid');return;}
-  // Ambil status armada SEBELUM diupdate — untuk logika ritase
+  
   const fUnit=fleetData.find(x=>x.nopol===armada);
   const statusSebelum=fUnit?fUnit.status:'jalan';
   const txnId = 'txn_'+Date.now();
   const txnLabel = (amount > 0) ? 'Setoran ' + armada : 'Antrean ' + armada;
+  
   const newTxn={id:txnId,type:'inflow',label:txnLabel,sub:driver+' · Netto',amount,date,armada,muat:muat||'',bongkar:bongkar||'',driver,nota:'',toko:'',kategori:'Inflow',status:'lunas'};
-  transactions.unshift(newTxn);
-  if(fUnit){fUnit.status=antre;fUnit.driver=driver;}
-  incrementRitaseForArmada(armada, statusSebelum);
-  // Simpan ke Supabase (Standardized to sbFetch)
-  sbFetch('transactions', {method:'POST', body:newTxn}).then(() => syncFromSupabase()).catch(e=>console.warn('Supabase inflow:',e));
-  // Sync fleet status change if any
-  if(fUnit) sbFetch('fleet', {method:'PATCH', filters:{id:fUnit.id}, body:{status:antre, driver:driver}}).catch(e=>console.warn('Sync fleet status fail:',e));
-  logAudit('create','transaksi',`Inflow ${fmt(amount)} - ${armada}`);
-  closeModal();renderDashboard();applyTxnFilters();renderLaporanTable();
-  renderKeuanganStats?.();refreshDetailHero();
-  showToast(amount > 0 ? 'Inflow ' + fmt(amount) + ' berhasil disimpan' : 'Status armada '+armada+' diperbarui ke Antre');vibrate(30);
+
+  try {
+    // 1. Post transaction
+    await sbFetch('transactions', {method:'POST', body:newTxn});
+    // 2. Patch fleet if status changed
+    if(fUnit) {
+      await sbFetch('fleet', {method:'PATCH', filters:{id:fUnit.id}, body:{status:antre, driver:driver}});
+    }
+    
+    await syncFromSupabase();
+    
+    incrementRitaseForArmada(armada, statusSebelum);
+    logAudit('create','transaksi',`Inflow ${fmt(amount)} - ${armada}`);
+    closeModal();
+    refreshDetailHero();
+    showToast(amount > 0 ? 'Inflow ' + fmt(amount) + ' berhasil disimpan' : 'Status armada '+armada+' diperbarui ke Antre');
+    vibrate(30);
+  } catch(e) { console.warn('Gagal submit inflow:', e); }
 }
-function submitOutflow(){
+
+async function submitOutflow(){
   const nota=document.getElementById('out-nota')?.value||'—';
   const toko=document.getElementById('out-toko')?.value||'—';
   const label=document.getElementById('out-label')?.value?.trim();
@@ -3734,8 +3691,9 @@ function submitOutflow(){
   const driver=isUnit?document.getElementById('out-driver')?.value:'';
   if(!label){showToast('Masukkan keterangan pengeluaran');return;}
   if(!amount||amount<=0){showToast('Masukkan jumlah yang valid');return;}
-  // Handle gudang item selection (Onderdil from stok)
+  
   let spId=null;
+  let spCopy=null;
   if(cat==='Onderdil'){
     const spSel=document.getElementById('out-sp-select');
     spId=spSel?.value||null;
@@ -3743,42 +3701,48 @@ function submitOutflow(){
       const sp=sparepartStock.find(s=>s.id===spId);
       if(sp){
         if(sp.stokSisa<=0){showToast('Stok '+sp.nama+' sudah habis!');return;}
-        sp.stokSisa--;
-        // Tambah ke installed[] — ritase mulai dari 0
-        sp.installed.push({
+        spCopy={...sp};
+        spCopy.stokSisa=sp.stokSisa-1;
+        spCopy.installed=[...sp.installed, {
           armada:armada||'UMUM',
           tglPasang:date,
           ritase:0,
           txnId:Date.now()
-        });
-        showToast('✅ '+sp.nama+' dipasang ke '+armada+' — ritase mulai dihitung');
+        }];
       }
     }
   }
+
   const txnLabel=label||(spId?sparepartStock.find(s=>s.id===spId)?.nama||'Onderdil':'Pengeluaran');
   const outId='txn_'+Date.now();
   const newOut={id:outId,type:'outflow',label:txnLabel,sub:`No.Nota: ${nota} · ${toko}${driver?' · '+driver:''}`,amount,date,armada,nota,toko,kategori:cat,driver,status:'lunas',sparepartId:spId||null};
-  transactions.unshift(newOut);
-  // Simpan ke Supabase (Standardized to sbFetch)
-  const dbOut = {
-    ...newOut, 
-    posisi: document.getElementById('out-pos-select')?.value || '', 
-    sparepart_id: newOut.sparepartId
-  };
-  delete dbOut.sparepartId;
-  sbFetch('transactions', {method:'POST', body:dbOut}).then(() => syncFromSupabase()).catch(e=>console.warn('Supabase outflow:',e));
-  
-  // Update inventory record in Supabase if sparepart was used
-  if(cat==='Onderdil' && spId){
-    const sp=sparepartStock.find(s=>s.id===spId);
-    if(sp) sbFetch('inventory', {method:'PATCH', filters:{id:spId}, body:{stok_sisa:sp.stokSisa, installed:sp.installed}}).catch(e=>console.warn('Sync inventory outflow fail:',e));
-  }
-  logAudit('create','transaksi',`Outflow ${fmt(amount)} - ${txnLabel}`);
-  closeModal();renderDashboard();applyTxnFilters();renderGudang();renderLaporanTable();
-  renderKeuanganStats?.();refreshDetailHero();
-  if(!spId) showToast('Outflow '+fmt(amount)+' disimpan');
-  vibrate(30);
+
+  try {
+    // 1. Post Transaction
+    const dbOut = {
+      ...newOut, 
+      posisi: document.getElementById('out-pos-select')?.value || '', 
+      sparepart_id: newOut.sparepartId
+    };
+    delete dbOut.sparepartId;
+    await sbFetch('transactions', {method:'POST', body:dbOut});
+
+    // 2. Update Inventory if needed
+    if(cat==='Onderdil' && spId && spCopy){
+      await sbFetch('inventory', {method:'PATCH', filters:{id:spId}, body:{stok_sisa:spCopy.stokSisa, installed:spCopy.installed}});
+    }
+
+    await syncFromSupabase();
+    
+    logAudit('create','transaksi',`Outflow ${fmt(amount)} - ${txnLabel}`);
+    closeModal();
+    refreshDetailHero();
+    if(spId) showToast('✅ Onderdil terpasang & stok terpotong');
+    else showToast('Outflow '+fmt(amount)+' disimpan');
+    vibrate(30);
+  } catch(e) { console.warn('Gagal submit outflow:', e); }
 }
+
 
 // ═══════════════════════════════ NAV ══════════════════════════════
 function showPage(name,sbEl,bnId){
@@ -3840,41 +3804,64 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 // PHASE 1 — AUDIT TRAIL + SYNC INDICATOR + LOGOUT
 // ═══════════════════════════════════════════════════════
 
-// Supabase REST helper (generic)
+// Refactored sbFetch to use Backend API with table normalization & error handling
 async function sbFetch(table, opts={}){
-  const {select='*', filters={}, method='GET', body=null, limit=50, order='created_at.desc'} = opts;
-  let url = `${SB_URL}/rest/v1/${table}?select=${select}&limit=${limit}&order=${order}`;
-  Object.entries(filters).forEach(([k,v])=>{ url+=`&${k}=eq.${encodeURIComponent(v)}`; });
-  const res = await fetch(url, {
-    method,
-    headers:{
-      'apikey':SB_KEY,
-      'Authorization':'Bearer '+SB_KEY,
-      'Content-Type':'application/json',
-      'Prefer': method==='POST'?'return=minimal':''
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
-  if(method==='GET'||method==='POST') return res.ok ? res.json().catch(()=>[]) : [];
-  return res.ok;
+  const {filters={}, method='GET', body=null} = opts;
+  
+  // Normalize table names (e.g., audit_logs -> audit-logs) to match Backend API
+  const normalizedTable = table.replace(/_/g, '-');
+  let endpoint = `/api/${normalizedTable}`;
+  let fetchMethod = method === 'PATCH' ? 'PUT' : method;
+
+  // Handle specific lookup by ID for mutations
+  if (filters.id && (fetchMethod === 'PUT' || fetchMethod === 'DELETE')) {
+    endpoint += `/${filters.id}`;
+  }
+
+  // Handle other filters as query parameters for GET requests
+  if (fetchMethod === 'GET' && Object.keys(filters).length > 0) {
+    const qs = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      // Basic mapping: if v is "eq.val", just use "val"
+      const val = (typeof v === 'string' && v.startsWith('eq.')) ? v.substring(3) : v;
+      qs.append(k, val);
+    });
+    endpoint += `?${qs.toString()}`;
+  }
+
+  try {
+    const result = await apiFetch(endpoint, {
+      method: fetchMethod,
+      body: body
+    });
+    return result;
+  } catch(e) {
+    console.error(`sbFetch API Error [${endpoint}]:`, e);
+    // Notify user on write failures (POST, PUT, DELETE)
+    if (fetchMethod !== 'GET') {
+      showToast(`❌ Gagal: ${e.message || 'Periksa koneksi server.'}`);
+    }
+    if (fetchMethod === 'GET') return [];
+    throw e;
+  }
 }
 
-// Log aksi ke Supabase audit_logs
+
+// Log aksi — now using Backend API
 async function logAudit(action, modul, detail=''){
   try{
     const adminName = (window.activeAdmin?.name) || 'System';
-    await fetch(`${SB_URL}/rest/v1/audit_logs`, {
-      method:'POST',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body: JSON.stringify({
-        admin_name: adminName,
+    await apiFetch('/api/audit-logs', {
+      method: 'POST',
+      body: {
+        user_name: adminName,
         action,
-        modul,
-        detail: typeof detail==='object' ? JSON.stringify(detail) : String(detail),
-        created_at: new Date().toISOString()
-      })
+        module: modul,
+        doc_id: '', 
+        changes_after: typeof detail==='object' ? detail : { info: String(detail) }
+      }
     });
-  } catch(e){ console.warn('logAudit failed:',e); }
+  } catch(e){ console.warn('logAudit failed:', e); }
 }
 
 // Load & render audit logs dari Supabase
@@ -4093,14 +4080,66 @@ async function saveRegCode(){
 
 // Sync indicator — tampilkan status di topbar
 let _lastSyncTime = null;
+// Realtime Sync — establishment
+function initRealtimeSync() {
+  try {
+    const evtSource = new EventSource(API_BASE + '/api/realtime');
+    evtSource.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      console.log('📡 Realtime update received:', data);
+      syncFromSupabase(); // refresh data
+    };
+    evtSource.onerror = () => {
+      console.warn('⚠️ Realtime link lost, falling back to 15s polling');
+      setConnectionStatus('error');
+    };
+    evtSource.onopen = () => {
+      console.log('✅ Realtime connected');
+      setConnectionStatus('ok');
+    };
+    window._realtime = evtSource;
+  } catch(e) { console.warn('Realtime init fail:', e); }
+}
+
+function setConnectionStatus(status) {
+  const el = document.getElementById('conn-status');
+  if (!el) return;
+  if (status === 'ok') {
+    el.textContent = '● ONLINE';
+    el.style.color = 'var(--success)';
+  } else if (status === 'error') {
+    el.textContent = '● OFFLINE';
+    el.style.color = 'var(--danger)';
+  } else {
+    el.textContent = '● SYNCING...';
+    el.style.color = 'var(--warning)';
+  }
+}
+
 function setSyncStatus(status){
   const dot = document.querySelector('.sync-dot');
   const txt = document.getElementById('sync-text');
   if(!dot||!txt) return;
-  if(status==='syncing'){ dot.style.background='var(--warning)'; txt.textContent='Syncing...'; dot.style.animation='ap 1s infinite'; }
-  else if(status==='ok'){ dot.style.background='var(--success)'; const t=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); txt.textContent='Sync '+t; dot.style.animation=''; _lastSyncTime=new Date(); }
-  else if(status==='error'){ dot.style.background='var(--danger)'; txt.textContent='Offline'; dot.style.animation=''; }
+  if(status==='syncing'){ 
+    dot.style.background='var(--warning)'; 
+    txt.textContent='Syncing...'; 
+    dot.style.animation='ap 1s infinite';
+    setConnectionStatus('syncing');
+  } else if(status==='ok'){ 
+    dot.style.background='var(--success)'; 
+    const t=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); 
+    txt.textContent='Sync '+t; 
+    dot.style.animation=''; 
+    _lastSyncTime=new Date();
+    setConnectionStatus('ok');
+  } else if(status==='error'){ 
+    dot.style.background='var(--danger)'; 
+    txt.textContent='Offline'; 
+    dot.style.animation='';
+    setConnectionStatus('error');
+  }
 }
+
 
 // Auto-sync data dari Supabase setiap 60 detik
 let _isSyncing = false;
@@ -4159,7 +4198,7 @@ async function syncFromSupabase(){
         installed: sp.installed || []
       }));
     }
-        // Sync settings (Registration Code)
+    // Sync settings (Registration Code)
     try {
       const settings = await sbFetch('settings',{select:'*',limit:100});
       if(Array.isArray(settings)){
@@ -4172,7 +4211,14 @@ async function syncFromSupabase(){
       }
     } catch(e) { console.warn('Settings sync fail:', e); }
 
-    setSyncStatus('ok');
+    // Simpan cache ke localStorage agar tersedia saat offline/next load
+    try {
+      localStorage.setItem('bhd_cache_transactions', JSON.stringify(transactions));
+      localStorage.setItem('bhd_cache_fleet', JSON.stringify(fleetData));
+      localStorage.setItem('bhd_cache_inventory', JSON.stringify(sparepartStock));
+    } catch(e) { console.warn('Cache localStorage gagal:', e); }
+
+    setSyncStatus('success');
     renderDashboard();
     applyTxnFilters?.();
     renderLaporanTable?.();
@@ -4180,8 +4226,13 @@ async function syncFromSupabase(){
   }catch(e){
     console.warn('Sync error:',e);
     setSyncStatus('error');
+    setConnectionStatus('offline');
+  } finally {
+    _isSyncing = false;
   }
 }
+
+
 
 // ═══════════════════════════════ INIT ════════════════════════════
 // ═══ CHART CAROUSEL (Swipeable) ═══
@@ -4234,23 +4285,117 @@ function initCarouselSwipe(){
   });
 }
 
+function setSyncStatus(status) {
+  const dot = document.querySelector('.sync-dot');
+  const txt = document.getElementById('sync-text');
+  if(!dot || !txt) return;
+  if(status === 'syncing') {
+    dot.style.background = 'var(--info)';
+    txt.textContent = 'Sinkronisasi...';
+    dot.classList.add('pulse-sync');
+    setConnectionStatus('syncing');
+  } else if(status === 'success') {
+    dot.style.background = 'var(--success)';
+    txt.textContent = 'Singkron: ' + new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+    dot.classList.remove('pulse-sync');
+    setConnectionStatus('online');
+  } else {
+    dot.style.background = 'var(--text4)';
+    txt.textContent = 'Belum sync';
+    dot.classList.remove('pulse-sync');
+  }
+}
+
+
+function setConnectionStatus(status) {
+  const el = document.getElementById('conn-status');
+  const badge = document.getElementById('api-status-badge');
+  if(!el) return;
+  
+  if(status === 'online' || status === 'ok') {
+    el.textContent = '● Online';
+    el.style.background = 'rgba(52,199,89,0.12)';
+    el.style.color = '#1a7a3a';
+    if(badge){ badge.textContent = 'Online'; badge.style.color = 'var(--success)'; badge.style.display = 'block'; }
+  } else if(status === 'offline' || status === 'error') {
+    el.textContent = '● Offline';
+    el.style.background = 'rgba(255,59,48,0.1)';
+    el.style.color = '#c0392b';
+    if(badge){ badge.textContent = 'Offline'; badge.style.color = 'var(--danger)'; badge.style.display = 'block'; }
+  } else if(status === 'syncing') {
+    el.textContent = '● Sinkronisasi...';
+    el.style.background = 'rgba(255,149,0,0.1)';
+    el.style.color = '#b36a00';
+    if(badge){ badge.textContent = 'Syncing'; badge.style.color = 'var(--orange)'; badge.style.display = 'block'; }
+  }
+}
+
+
+
+async function apiPing() {
+  try {
+    const res = await fetch(`${getApiBase()}/realtime?ping=1`, {method:'HEAD'});
+    return res.ok;
+  } catch(e) { return false; }
+}
+
+function initRealtimeSync() {
+  const url = `${getApiBase()}/realtime`;
+  console.log('🔌 Memulai SSE di:', url);
+  const es = new EventSource(url);
+  
+  es.onopen = () => {
+    console.log('✅ SSE Terhubung');
+    setConnectionStatus('online');
+  };
+  
+  es.onerror = (err) => {
+    console.warn('❌ SSE Error:', err);
+    setConnectionStatus('error');
+    es.close();
+    setTimeout(initRealtimeSync, 5000); // Reconnect after 5s
+  };
+  
+  es.addEventListener('sync', (e) => {
+    console.log('📥 SSE Sync received');
+    syncFromSupabase();
+  });
+
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', () => es.close());
+}
+
 async function _appInit(){
+
   try{
     updateSettingsAdminInfo();
     initCarouselSwipe();
     goToChart(0);
-    showToast('⏳ Memuat data...');
+    
+    // Check server health
+    const serverOnline = await apiPing();
+    if(!serverOnline){
+      showToast('⚠️ Server backend tidak terdeteksi. Data tidak akan tersimpan.');
+      console.warn('Backend server offline — semua perubahan hanya tersimpan sementara di memori.');
+      setConnectionStatus('offline');
+    } else {
+      initRealtimeSync();
+    }
+
+
+    showToast('⏳ Sinkronisasi data...');
     await syncFromSupabase();
-    showToast('✅ Data berhasil dimuat');
+    
     checkDocWarnings();
     setInterval(syncFromSupabase, 15000);
     document.addEventListener('visibilitychange',()=>{ if(!document.hidden) syncFromSupabase(); });
-    // Audit log format: [Waktu] - [Admin] - [Aksi] - [Detail]
+    
     const waktu=new Date().toLocaleString('id-ID');
     const adminName=window.activeAdmin?.name||'System';
-    logAudit('login','login',`[${waktu}] - [${adminName}] - [Login] - [Masuk ke sistem, role: ${window.activeAdmin?.role||'admin'}]`);
+    logAudit('login','login',`[${waktu}] - [${adminName}] - [Login] - [Masuk ke sistem]`);
   }catch(e){ console.error('Init error:',e); }
 }
+
 // Fetch registration code on page load so it's ready for new admin registration
 (async function preFetchSettings(){
   try {

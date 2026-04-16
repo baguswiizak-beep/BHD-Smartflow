@@ -12,34 +12,13 @@ const { Pool } = require('pg');
 
 // Parsing connection string manual (untuk menghindari error karakter spesial di username)
 let pool;
-let isMock = false;
 
-const MOCK_DATA = {
-    settings: [
-        { key: 'company_name', value: 'PT. BAGUS HARYA DWIPRIMA (MOCK)' },
-        { key: 'fleet_count', value: '10' },
-        { key: 'login_username', value: 'admin' },
-        { key: 'login_password', value: 'bhd2024' }
-    ],
-    admins: [
-        { id: 'admin-1', username: 'admin', password: 'bhd2024', role: 'superadmin' }
-    ],
-    transactions: [
-        { id: '1', type: 'inflow', amount: 5000000, label: 'Ritase Pasir', date: new Date().toISOString().split('T')[0], armada: 'B 1234 XY' },
-        { id: '2', type: 'outflow', amount: 1500000, label: 'BBM Solar', date: new Date().toISOString().split('T')[0], armada: 'B 5678 ZW' }
-    ],
-    fleet: [
-        { id: '1', nopol: 'B 1234 XY', driver: 'Bagus', status: 'jalan' },
-        { id: '2', nopol: 'B 5678 ZW', driver: 'Wizak', status: 'bengkel' }
-    ],
-    drivers: [{ nama: 'Bagus' }, { nama: 'Wizak' }]
-};
+
 
 try {
     let dbUrl = process.env.SUPABASE_URL_POOLER || process.env.POSTGRES_URL;
     if (!dbUrl) {
-        console.warn('⚠ Database URL tidak ditemukan. Menggunakan MOCK MODE.');
-        isMock = true;
+        throw new Error('Database URL (POSTGRES_URL / SUPABASE_URL_POOLER) tidak ditemukan dilingkungan (env).');
     } else {
         // Optimization for Supabase Pooler (PgBouncer)
         if (dbUrl.includes('pooler.supabase.com') && !dbUrl.includes('pgbouncer=true')) {
@@ -54,22 +33,11 @@ try {
     }
 } catch (e) {
     console.error('❌ Gagal inisialisasi Pool:', e.message);
-    isMock = true;
+    throw e;
 }
 
-// Interceptor Query untuk Mock / Real
+// Database Query Wrapper
 const query = async (text, params) => {
-    if (isMock) {
-        const sql = text.toLowerCase();
-        if (sql.includes('from settings')) return { rows: MOCK_DATA.settings };
-        if (sql.includes('from admins')) return { rows: MOCK_DATA.admins };
-        if (sql.includes('from transactions')) return { rows: MOCK_DATA.transactions };
-        if (sql.includes('from fleet')) return { rows: MOCK_DATA.fleet };
-        if (sql.includes('from drivers')) return { rows: MOCK_DATA.drivers };
-        if (sql.includes('select now()')) return { rows: [{ now: new Date() }] };
-        if (sql.includes('select count(*)')) return { rows: [{ count: '1' }] };
-        return { rows: [], rowCount: 0 };
-    }
     return pool.query(text, params);
 };
 
@@ -178,7 +146,6 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 `;
 
 async function init() {
-    if (isMock) return; // Sudah dalam mode mock
 
     try {
         console.log('⏳ Menghubungkan ke Postgres...');
@@ -216,8 +183,8 @@ async function init() {
             }
         }
     } catch (e) {
-        console.warn('⚠ Gagal terhubung ke Database Asli. Beralih ke MODE MOCK:', e.message);
-        isMock = true;
+        console.error('❌ Gagal terhubung ke Database Asli:', e.message);
+        throw e;
     }
 }
 
@@ -386,9 +353,6 @@ registerAdmin: async (username, password, role = 'admin') => {
     },
 
     deleteTransaction: async (id) => {
-        if (isMock) {
-            return true; // Simple mock success
-        }
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -580,13 +544,13 @@ registerAdmin: async (username, password, role = 'admin') => {
     },
 
     uninstallInventory: async (id, installId) => {
-        const client = isMock ? { query: async () => ({ rows: [] }), release: () => {} } : await pool.connect();
+        const client = await pool.connect();
         try {
-            if (!isMock) await client.query('BEGIN');
+            await client.query('BEGIN');
             
             // Ambil info pemasangan
             const { rows } = await client.query('SELECT * FROM inventory_installed WHERE id = $1', [installId]);
-            if (!isMock && rows.length === 0) throw new Error('Data pemasangan tidak ditemukan');
+            if (rows.length === 0) throw new Error('Data pemasangan tidak ditemukan');
             
             // Hapus pemasangan
             await client.query('DELETE FROM inventory_installed WHERE id = $1', [installId]);
@@ -594,13 +558,13 @@ registerAdmin: async (username, password, role = 'admin') => {
             // Kembalikan stok (asumsi per baris = 1 unit)
             await client.query('UPDATE inventory SET stok_sisa = stok_sisa + 1 WHERE id = $1', [id]);
             
-            if (!isMock) await client.query('COMMIT');
+            await client.query('COMMIT');
             return true;
         } catch (e) {
-            if (!isMock) await client.query('ROLLBACK');
+            await client.query('ROLLBACK');
             return false;
         } finally {
-            if (!isMock) client.release();
+            client.release();
         }
     },
 
@@ -610,7 +574,7 @@ const exportedDb = {
     ...db,
     init,
     query,
-    isMock: () => isMock
+    isMock: () => false
 };
 
 module.exports = exportedDb;

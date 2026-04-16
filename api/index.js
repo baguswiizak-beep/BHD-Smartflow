@@ -12,6 +12,16 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// ── SSE REALTIME DISPATCHER ──────────────────────────
+let clients = [];
+function broadcastChange(payload = { type: 'refresh' }) {
+    console.log(`📡 Broadcasting change to ${clients.length} clients...`);
+    clients.forEach(client => {
+        client.res.write(`data: ${JSON.stringify(payload)}\n\n`);
+    });
+}
+// ──────────────────────────────────────────────────────
+
 // ── DATABASE INITIALIZATION PROMISE ──
 let dbInitPromise = null;
 const ensureDb = async () => {
@@ -39,6 +49,24 @@ app.get('/api/ping', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/api/realtime', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    const clientId = Date.now();
+    const newClient = { id: clientId, res };
+    clients.push(newClient);
+
+    console.log(`🔌 Client connected to Realtime: ${clientId} (Total: ${clients.length})`);
+
+    req.on('close', () => {
+        console.log(`🔌 Client disconnected: ${clientId}`);
+        clients = clients.filter(c => c.id !== clientId);
+    });
+});
+
 app.get('/api/debug', (req, res) => {
   res.json({
     env: process.env.NODE_ENV || 'development',
@@ -46,18 +74,18 @@ app.get('/api/debug', (req, res) => {
     supabasePoolerLength: process.env.SUPABASE_URL_POOLER ? process.env.SUPABASE_URL_POOLER.length : 0,
     hasPostgresUrl: !!process.env.POSTGRES_URL,
     postgresUrlLength: process.env.POSTGRES_URL ? process.env.POSTGRES_URL.length : 0,
-    isMockMode: db.isMock(), // Use the newly exported function
+    isMockMode: false,
     dbLoaded: !!db
   });
 });
 
 app.get('/api/health', async (req, res) => {
   try {
-    if (!db) throw new Error('Database module not loaded');
+    if (!db) throw new Error('Modul Database tidak termuat');
     await ensureDb();
-    res.json({ status: 'ok', db: 'postgres', timestamp: new Date().toISOString() });
+    res.json({ status: 'ok', db: 'postgres', database: 'connected', timestamp: new Date().toISOString() });
   } catch (e) {
-    res.status(500).json({ status: 'error', message: e.message });
+    res.status(500).json({ status: 'error', database: 'disconnected', message: e.message });
   }
 });
 
@@ -195,6 +223,7 @@ app.put('/api/settings', async (req, res) => {
   const { key, value } = req.body || {};
   if (!key) return res.status(400).json({ error: 'key diperlukan' });
   await db.updateSetting(key, String(value));
+  broadcastChange({ type: 'settings', key });
   res.json({ ok: true });
 });
 
@@ -225,6 +254,7 @@ app.post('/api/transactions', async (req, res) => {
     });
     
     res.json({ ok: true, id: body.id });
+    broadcastChange({ type: 'transactions', action: 'create', id: body.id });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -251,6 +281,8 @@ app.put('/api/transactions/:id', async (req, res) => {
       });
     }
     res.json({ ok });
+    if (ok) broadcastChange({ type: 'transactions', action: 'update', id: req.params.id });
+
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -273,6 +305,8 @@ app.delete('/api/transactions/:id', async (req, res) => {
     });
     
     res.json({ ok: true });
+    broadcastChange({ type: 'transactions', action: 'delete', id: req.params.id });
+
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -296,13 +330,16 @@ app.post('/api/fleet', async (req, res) => {
   const f = req.body;
   if (!f.id || !f.nopol) return res.status(400).json({ error: 'id dan nopol diperlukan' });
   await db.addFleet(f);
+  broadcastChange({ type: 'fleet', action: 'create' });
   res.status(201).json({ ok: true });
 });
 
 app.put('/api/fleet/:id', async (req, res) => {
   const ok = await db.updateFleet(req.params.id, req.body);
   if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
-  res.json({ ok: true });
+    broadcastChange({ type: 'fleet', action: 'update', id: req.params.id });
+    res.json({ ok: true });
+
 });
 
 // ── FLEET TIRES ──────────────────────────────────────────────
@@ -335,6 +372,7 @@ app.delete('/api/fleet/tires/:tireId', async (req, res) => {
 
 app.delete('/api/fleet/:id', async (req, res) => {
   await db.deleteFleet(req.params.id);
+  broadcastChange({ type: 'fleet', action: 'delete', id: req.params.id });
   res.json({ ok: true });
 });
 
@@ -347,11 +385,13 @@ app.post('/api/drivers', async (req, res) => {
   const { nama } = req.body || {};
   if (!nama) return res.status(400).json({ error: 'Nama diperlukan' });
   await db.addDriver(nama);
+  broadcastChange({ type: 'drivers', action: 'create' });
   res.status(201).json({ ok: true });
 });
 
 app.delete('/api/drivers/:nama', async (req, res) => {
   await db.deleteDriver(decodeURIComponent(req.params.nama));
+  broadcastChange({ type: 'drivers', action: 'delete' });
   res.json({ ok: true });
 });
 
@@ -373,6 +413,8 @@ app.post('/api/inventory', async (req, res) => {
   });
 
   res.status(201).json({ ok: true });
+  broadcastChange({ type: 'inventory', action: 'create' });
+
 });
 
 app.put('/api/inventory/:id', async (req, res) => {
@@ -387,6 +429,8 @@ app.put('/api/inventory/:id', async (req, res) => {
   });
 
   res.json({ ok: true });
+  broadcastChange({ type: 'inventory', action: 'update', id: req.params.id });
+
 });
 
 app.delete('/api/inventory/:id', async (req, res) => {
@@ -401,6 +445,8 @@ app.delete('/api/inventory/:id', async (req, res) => {
   });
 
   res.json({ ok: true });
+  broadcastChange({ type: 'inventory', action: 'delete', id: req.params.id });
+
 });
 
 app.post('/api/inventory/sync-multi', async (req, res) => {
@@ -462,10 +508,10 @@ if (require.main === module) {
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`
   ╔══════════════════════════════════════════════════════════════╗
-  ║          BHD SmartFlow API - Terhubung ke SQL                ║
+  ║          BHD SmartFlow API - Force SQL Mode          ║
   ╟──────────────────────────────────────────────────────────────╢
   ║  ✅ PC/Laptop : http://127.0.0.1:${PORT}             ║
-  ║  🚀 Status    : Database SQL Aktif                           ║
+  ║  🚀 Status    : Database SQL (WAJIB) Aktif                   ║
   ╚══════════════════════════════════════════════════════════════╝
       `);
     });
