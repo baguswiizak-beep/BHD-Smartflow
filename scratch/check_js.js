@@ -229,7 +229,7 @@ function spStatusLabel(sp){
   return map[s];
 }
 const spCatIconDefault={
-  Ban:'ðŸ”µ',Oli:'ðŸŸ¡',Filter:'ðŸŸ ',Spare:'ðŸ”§',Aki:'âš¡',Rem:'ðŸ”´',
+  Ban:'ðŸ›ž',Oli:'ðŸ›¢ï¸',Filter:'ðŸŸ ',Spare:'ðŸ”§',Aki:'âš¡',Rem:'ðŸ”´',
   Lampu:'ðŸ’¡',Mesin:'âš™ï¸',Baut:'ðŸ”©',Tool:'ðŸ› ï¸',Bearing:'â­•',Belt:'ã€°ï¸',
   Radiator:'ðŸŒ¡ï¸',Kopling:'ðŸ”—',Knalpot:'ðŸ’¨',Body:'ðŸš›',Kaca:'ðŸªŸ',
   Listrik:'âš¡',Pompa:'ðŸ’§',Selang:'ðŸ”—',Rantai:'â›“ï¸',Gear:'âš™ï¸',
@@ -237,7 +237,27 @@ const spCatIconDefault={
 };
 // SVG icons untuk tampil di card gudang (lebih visual)
 const spCatIconSVG={
-  Ban:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#3B82F6" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="21"/><line x1="3" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="21" y2="12"/></svg>`,
+  Ban:`<svg viewBox="0 0 32 32" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Dinding luar ban truk tebal -->
+    <circle cx="16" cy="16" r="14" stroke="#1e1e1e" stroke-width="4" fill="#2d2d2d"/>
+    <!-- Tapak kembang ban (tread blocks) melingkar -->
+    <circle cx="16" cy="16" r="14" stroke="#555" stroke-width="1.5" stroke-dasharray="4.4 2.2" fill="none"/>
+    <!-- Dinding samping (sidewall) ban -->
+    <circle cx="16" cy="16" r="9.5" stroke="#444" stroke-width="1" fill="#3a3a3a"/>
+    <!-- Pelek velg -->
+    <circle cx="16" cy="16" r="6" stroke="#9CA3AF" stroke-width="2" fill="#6B7280"/>
+    <!-- Pusat roda/hub -->
+    <circle cx="16" cy="16" r="2.5" fill="#D1D5DB"/>
+    <!-- Baut roda (lug nuts) -->
+    <circle cx="16" cy="10" r="1" fill="#9CA3AF"/>
+    <circle cx="16" cy="22" r="1" fill="#9CA3AF"/>
+    <circle cx="10" cy="16" r="1" fill="#9CA3AF"/>
+    <circle cx="22" cy="16" r="1" fill="#9CA3AF"/>
+    <circle cx="11.5" cy="11.5" r="1" fill="#9CA3AF"/>
+    <circle cx="20.5" cy="20.5" r="1" fill="#9CA3AF"/>
+    <circle cx="20.5" cy="11.5" r="1" fill="#9CA3AF"/>
+    <circle cx="11.5" cy="20.5" r="1" fill="#9CA3AF"/>
+  </svg>`,
   Oli:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#EAB308" stroke-width="2"><path d="M3 3h18v13a3 3 0 01-3 3H6a3 3 0 01-3-3V3z"/><path d="M3 8h18"/></svg>`,
   Aki:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F59E0B" stroke-width="2"><rect x="2" y="7" width="20" height="12" rx="2"/><path d="M7 7V5M17 7V5M10 13l2-2v4"/></svg>`,
   Filter:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F97316" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>`,
