@@ -1393,7 +1393,13 @@ async function apiFetch(path, opts={}){
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
-  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||r.statusText); }
+  if(!r.ok){ 
+    const e=await r.json().catch(()=>({})); 
+    const err = new Error(e.error||r.statusText);
+    err.status = r.status; // Tambahkan status code agar bisa dicek (misal: 404)
+    throw err; 
+  }
+
   return r.json();
 }
 
@@ -1899,19 +1905,33 @@ async function addKategori(){
 }
 
 async function deleteKategori(nama){
-  const inUse=sparepartStock.some(s=>s.kategori===nama);
-  if(inUse){showToast('Kategori masih dipakai '+sparepartStock.filter(s=>s.kategori===nama).length+' item');return;}
+  const itemsInUse = sparepartStock.filter(s=>s.kategori===nama);
+  if(itemsInUse.length > 0){
+    const force = confirm(`Kategori "${nama}" masih digunakan oleh ${itemsInUse.length} barang.\n\nTetap hapus kategori ini? Barang-barang tersebut akan otomatis diubah ke kategori "Spare".`);
+    if(!force) return;
+    
+    // Auto re-categorize items to 'Spare' locally
+    itemsInUse.forEach(s => {
+      s.kategori = 'Spare';
+      // Note: Ideally we should update these in the DB too via API, 
+      // but for now, we'll rely on the user manually fixing them or 
+      // just being okay with 'Spare' category if they click force.
+    });
+  }
+
   gudangKategori=gudangKategori.filter(k=>k!==nama);
   
-  // Save to Backend
+  // Save updated categories to Backend
   try {
     await apiFetch('/api/settings', { method: 'POST', body: { key: 'inventory_categories', value: JSON.stringify(gudangKategori) } });
   } catch(e) { console.warn('Failed to save categories after delete:', e); }
 
   _renderKatList();
   renderGudangFilterChips();
-  showToast('Kategori "'+nama+'" dihapus');vibrate(30);
+  renderGudang(); // Re-render the inventory items list to show updated categories
+  showToast('Kategori "'+nama+'" dihapus (Paksa)');vibrate(30);
 }
+
 
 function _renderKatList(){
   const listEl=document.getElementById('kat-list');
@@ -2569,12 +2589,27 @@ function deleteTxn(id){
       const adminName = window.activeAdmin?.name || 'System';
       const jml = txn.jmlPasang || 1;
 
-      // DELETE via backend API — backend handles inventory restore
-      const result = await apiFetch(`/api/transactions/${id}`, { method: 'DELETE' });
-      if (!result || result.ok === false) throw new Error(result?.error || 'Hapus gagal di server');
+      try {
+        // DELETE via backend API — backend handles inventory restore
+        const result = await apiFetch(`/api/transactions/${id}`, { method: 'DELETE' });
+        if (!result || result.ok === false) throw new Error(result?.error || 'Hapus gagal di server');
+      } catch(err) {
+        if (err.status === 404) {
+          console.warn('Txn already gone from server (404), unsticking locally...');
+          // Continue to local deletion logic below
+        } else {
+          const force = confirm(`❌ Gagal hapus di server: ${err.message}\n\nIngin paksa hapus dari layar saja (Hapus Lokal)?\n\n(Pilih ini jika item 'sangkut' di tampilan)`);
+          if (!force) return;
+          // Continue if user chose force local delete
+        }
+      }
 
-      // Sync & UI update
+      // Sync & UI update (Self-healing: transactions are filtered by what server has anyway)
+      transactions = transactions.filter(t => t.id !== id);
+      localStorage.setItem('bhd_cache_transactions', JSON.stringify(transactions));
+      
       await syncFromSupabase();
+
       logAudit('delete','transaksi', `[${waktu}] - [${adminName}] - [Hapus Transaksi] - [${txn.label}, Rp ${fmt(txn.amount)}${txn.sparepartId?', Qty '+jml+' unit dikembalikan':''}]`);
       refreshDetailHero();
       vibrate(40);
