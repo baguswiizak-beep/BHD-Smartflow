@@ -1979,18 +1979,19 @@ async function deleteSparepart(id){
   const sp = sparepartStock.find(s=>s.id===id);
   if(!sp) return;
   
-  showConfirmPopup('🗑️ Hapus Item', 
-    `Hapus master data item: <b>${sp.nama}</b> (Spek: ${sp.spek})?<br><br><span style="color:var(--danger);font-size:11px;">⚠️ Tindakan ini akan gagal jika item masih memiliki riwayat pemakaian.</span>`,
+  showConfirmPopup('🗑️ Hapus Paksa Item', 
+    `Hapus master data item: <b>${sp.nama}</b> (Spek: ${sp.spek})?<br><br><span style="color:var(--danger);font-size:11px;">⚠️ <b>Peringatan Hapus Paksa:</b> Tindakan ini akan menghapus SEMUA riwayat pemakaian dan transaksi keuangan terkait item ini secara permanen.</span>`,
     async () => {
       // DELETE via backend
       const result = await apiFetch(`/api/inventory/${id}`, { method: 'DELETE' });
-      if (!result || result.ok === false) throw new Error(result?.error || 'Hapus gagal (Mungkin item sedang digunakan)');
+      if (!result || result.ok === false) throw new Error(result?.error || 'Gagal hapus paksa');
       
       await syncFromSupabase();
-      showToast('Item dihapus');
+      showToast('Item dan semua riwayat dihapus');
       vibrate(40);
     }
   );
+
 }
 
 async function deleteUsage(spId, installId){

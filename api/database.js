@@ -561,9 +561,37 @@ const db = {
     },
 
     deleteInventory: async (id) => {
-        const { rowCount } = await pool.query('DELETE FROM inventory WHERE id = $1', [id]);
-        return rowCount > 0;
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            
+            // 1. Dapatkan daftar txn_id terkait pemakaian item ini
+            const { rows: usages } = await client.query('SELECT txn_id FROM inventory_installed WHERE inventory_id = $1', [id]);
+            const txnIds = usages.map(u => u.txn_id).filter(t => t);
+            
+            // 2. Hapus catatan pemakaian (install history)
+            await client.query('DELETE FROM inventory_installed WHERE inventory_id = $1', [id]);
+            
+            // 3. Hapus transaksi keuangan terkait (outflows)
+            if (txnIds.length > 0) {
+                // Gunakan ANY($1) untuk array delete
+                await client.query('DELETE FROM transactions WHERE id = ANY($1)', [txnIds]);
+            }
+            
+            // 4. Akhirnya hapus master item inventory
+            const { rowCount } = await client.query('DELETE FROM inventory WHERE id = $1', [id]);
+            
+            await client.query('COMMIT');
+            return rowCount > 0;
+        } catch (e) {
+            await client.query('ROLLBACK');
+            console.error('Force delete inventory failed:', e.message);
+            throw e;
+        } finally {
+            client.release();
+        }
     },
+
 
     installInventory: async (id, installData) => {
         const client = await pool.connect();
