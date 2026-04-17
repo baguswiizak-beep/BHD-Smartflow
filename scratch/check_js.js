@@ -249,8 +249,8 @@ function getSpCatIcon(kat, svg=false){
   if(svg && spCatIconSVG[kat]) return spCatIconSVG[kat];
   if(spCatIconDefault[kat]) return spCatIconDefault[kat];
   const k=kat.toLowerCase();
-  if(k.includes('ban')||k.includes('tire')||k.includes('roda')) return svg&&spCatIconSVG['Ban']?spCatIconSVG['Ban']:'ðŸ”µ';
-  if(k.includes('oli')||k.includes('oil')||k.includes('pelumas')||k.includes('grease')) return svg&&spCatIconSVG['Oli']?spCatIconSVG['Oli']:'ðŸŸ¡';
+  if(k.includes('ban')||k.includes('tire')||k.includes('roda')) return svg&&spCatIconSVG['Ban']?spCatIconSVG['Ban']:'ðŸ›ž';
+  if(k.includes('oli')||k.includes('oil')||k.includes('pelumas')||k.includes('grease')) return svg&&spCatIconSVG['Oli']?spCatIconSVG['Oli']:'ðŸ›¢ï¸';
   if(k.includes('aki')||k.includes('baterai')||k.includes('accu')||k.includes('battery')) return svg&&spCatIconSVG['Aki']?spCatIconSVG['Aki']:'âš¡';
   if(k.includes('rem')||k.includes('brake')||k.includes('kampas')) return 'ðŸ”´';
   if(k.includes('filter')) return svg&&spCatIconSVG['Filter']?spCatIconSVG['Filter']:'ðŸŸ ';
