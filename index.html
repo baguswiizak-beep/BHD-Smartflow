@@ -2553,141 +2553,44 @@ function deleteTxn(id){
 }
 
 function editTxn(id){
-  const txn=transactions.find(t=>t.id===id);
-  if(!txn) return;
-  const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
-  tEl.textContent='✏️ Edit Transaksi';
-  const isOnderdil=txn.sparepartId;
-  // Show sparepart info if linked
-  let spInfo='';
-  if(isOnderdil){
-    const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
-    const spName=sp?sp.nama:'onderdil';
-    const jmlLama=txn.jmlPasang||1;
-    spInfo=`<div style="background:var(--orange-bg);border:1px solid var(--orange-bd);border-radius:10px;padding:9px 11px;font-size:11px;color:var(--orange);">
-      🔧 Terkait stok <b>${spName}</b> (${jmlLama} unit terpasang)<br>
-      <span style="font-size:10px;opacity:.8;">Edit jumlah akan menyesuaikan stok otomatis. Rumus: Stok Baru = Stok Sekarang + (Jumlah Lama - Jumlah Baru)</span>
-    </div>
-    <div><label class="form-label">Jumlah Pasang (unit)</label>
-      <input class="form-input" id="et-jml" type="number" min="0" value="${jmlLama}"/></div>`;
-  }
-  body.innerHTML=`<div style="display:grid;gap:12px;">
-    <div style="background:var(--${txn.type==='inflow'?'green':'orange'}-bg);border:1px solid var(--${txn.type==='inflow'?'green':'orange'}-bd);border-radius:10px;padding:8px 11px;font-size:11px;font-weight:600;color:var(--${txn.type==='inflow'?'green2':'orange'});">
-      ${txn.type==='inflow'?'📈 Pemasukan':'📉 Pengeluaran'} · ${fmtDate(txn.date)}
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div><label class="form-label">Tgl</label><input class="form-input" id="et-date" type="date" value="${txn.date||today()}"/></div>
-      <div><label class="form-label">Jumlah</label><input class="form-input" id="et-amount" type="number" value="${txn.amount||0}"/></div>
-    </div>
-    <div><label class="form-label">Keterangan</label><input class="form-input" id="et-label" value="${txn.label||''}"/></div>
-    <div><label class="form-label">Armada</label>
-      <select class="form-select" id="et-armada">
-        <option value="">— Tidak ada —</option>
-        ${fleetData.map(f=>`<option value="${f.nopol}" ${txn.armada===f.nopol?'selected':''}>${f.nopol} - ${f.driver}</option>`).join('')}
-      </select></div>
-    ${spInfo}
-    <div id="et-pos-field" style="display:${(isOnderdil || (txn.label||'').toLowerCase().includes('ban'))?'block':'none'};">
-      <label class="form-label">📍 Posisi Ban (Sumbu)</label>
-      <select class="form-select" id="et-pos">
-        <option value="">— Pilih Posisi —</option>
-        <option value="Depan Kiri" ${txn.posisi==='Depan Kiri'?'selected':''}>Depan Kiri</option>
-        <option value="Depan Kanan" ${txn.posisi==='Depan Kanan'?'selected':''}>Depan Kanan</option>
-        <option value="Tengah Kiri Dalam" ${txn.posisi==='Tengah Kiri Dalam'?'selected':''}>Tengah Kiri Dalam</option>
-        <option value="Tengah Kiri Luar" ${txn.posisi==='Tengah Kiri Luar'?'selected':''}>Tengah Kiri Luar</option>
-        <option value="Tengah Kanan Dalam" ${txn.posisi==='Tengah Kanan Dalam'?'selected':''}>Tengah Kanan Dalam</option>
-        <option value="Tengah Kanan Luar" ${txn.posisi==='Tengah Kanan Luar'?'selected':''}>Tengah Kanan Luar</option>
-        <option value="Belakang Kiri Dalam" ${txn.posisi==='Belakang Kiri Dalam'?'selected':''}>Belakang Kiri Dalam</option>
-        <option value="Belakang Kiri Luar" ${txn.posisi==='Belakang Kiri Luar'?'selected':''}>Belakang Kiri Luar</option>
-        <option value="Belakang Kanan Dalam" ${txn.posisi==='Belakang Kanan Dalam'?'selected':''}>Belakang Kanan Dalam</option>
-        <option value="Belakang Kanan Luar" ${txn.posisi==='Belakang Kanan Luar'?'selected':''}>Belakang Kanan Luar</option>
-      </select>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <button onclick="closeSm()" style="padding:10px;border-radius:11px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Batal</button>
-      <button onclick="confirmSaveEditTxn('${id}')" style="padding:10px;border-radius:11px;border:none;background:var(--green-bg);color:var(--green2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">💾 Simpan</button>
-    </div>
-  </div>`;
-  document.getElementById('sm-overlay').classList.add('open');
+  openModal('edit', {id});
 }
 
 function confirmSaveEditTxn(id){
   const txn=transactions.find(t=>t.id===id);if(!txn)return;
   const newLabel=document.getElementById('et-label')?.value||txn.label;
-  const newAmount=parseFloat(document.getElementById('et-amount')?.value)||txn.amount;
+  const newAmount=parseFloat(getRaw('et-amount'))||txn.amount;
   const newDate=document.getElementById('et-date')?.value||txn.date;
   const newArmada=document.getElementById('et-armada')?.value||txn.armada;
-  const oldAmount=txn.amount;
-  const oldJml=txn.jmlPasang||1;
-  const newJml=txn.sparepartId?parseInt(document.getElementById('et-jml')?.value||oldJml):oldJml;
+  const finalPosisi=(txn.sparepartId || (txn.label||'').toLowerCase().includes('ban')) ? (document.getElementById('et-pos')?.value || txn.posisi) : '';
+  const newCat=document.getElementById('et-cat')?.value||txn.kategori;
 
-  // Build confirm message with stock reversal info
-  let stockMsg='';
-  if(txn.sparepartId && newJml!==oldJml){
-    const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
-    const selisih=oldJml-newJml; // positif = stok bertambah, negatif = berkurang
-    if(sp) stockMsg=`<br><span style="font-size:11px;color:${selisih>0?'var(--success)':'var(--danger)'};">
-      ${selisih>0?'✅':'⚠️'} Stok <b>${sp.nama}</b>: ${sp.stokSisa} → ${sp.stokSisa+selisih}
-      (${selisih>0?'+':''}{${selisih}})
-    </span>`.replace('{','').replace('}','');
-  }
+  closeSm(); // In case anything is open
+  closeModal();
 
-  closeSm();
-  showConfirmPopup('💾 Konfirmasi Perubahan',
-    `<b>${txn.type==='inflow'?'Pemasukan':'Pengeluaran'}</b><br>
-     Nominal: ${fmt(oldAmount)} → <b>${fmt(newAmount)}</b>${stockMsg}`,
-    async ()=>{
-      const waktu=new Date().toLocaleString('id-ID');
-      const adminName=window.activeAdmin?.name||'System';
-      
-      try {
-        // Update local object logically (calculations)
-        let finalAmount = newAmount;
-        let finalPosisi = (txn.sparepartId || txn.label.toLowerCase().includes('ban')) ? (document.getElementById('et-pos')?.value || txn.posisi) : '';
-        
-        // Handle Stock Reversal in Database if Qty changed
-        if(txn.sparepartId && newJml!==oldJml){
-          const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
-          if(sp){
-            const selisih=oldJml-newJml;
-            const newStok = Math.min(sp.stokAwal, Math.max(0, sp.stokSisa+selisih));
-            let newInstalled = [...sp.installed];
-            if(selisih>0){
-              let removed=0;
-              newInstalled = newInstalled.filter(i=>{
-                if(removed<selisih && String(i.txnId).startsWith(String(id))){removed++;return false;}
-                return true;
-              });
-            } else if(selisih<0){
-              for(let i=0;i<Math.abs(selisih);i++){
-                newInstalled.push({armada:newArmada,tglPasang:newDate,ritase:0,txnId:id+'_extra_'+i,posisi:finalPosisi});
-              }
-            }
-            await sbFetch('inventory', {method:'PATCH', filters:{id:txn.sparepartId}, body:{stok_sisa:newStok, installed:newInstalled}});
-          }
-          finalAmount = newJml*(newAmount/oldJml);
-        }
+  const waktu=new Date().toLocaleString('id-ID');
+  const adminName=window.activeAdmin?.name||'System';
+  
+  const dbData = {
+    label:newLabel,
+    amount:newAmount,
+    date:newDate,
+    armada:newArmada,
+    posisi:finalPosisi,
+    kategori:newCat
+  };
 
-        const dbData = {
-          label:newLabel,
-          amount:finalAmount,
-          date:newDate,
-          armada:newArmada,
-          posisi:finalPosisi,
-          sparepart_id:txn.sparepartId
-        };
-
-        await sbFetch('transactions',{method:'PATCH', filters:{id:id}, body:dbData});
-        await syncFromSupabase();
-
-        logAudit('update','transaksi', `[${waktu}] - [${adminName}] - [Edit Transaksi] - [${newLabel}, Rp ${fmt(oldAmount)}→${fmt(finalAmount)}${newJml!==oldJml?', Qty '+oldJml+'→'+newJml:''}]`);
-        refreshDetailHero();
-        showToast('Transaksi diperbarui'+(txn.sparepartId&&newJml!==oldJml?' · Stok disesuaikan':''));
-      } catch(e) {
-        console.warn('Gagal update transaksi:', e);
-        showToast('❌ Gagal memperbarui transaksi. Periksa koneksi server.');
-      }
-
-    }
+  sbFetch('transactions',{method:'PATCH', filters:{id:id}, body:dbData}).then(()=>{
+    return syncFromSupabase();
+  }).then(()=>{
+    logAudit('update','transaksi', `[${waktu}] - [${adminName}] - [Edit Transaksi] - [${newLabel}, Rp ${fmt(txn.amount)}→${fmt(newAmount)}]`);
+    refreshDetailHero();
+    showToast('Transaksi berhasil diperbarui');
+  }).catch(e=>{
+    console.warn('Gagal update transaksi:', e);
+    showToast('❌ Gagal memperbarui transaksi.');
+  });
+}
 
   );
 }
@@ -3715,7 +3618,54 @@ function openModal(type, prefill={}){
 
   document.getElementById('mt-dot').className='mt-dot '+type;
   const title=document.getElementById('mt-text'),body=document.getElementById('modal-body');
-  if(type==='inflow'){
+  
+  if(type==='edit'){
+    const txn=transactions.find(t=>t.id===prefill.id);
+    if(!txn) return;
+    title.textContent='✏️ Edit Transaksi';
+    body.innerHTML=`
+      <div style="background:var(--${txn.type==='inflow'?'green':'orange'}-bg);border:1px solid var(--${txn.type==='inflow'?'green':'orange'}-bd);border-radius:10px;padding:8px 11px;font-size:12px;font-weight:700;color:var(--${txn.type==='inflow'?'green2':'orange'});margin-bottom:14px;">
+        ${txn.type==='inflow'?'📈 Pemasukan':'📉 Pengeluaran'} · Transaksi ID: ${String(txn.id).substring(0,8)}...
+      </div>
+      <div class="form-group"><label class="form-label">Keterangan / Label</label>
+        <input class="form-input" id="et-label" value="${txn.label||''}"/></div>
+      <div class="form-group"><label class="form-label">Jumlah (Rp)</label>
+        <input class="form-input" id="et-amount" placeholder="0" inputmode="numeric" value="${fmt(txn.amount||0)}"/></div>
+      <div class="form-group"><label class="form-label">Tanggal</label>
+        <input type="date" class="form-input" id="et-date" value="${txn.date||today()}"/></div>
+      <div class="form-group"><label class="form-label">Kategori</label>
+        <select class="form-select" id="et-cat">
+          <option value="UMUM" ${txn.kategori==='UMUM'?'selected':''}>Beban Umum</option>
+          <option value="Tunai" ${(txn.kategori||'').toLowerCase()==='tunai'?'selected':''}>Kas Bon / Tunai</option>
+          <option value="Onderdil" ${(txn.kategori||'').toLowerCase()==='onderdil'?'selected':''}>Beban Onderdil</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Armada Alokasi</label>
+        <select class="form-select" id="et-armada">
+          <option value="">— Opsional (Biaya Umum) —</option>
+          ${fleetData.map(f=>`<option value="${f.nopol}" ${txn.armada===f.nopol?'selected':''}>${f.nopol} - ${f.driver}</option>`).join('')}
+        </select></div>
+      <div class="form-group" style="display:${(txn.sparepartId || (txn.label||'').toLowerCase().includes('ban'))?'block':'none'};">
+        <label class="form-label">📍 Posisi Ban (Sumbu)</label>
+        <select class="form-select" id="et-pos">
+          <option value="">— Pilih Posisi —</option>
+          <option value="Depan Kiri" ${txn.posisi==='Depan Kiri'?'selected':''}>Depan Kiri</option>
+          <option value="Depan Kanan" ${txn.posisi==='Depan Kanan'?'selected':''}>Depan Kanan</option>
+          <option value="Tengah Kiri Dalam" ${txn.posisi==='Tengah Kiri Dalam'?'selected':''}>Tengah Kiri Dalam</option>
+          <option value="Tengah Kiri Luar" ${txn.posisi==='Tengah Kiri Luar'?'selected':''}>Tengah Kiri Luar</option>
+          <option value="Tengah Kanan Dalam" ${txn.posisi==='Tengah Kanan Dalam'?'selected':''}>Tengah Kanan Dalam</option>
+          <option value="Tengah Kanan Luar" ${txn.posisi==='Tengah Kanan Luar'?'selected':''}>Tengah Kanan Luar</option>
+          <option value="Belakang Kiri Dalam" ${txn.posisi==='Belakang Kiri Dalam'?'selected':''}>Belakang Kiri Dalam</option>
+          <option value="Belakang Kiri Luar" ${txn.posisi==='Belakang Kiri Luar'?'selected':''}>Belakang Kiri Luar</option>
+          <option value="Belakang Kanan Dalam" ${txn.posisi==='Belakang Kanan Dalam'?'selected':''}>Belakang Kanan Dalam</option>
+          <option value="Belakang Kanan Luar" ${txn.posisi==='Belakang Kanan Luar'?'selected':''}>Belakang Kanan Luar</option>
+        </select>
+      </div>
+      ${txn.sparepartId ? `<div style="font-size:10.5px;color:var(--text3);background:var(--bg3);padding:10px;border-radius:10px;margin-bottom:14px;">💡 <b>Onderdil Mode:</b> Tidak dapat mengubah kuantitas stok di form ini. Jika terjadi kesalahan input barang yang menyebabkan stok keliru, silakan <b>Hapus</b> baris transaksi ini lalu buat ulang.</div>` : ''}
+      <button class="form-btn outflow" style="background:var(--primary);" onclick="confirmSaveEditTxn('${txn.id}')">💾 Simpan Perubahan</button>`;
+    setupCurrencyInput('et-amount');
+  }
+  else if(type==='inflow'){
     title.textContent='+ Input Inflow';
     body.innerHTML=`
       <div class="form-group"><label class="form-label">No. Plat Armada</label><select class="form-select" id="inf-armada" onchange="syncDriverFromArmada()">${getArmadaOpts()}</select></div>
