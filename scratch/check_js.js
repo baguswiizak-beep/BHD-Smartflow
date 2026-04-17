@@ -437,7 +437,7 @@ function _renderKatList(){
 
 // â”€â”€ ONDERDIL: Armada Usage Popup (#7) â”€â”€
 function openArmadaUsagePopup(spId, instIdx){
-  const sp=sparepartStock.find(s=>s.id===spId);
+  const sp=sparepartStock.find(s=>String(s.id)===String(spId));
   if(!sp||!sp.installed[instIdx])return;
   const i=sp.installed[instIdx];
   const f=fleetData.find(x=>x.nopol===i.armada);
@@ -603,7 +603,7 @@ function renderGudangFilterChips(){
 }
 
 function openAddStockModal(editId){
-  const sp=editId?sparepartStock.find(s=>s.id===editId):null;
+  const sp=editId?sparepartStock.find(s=>String(s.id)===String(editId)):null;
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent=sp?'Edit Item Stok':'Tambah Stok Baru';
   body.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">'
@@ -632,7 +632,7 @@ async function saveSparepart(editId){
   if(jml<=0){showToast('Jumlah harus lebih dari 0');return;}
   try {
     if(editId){
-      const sp=sparepartStock.find(s=>s.id===editId);
+      const sp=sparepartStock.find(s=>String(s.id)===String(editId));
       if(sp){
         const dbData = { nama, spek, kategori: kat, toko, nota, tgl_masuk: tgl, stok_awal: jml, stok_sisa: Math.min(isNaN(sp.stokSisa)?jml:sp.stokSisa,jml), harga_satuan: isNaN(harga)?0:harga, catatan: sp.catatan };
         await sbFetch('inventory',{method:'PATCH',filters:{id:editId},body:dbData});
@@ -654,7 +654,7 @@ async function saveSparepart(editId){
 }
 
 async function deleteSparepart(id){
-  const sp = sparepartStock.find(s=>s.id===id);
+  const sp = sparepartStock.find(s=>String(s.id)===String(id));
   if(!sp) return;
   
   showConfirmPopup('ðŸ—‘ï¸ Hapus Paksa Item', 
@@ -672,7 +672,7 @@ async function deleteSparepart(id){
       }
       
       // Local update immediately
-      sparepartStock = sparepartStock.filter(s => s.id !== id);
+      sparepartStock = sparepartStock.filter(s => String(s.id) !== String(id));
 
       await syncFromSupabase();
       showToast('Item dan semua riwayat dihapus');
@@ -682,8 +682,8 @@ async function deleteSparepart(id){
 }
 
 async function deleteUsage(spId, installId){
-  const sp = sparepartStock.find(s=>s.id===spId);
-  const ins = sp?.installed?.find(i=>i.id==installId);
+  const sp = sparepartStock.find(s=>String(s.id)===String(spId));
+  const ins = sp?.installed?.find(i=>String(i.id)===String(installId));
   if(!sp || !ins) return;
 
   showConfirmPopup('ðŸ—‘ï¸ Hapus Pemasangan',
@@ -703,7 +703,7 @@ async function deleteUsage(spId, installId){
 
 
 function openPasangModal(spId){
-  const sp=sparepartStock.find(s=>s.id===spId);if(!sp)return;
+  const sp=sparepartStock.find(s=>String(s.id)===String(spId));if(!sp)return;
   if(sp.stokSisa<=0){showToast('Stok habis!');return;}
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent='Pasang ke Armada';
@@ -733,7 +733,7 @@ function openPasangModal(spId){
 }
 
 async function confirmPasang(spId){
-  const sp=sparepartStock.find(s=>s.id===spId);if(!sp)return;
+  const sp=sparepartStock.find(s=>String(s.id)===String(spId));if(!sp)return;
   const armada=document.getElementById('pasang-armada')?.value, tgl=document.getElementById('pasang-tgl')?.value, jml=parseInt(document.getElementById('pasang-jml')?.value||'1'), posisi=document.getElementById('pasang-posisi')?.value||'';
   if(jml<1){showToast('Jumlah minimal 1');return;}
   if(jml>sp.stokSisa){showToast('Jumlah melebihi stok (sisa: '+sp.stokSisa+')');return;}
@@ -1969,7 +1969,7 @@ function refreshDetailHero(){
 }
 
 function openUnitDetail(id){
-  const f=fleetData.find(x=>x.id===id);if(!f)return;
+  const f=fleetData.find(x=>String(x.id)===String(id));if(!f)return;
   currentDetailUnit=f;
   _detailFromDate=''; _detailToDate='';
   document.querySelectorAll('.dp-period-btn').forEach(b=>b.classList.remove('active'));
@@ -2059,7 +2059,7 @@ function showTab(name,btnEl){
 }
 
 async function saveDocs(id){
-  const f=fleetData.find(x=>x.id===id);if(!f)return;
+  const f=fleetData.find(x=>String(x.id)===String(id));if(!f)return;
   const newPajak=document.getElementById('edit-pajak')?.value||f.pajak;
   const newKir=document.getElementById('edit-kir')?.value||f.kir;
   
@@ -2243,7 +2243,7 @@ function openSmModal(type,val){
       <button class="sm-btn orange" onclick="saveDriver('${val}')">${isEdit?'Simpan':'Tambah Supir'}</button>
       ${isEdit?`<button class="sm-btn danger" onclick="deleteDriver('${val}');closeSm()">Hapus Supir</button>`:''}`;
   } else {
-    const isEdit=!!val;const u=isEdit?fleetData.find(f=>f.id===val):null;
+    const isEdit=!!val;const u=isEdit?fleetData.find(f=>String(f.id)===String(val)):null;
     tEl.textContent=isEdit?'Edit Unit Armada':'Tambah Unit Baru';
     body.innerHTML=`
       <div><label class="form-label">No. Plat</label><input class="form-input" id="sm-nopol" value="${u?u.nopol:''}" placeholder="B 1234 XX"/></div>
@@ -2331,7 +2331,7 @@ async function saveUnit(existId){
 }
 
 async function deleteUnit(id){
-  const u=fleetData.find(f=>f.id===id);
+  const u=fleetData.find(f=>String(f.id)===String(id));
   if(!u) return;
   if(!confirm(`Hapus armada ${u.nopol}?`)) return;
 
@@ -2394,7 +2394,7 @@ function openModal(type, prefill={}){
   const title=document.getElementById('mt-text'),body=document.getElementById('modal-body');
   
   if(type==='edit'){
-    const txn=transactions.find(t=>t.id===prefill.id);
+    const txn=transactions.find(t=>String(t.id)===String(prefill.id));
     if(!txn) return;
     title.textContent='âœï¸ Edit Transaksi';
     body.innerHTML=`
@@ -2523,7 +2523,7 @@ function onGudangItemSelect(){
     if(info) info.style.display='none';
     return;
   }
-  const sp=sparepartStock.find(s=>s.id===spId);
+  const sp=sparepartStock.find(s=>String(s.id)===String(spId));
   if(!sp){if(info) info.style.display='none';return;}
   // Auto-fill fields
   const labelEl=document.getElementById('out-label');
@@ -2652,14 +2652,14 @@ async function submitOutflow(){
     const spSel=document.getElementById('out-sp-select');
     spId=spSel?.value||null;
     if(spId){
-      const sp=sparepartStock.find(s=>s.id===spId);
+      const sp=sparepartStock.find(s=>String(s.id)===String(spId));
       if(sp && sp.stokSisa<=0){
         showToast('Stok '+sp.nama+' sudah habis!');return;
       }
     }
   }
 
-  const txnLabel=label||(spId?sparepartStock.find(s=>s.id===spId)?.nama||'Onderdil':'Pengeluaran');
+  const txnLabel=label||(spId?sparepartStock.find(s=>String(s.id)===String(spId))?.nama||'Onderdil':'Pengeluaran');
   const newOut={id:outId,type:'outflow',label:txnLabel,sub:`No.Nota: ${nota} Â· ${toko}${driver?' Â· '+driver:''}`,amount,date,armada,nota,toko,kategori:cat,driver,status:'lunas',sparepartId:spId||null};
 
   try {
