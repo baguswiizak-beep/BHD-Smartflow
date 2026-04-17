@@ -1400,7 +1400,11 @@ async function apiFetch(path, opts={}){
     throw err; 
   }
 
-  return r.json();
+  if (r.status === 204) return { ok: true };
+  const text = await r.text();
+  if (!text || !text.trim()) return { ok: true };
+  try { return JSON.parse(text); } catch(e) { return { ok: true }; }
+
 }
 
 // Kredensial fallback (hanya dipakai jika server offline)
@@ -1923,13 +1927,22 @@ async function deleteKategori(nama){
   
   // Save updated categories to Backend
   try {
-    await apiFetch('/api/settings', { method: 'POST', body: { key: 'inventory_categories', value: JSON.stringify(gudangKategori) } });
-  } catch(e) { console.warn('Failed to save categories after delete:', e); }
+    await apiFetch('/api/settings', { 
+      method: 'POST', 
+      body: { key: 'inventory_categories', value: JSON.stringify(gudangKategori) } 
+    });
+    _renderKatList();
+    renderGudangFilterChips();
+    renderGudang(); 
+    showToast('Kategori "'+nama+'" dihapus (Paksa)');vibrate(30);
+  } catch(e) {
+    // Rollback local state if server fails
+    gudangKategori = [...gudangKategori, nama].sort();
+    console.warn('Failed to save categories after delete:', e);
+    showToast('❌ Gagal hapus kategori: ' + (e.message || 'Periksa koneksi'));
+    _renderKatList();
+  }
 
-  _renderKatList();
-  renderGudangFilterChips();
-  renderGudang(); // Re-render the inventory items list to show updated categories
-  showToast('Kategori "'+nama+'" dihapus (Paksa)');vibrate(30);
 }
 
 
@@ -2605,10 +2618,13 @@ function deleteTxn(id){
       }
 
       // Sync & UI update (Self-healing: transactions are filtered by what server has anyway)
+      await syncFromSupabase();
+
+      // Re-apply after sync to prevent data flicker due to race conditions
       transactions = transactions.filter(t => t.id !== id);
       localStorage.setItem('bhd_cache_transactions', JSON.stringify(transactions));
-      
-      await syncFromSupabase();
+      if (typeof applyTxnFilters === 'function') applyTxnFilters();
+
 
       logAudit('delete','transaksi', `[${waktu}] - [${adminName}] - [Hapus Transaksi] - [${txn.label}, Rp ${fmt(txn.amount)}${txn.sparepartId?', Qty '+jml+' unit dikembalikan':''}]`);
       refreshDetailHero();
