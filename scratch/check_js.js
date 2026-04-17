@@ -543,15 +543,19 @@ async function addKategori(){
   gudangKategori.push(nama);
   input.value='';
   
-  // Save to Backend
   try {
     await apiFetch('/api/settings', { method: 'POST', body: { key: 'inventory_categories', value: JSON.stringify(gudangKategori) } });
-  } catch(e) { console.warn('Failed to save categories:', e); }
-
-  _renderKatList();
-  renderGudangFilterChips();
-  showToast('Kategori "'+nama+'" ditambahkan');vibrate(20);
+    _renderKatList();
+    renderGudangFilterChips();
+    showToast('Kategori "'+nama+'" ditambahkan');vibrate(20);
+  } catch(e) { 
+    gudangKategori = gudangKategori.filter(k=>k!==nama); // Rollback
+    console.warn('Failed to save categories:', e); 
+    showToast('âŒ Gagal tambah kategori: ' + (e.message || 'Periksa koneksi server'));
+    _renderKatList();
+  }
 }
+
 
 async function deleteKategori(nama){
   const itemsInUse = sparepartStock.filter(s=>s.kategori===nama);
@@ -588,18 +592,6 @@ async function deleteKategori(nama){
     _renderKatList();
   }
 
-}
-
-
-function _renderKatList(){
-  const listEl=document.getElementById('kat-list');
-  if(listEl){
-    listEl.innerHTML=gudangKategori.map(k=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg3);border-radius:10px;margin-bottom:6px;">
-        <span style="font-size:13px;font-weight:600;">${getSpCatIcon(k)} ${k}</span>
-        ${gudangKategori.length>1?`<button onclick="deleteKategori('${k}')" style="background:rgba(224,48,48,.1);color:var(--danger);border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;">Hapus</button>`:'<span style="font-size:10px;color:var(--text3);">Min 1</span>'}
-      </div>`).join('');
-  }
 }
 
 
@@ -668,16 +660,25 @@ async function deleteSparepart(id){
   showConfirmPopup('ðŸ—‘ï¸ Hapus Paksa Item', 
     `Hapus master data item: <b>${sp.nama}</b> (Spek: ${sp.spek})?<br><br><span style="color:var(--danger);font-size:11px;">âš ï¸ <b>Peringatan Hapus Paksa:</b> Tindakan ini akan menghapus SEMUA riwayat pemakaian dan transaksi keuangan terkait item ini secara permanen.</span>`,
     async () => {
-      // DELETE via backend
-      const result = await apiFetch(`/api/inventory/${id}`, { method: 'DELETE' });
-      if (!result || result.ok === false) throw new Error(result?.error || 'Gagal hapus paksa');
+      try {
+        const result = await apiFetch(`/api/inventory/${id}`, { method: 'DELETE' });
+        if (!result || result.ok === false) throw new Error(result?.error || 'Gagal hapus paksa');
+      } catch(err) {
+        if (err.status === 404) {
+          console.warn('Item already gone from server (404), continuing...');
+        } else {
+          throw err;
+        }
+      }
       
+      // Local update immediately
+      sparepartStock = sparepartStock.filter(s => s.id !== id);
+
       await syncFromSupabase();
       showToast('Item dan semua riwayat dihapus');
       vibrate(40);
     }
   );
-
 }
 
 async function deleteUsage(spId, installId){
@@ -2751,11 +2752,18 @@ async function confirmReset(){
       localStorage.removeItem('bhd_cache_fleet');
       localStorage.removeItem('bhd_cache_inventory');
       
-      // 3. Update local state
+      // 3. Update local state SEGERA sebelum menunggu sync
       transactions = [];
+      renderDashboard();
+      if(typeof applyTxnFilters === 'function') applyTxnFilters();
+      if(typeof renderLaporanTable === 'function') renderLaporanTable();
       
-      // 4. Full Sync to get fresh (zeroed) state from server
-      await syncFromSupabase();
+      // 4. Sync untuk konfirmasi dari server
+      try {
+        await syncFromSupabase();
+      } catch(e) {
+        console.warn('Post-reset sync failed, local already cleared:', e);
+      }
       
       showToast('Semua data transaksi di-reset ke Nol');
       vibrate(40);
@@ -3058,7 +3066,7 @@ async function syncFromSupabase(){
   setSyncStatus('syncing');
   try{
     const txns = await sbFetch('transactions',{select:'*',limit:500,order:'created_at.desc'});
-    if(Array.isArray(txns)&&txns.length>0){
+    if(Array.isArray(txns)){
       transactions = txns.map(t=>({
         id:t.id, 
         type:t.type, 
