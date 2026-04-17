@@ -3393,10 +3393,28 @@ function renderTruckTab(f){
     </div>
     <div id="tire-detail-panel" style="display:none;background:var(--card);border:1px solid var(--card-b);border-radius:14px;padding:14px;"></div>
     <div style="background:var(--bg3);border-radius:12px;padding:12px;margin-top:8px;">
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Total Ban Terpasang</div>
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">Ringkasan Ban Terpasang</div>
       <div style="font-size:13px;font-weight:700;color:var(--text);">${installedBans.length} ban terpasang dari 10 posisi</div>
-      ${installedBans.length===0?`<div style="font-size:11px;color:var(--text3);margin-top:4px;">Klik lingkaran ban di atas untuk memasang ban di posisi tersebut.</div>`:''}
-    </div>`;
+      ${installedBans.length===0 
+        ? \`<div style="font-size:11px;color:var(--text3);margin-top:4px;">Klik lingkaran ban di atas untuk memasang ban di posisi tersebut.</div>\`
+        : \`<div style="display:grid;gap:8px;margin-top:12px;">\` + 
+          installedBans.map(b=>{
+            const pct=(b.ritase/threshold)*100;
+            const bColor=pct>=90?'var(--danger)':pct>=70?'var(--warning)':'var(--success)';
+            return \`
+            <div style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--card-b);padding:10px 12px;border-radius:10px;cursor:pointer;transition:transform .1s;" onclick="showTireDetail('${f.nopol}','\${b.posisi}')" onactive="this.style.transform='scale(0.98)'">
+              <div style="display:flex;flex-direction:column;gap:3px;">
+                <span style="font-size:11px;font-weight:800;color:var(--text);">🔘 \${b.posisi||'Posisi Belum Diset'}</span>
+                <span style="font-size:10.5px;font-weight:500;color:var(--text3);">\${b.nama} (\${b.spek||'-'})</span>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11.5px;font-weight:700;color:\${bColor};">\${b.ritase} ritase</div>
+                <div style="font-size:9.5px;font-weight:500;color:var(--text3);margin-top:2px;">Tgl: \${fmtDate(b.tglPasang)}</div>
+              </div>
+            </div>\`;
+          }).join('') + \`</div>\`
+      }
+    </div>\`;
   // Store for click handler
   window._truckBans={f,installedBans,positions,threshold,getBanAtPosition};
 }
