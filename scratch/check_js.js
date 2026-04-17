@@ -2054,7 +2054,7 @@ function renderTruckTab(f){
         }).join('');
         return '<div style="display:grid;gap:8px;margin-top:12px;">'+items+'</div>';
       })()}
-    </div>\`;
+    </div>`;
   // Store for click handler
   window._truckBans={f,installedBans,positions,threshold,getBanAtPosition};
 }
