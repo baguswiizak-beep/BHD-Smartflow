@@ -266,7 +266,7 @@ const db = {
         return user;
     },
 
-registerAdmin: async (username, password, role = 'admin') => {
+    registerAdmin: async (username, password, role = 'admin') => {
         const id = 'admin-' + Date.now();
         await query(
             'INSERT INTO admins (id, username, password, role, active) VALUES ($1, $2, $3, $4, $5)',
