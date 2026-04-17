@@ -2030,6 +2030,12 @@ async function deleteSparepart(id){
       sparepartStock = sparepartStock.filter(s => String(s.id) !== String(id));
 
       await syncFromSupabase();
+      
+      // Re-apply setelah sync untuk mencegah flicker dari race condition
+      sparepartStock = sparepartStock.filter(s => String(s.id) !== String(id));
+      localStorage.setItem('bhd_cache_inventory', JSON.stringify(sparepartStock));
+      if(typeof renderGudang==='function') renderGudang();
+
       showToast('Item dan semua riwayat dihapus');
       vibrate(40);
     }
