@@ -659,7 +659,26 @@ const db = {
         }
     },
 
+    // ----- SETTINGS -----
+    getSettings: async (key) => {
+        const sql = key ? 'SELECT * FROM settings WHERE key = $1' : 'SELECT * FROM settings';
+        const { rows } = await query(sql, key ? [key] : []);
+        if (key) return rows[0] || null;
+        // Return as object {key: value} if no key provided
+        return rows.reduce((acc, r) => { acc[r.key] = r.value; return acc; }, {});
+    },
+
+    upsertSetting: async (key, value) => {
+        const sql = `
+            INSERT INTO settings (key, value) VALUES ($1, $2)
+            ON CONFLICT (key) DO UPDATE SET value = $2
+        `;
+        await query(sql, [key, value]);
+        return true;
+    },
+
     resetTransactions: async () => {
+
         const client = await pool.connect();
         try {
             await client.query('BEGIN');

@@ -306,27 +306,47 @@ app.put('/api/transactions/:id', async (req, res) => {
 
 app.delete('/api/transactions/:id', async (req, res) => {
   try {
-    const db = require('./database');
-    const oldData = await db.getTransactions({ id: req.params.id });
-    await db.deleteTransaction(req.params.id);
-    
-    await db.addAuditLog({
-      user_id: req.admin.id,
-      user_name: req.admin.name,
-      action: 'delete',
-      module: 'finance',
-      doc_id: req.params.id,
-      changes_before: oldData[0] || null,
-      metadata: { ip: req.ip, ua: req.headers['user-agent'] }
-    });
-    
-    res.json({ ok: true });
-    broadcastChange({ type: 'transactions', action: 'delete', id: req.params.id });
+    const id = req.params.id;
+    const items = await db.getTransactions({ id: id });
+    if (!items || items.length === 0) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
+    const txn = items[0];
 
+    // Jika transaksi adalah pengeluaran onderdil yang terhubung ke inventory
+    if (txn.sparepart_id || txn.type === 'outflow') {
+      // Cari jika ada record inventory_installed terkait txn_id ini
+      // Di database.js belum ada getInventoryInstalledByTxn, kita bisa query langsung atau tambahkan di db
+      try {
+        const { rows: installs } = await db.query('SELECT id, inventory_id FROM inventory_installed WHERE txn_id = $1', [id]);
+        for (const inst of installs) {
+          // Uninstall inventory restores stock (+1) and deletes the installation record
+          await db.uninstallInventory(inst.inventory_id, inst.id);
+        }
+      } catch (ie) { console.warn('Check usage rollback failed:', ie.message); }
+    }
+
+    // Akhirnya hapus master transaksi
+    await db.deleteTransaction(id);
+    
+    // Audit Log
+    try {
+      await db.addAuditLog({
+        user_id: req.admin?.id || 'system',
+        user_name: req.admin?.name || 'System',
+        action: 'delete', module: 'finance', doc_id: id,
+        changes_before: txn,
+        metadata: { ip: req.ip, ua: req.headers['user-agent'] }
+      });
+    } catch(ae) { console.warn('Audit log failed during delete:', ae.message); }
+    
+    broadcastChange({ type: 'transactions', action: 'delete', id });
+    res.json({ ok: true });
   } catch (e) {
+    console.error('Delete transaction failed:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
+
+
 
 app.delete('/api/transactions/reset', async (req, res) => {
   try {
@@ -554,7 +574,29 @@ app.get('/api/summary', async (req, res) => {
 
 });
 
+app.get('/api/settings/:key', async (req, res) => {
+  try {
+    const val = await db.getSettings(req.params.key);
+    res.json(val || { key: req.params.key, value: null });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/settings', async (req, res) => {
+  try {
+    const { key, value } = req.body || {};
+    if (!key) return res.status(400).json({ error: 'Key required' });
+    await db.upsertSetting(key, value);
+    broadcastChange({ type: 'settings', key });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/sync/summary', async (req, res) => {
+
   try {
     // Mengembalikan data ringkas yang sering berubah untuk pengecekan cepat (sync)
     const txns = await db.getTransactions({ limit: 1 }); // Ambil 1 terbaru saja

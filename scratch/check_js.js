@@ -525,31 +525,40 @@ function openKategoriModal(){
   document.getElementById('sm-overlay').classList.add('open');
 }
 
-function addKategori(){
+async function addKategori(){
   const input=document.getElementById('kat-new-name');
   const nama=(input?.value||'').trim();
   if(!nama){showToast('Nama kategori tidak boleh kosong');return;}
   if(gudangKategori.includes(nama)){showToast('Kategori sudah ada');return;}
   gudangKategori.push(nama);
   input.value='';
-  // Re-render list in modal
-  const listEl=document.getElementById('kat-list');
-  if(listEl){
-    listEl.innerHTML=gudangKategori.map(k=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg3);border-radius:10px;margin-bottom:6px;">
-        <span style="font-size:13px;font-weight:600;">${getSpCatIcon(k)} ${k}</span>
-        ${gudangKategori.length>1?`<button onclick="deleteKategori('${k}')" style="background:rgba(224,48,48,.1);color:var(--danger);border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;">Hapus</button>`:'<span style="font-size:10px;color:var(--text3);">Min 1</span>'}
-      </div>`).join('');
-  }
+  
+  // Save to Backend
+  try {
+    await apiFetch('/api/settings', { method: 'POST', body: { key: 'inventory_categories', value: JSON.stringify(gudangKategori) } });
+  } catch(e) { console.warn('Failed to save categories:', e); }
+
+  _renderKatList();
   renderGudangFilterChips();
   showToast('Kategori "'+nama+'" ditambahkan');vibrate(20);
 }
 
-function deleteKategori(nama){
+async function deleteKategori(nama){
   const inUse=sparepartStock.some(s=>s.kategori===nama);
   if(inUse){showToast('Kategori masih dipakai '+sparepartStock.filter(s=>s.kategori===nama).length+' item');return;}
   gudangKategori=gudangKategori.filter(k=>k!==nama);
-  // Re-render list
+  
+  // Save to Backend
+  try {
+    await apiFetch('/api/settings', { method: 'POST', body: { key: 'inventory_categories', value: JSON.stringify(gudangKategori) } });
+  } catch(e) { console.warn('Failed to save categories after delete:', e); }
+
+  _renderKatList();
+  renderGudangFilterChips();
+  showToast('Kategori "'+nama+'" dihapus');vibrate(30);
+}
+
+function _renderKatList(){
   const listEl=document.getElementById('kat-list');
   if(listEl){
     listEl.innerHTML=gudangKategori.map(k=>`
@@ -558,9 +567,8 @@ function deleteKategori(nama){
         ${gudangKategori.length>1?`<button onclick="deleteKategori('${k}')" style="background:rgba(224,48,48,.1);color:var(--danger);border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;">Hapus</button>`:'<span style="font-size:10px;color:var(--text3);">Min 1</span>'}
       </div>`).join('');
   }
-  renderGudangFilterChips();
-  showToast('Kategori "'+nama+'" dihapus');vibrate(30);
 }
+
 
 function renderGudangFilterChips(){
   const el=document.getElementById('gudang-filter-chips');
@@ -3049,8 +3057,14 @@ async function syncFromSupabase(){
         }));
       }
     } catch(e) { console.warn('Sync inventory failing:', e); }
-    // Sync settings (Registration Code)
+    // Sync settings
     try {
+      const resp = await apiFetch('/api/settings/inventory_categories');
+      if (resp && resp.value) {
+        const cats = JSON.parse(resp.value);
+        if (Array.isArray(cats)) gudangKategori = cats;
+      }
+      // Sync Registration Code (Lama)
       const settings = await sbFetch('settings',{select:'*',limit:100});
       if(Array.isArray(settings)){
         const regCode = settings.find(s=>s.key==='admin_reg_code')?.value;
@@ -3068,6 +3082,7 @@ async function syncFromSupabase(){
       localStorage.setItem('bhd_cache_fleet', JSON.stringify(fleetData));
       localStorage.setItem('bhd_cache_inventory', JSON.stringify(sparepartStock));
     } catch(e) { console.warn('Cache localStorage gagal:', e); }
+
 
     setSyncStatus('success');
     renderDashboard();
