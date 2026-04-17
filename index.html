@@ -1507,9 +1507,9 @@ function renderKeuanganStats(){
   const list=typeof getKeuanganTxns==='function'?getKeuanganTxns():[...transactions];
   const inf=list.filter(t=>t.type==='inflow').reduce((s,t)=>s+t.amount,0);
   
-  const oUmum=list.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount,0);
-  const oTunai=list.filter(t=>t.type==='outflow'&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
-  const oOnderdil=list.filter(t=>t.type==='outflow'&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+  const oUmum=list.filter(t=>t.type==='outflow'&&(t.kategori||'').toLowerCase()==='umum').reduce((s,t)=>s+t.amount,0);
+  const oTunai=list.filter(t=>t.type==='outflow'&&(t.kategori||'').toLowerCase()==='tunai').reduce((s,t)=>s+t.amount,0);
+  const oOnderdil=list.filter(t=>t.type==='outflow'&&(t.kategori||'').toLowerCase()==='onderdil').reduce((s,t)=>s+t.amount,0);
   
   const kIn=document.getElementById('k-in');
   const kUmum=document.getElementById('k-umum');
