@@ -255,20 +255,23 @@ app.post('/api/transactions', async (req, res) => {
     if (!body.id) body.id = 'txn-' + Date.now();
     await db.addTransaction(body);
     
-    // Log Audit
-    await db.addAuditLog({
-      user_id: req.admin.id,
-      user_name: req.admin.name,
-      action: 'create',
-      module: 'finance',
-      doc_id: body.id,
-      changes_after: body,
-      metadata: { ip: req.ip, ua: req.headers['user-agent'] }
-    });
+    // Log Audit (Safe)
+    try {
+      await db.addAuditLog({
+        user_id: req.admin?.id || 'system',
+        user_name: req.admin?.name || 'System',
+        action: 'create',
+        module: 'finance',
+        doc_id: body.id,
+        changes_after: body,
+        metadata: { ip: req.ip, ua: req.headers['user-agent'] }
+      });
+    } catch(ae) { console.warn('Audit log failed for txn:', ae.message); }
     
-    res.json({ ok: true, id: body.id });
     broadcastChange({ type: 'transactions', action: 'create', id: body.id });
+    res.json({ ok: true, id: body.id });
   } catch (e) {
+    console.error('Error in POST /api/transactions:', e.stack);
     res.status(500).json({ error: e.message });
   }
 });
@@ -358,11 +361,29 @@ app.post('/api/fleet', async (req, res) => {
 });
 
 app.put('/api/fleet/:id', async (req, res) => {
-  const ok = await db.updateFleet(req.params.id, req.body);
-  if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
+  try {
+    const ok = await db.updateFleet(req.params.id, req.body);
+    if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
+    
+    // Audit Log (Optional but safe)
+    try {
+      await db.addAuditLog({
+        user_id: req.admin?.id || 'system',
+        user_name: req.admin?.name || 'System',
+        action: 'update',
+        module: 'fleet',
+        doc_id: req.params.id,
+        changes_after: req.body,
+        metadata: { ip: req.ip }
+      });
+    } catch(ae) { console.warn('Audit log failed for fleet update:', ae.message); }
+
     broadcastChange({ type: 'fleet', action: 'update', id: req.params.id });
     res.json({ ok: true });
-
+  } catch (e) {
+    console.error('Error in PUT /api/fleet:', e.stack);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── FLEET TIRES ──────────────────────────────────────────────
@@ -424,41 +445,53 @@ app.get('/api/inventory', async (_req, res) => {
 });
 
 app.post('/api/inventory', async (req, res) => {
-  const sp = req.body;
-  if (!sp.id || !sp.nama) return res.status(400).json({ error: 'id dan nama diperlukan' });
-  await db.addInventory(sp);
-  
-  // Audit Log
-  await db.addAuditLog({
-    user_id: req.admin.id, user_name: req.admin.name,
-    action: 'create', module: 'inventory', doc_id: sp.id,
-    changes_after: sp, metadata: { ip: req.ip, agent: req.get('user-agent') }
-  });
+  try {
+    const sp = req.body;
+    if (!sp.id || !sp.nama) return res.status(400).json({ error: 'id dan nama diperlukan' });
+    await db.addInventory(sp);
+    
+    // Audit Log
+    try {
+      await db.addAuditLog({
+        user_id: req.admin?.id || 'system', 
+        user_name: req.admin?.name || 'System',
+        action: 'create', module: 'inventory', doc_id: sp.id,
+        changes_after: sp, metadata: { ip: req.ip, agent: req.get('user-agent') }
+      });
+    } catch(ae) { console.warn('Audit log failed but inventory saved:', ae.message); }
 
-  res.status(201).json({ ok: true });
-  broadcastChange({ type: 'inventory', action: 'create' });
-
+    broadcastChange({ type: 'inventory', action: 'create' });
+    res.status(201).json({ ok: true });
+  } catch (e) {
+    console.error('Crash avoided in POST /api/inventory:', e.stack);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.put('/api/inventory/:id', async (req, res) => {
-  const ok = await db.updateInventory(req.params.id, req.body);
-  if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
+  try {
+    const ok = await db.updateInventory(req.params.id, req.body);
+    if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
 
-  // Audit Log
-  await db.addAuditLog({
-    user_id: req.admin.id, user_name: req.admin.name,
-    action: 'update', module: 'inventory', doc_id: req.params.id,
-    changes_after: req.body, metadata: { ip: req.ip, agent: req.get('user-agent') }
-  });
+    // Audit Log
+    try {
+      await db.addAuditLog({
+        user_id: req.admin?.id || 'system', 
+        user_name: req.admin?.name || 'System',
+        action: 'update', module: 'inventory', doc_id: req.params.id,
+        changes_after: req.body, metadata: { ip: req.ip, agent: req.get('user-agent') }
+      });
+    } catch(ae) { console.warn('Audit log failed but update saved:', ae.message); }
 
-  res.json({ ok: true });
-  broadcastChange({ type: 'inventory', action: 'update', id: req.params.id });
-
+    broadcastChange({ type: 'inventory', action: 'update', id: req.params.id });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Crash avoided in PUT /api/inventory:', e.stack);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.delete('/api/inventory/:id', async (req, res) => {
-  const ok = await db.deleteInventory(req.params.id);
-  if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
 
   // Audit Log
   await db.addAuditLog({

@@ -121,7 +121,8 @@ CREATE TABLE IF NOT EXISTS inventory_installed (
     armada TEXT,
     tgl_pasang TEXT,
     ritase INTEGER DEFAULT 0,
-    txn_id TEXT
+    txn_id TEXT,
+    posisi TEXT
 );
 
 -- Settings
@@ -158,6 +159,35 @@ async function init() {
         await query(SCHEMA);
         console.log('✅ Skema database SQL siap');
 
+        // ── AUTO MIGRATION: Pastikan kolom baru ada (untuk sinkronisasi skema lama) ──
+        console.log('🔄 Sinkronisasi kolom database (Auto-Migration)...');
+        const migrations = [
+            // Inventory
+            { t: 'inventory', c: 'toko', type: 'TEXT' },
+            { t: 'inventory', c: 'nota', type: 'TEXT' },
+            { t: 'inventory', c: 'tgl_masuk', type: 'TEXT' },
+            { t: 'inventory', c: 'catatan', type: 'TEXT' },
+            { t: 'inventory', c: 'stok_min', type: 'INTEGER DEFAULT 5' },
+            // Transactions
+            { t: 'transactions', c: 'label', type: 'TEXT' },
+            { t: 'transactions', c: 'sub', type: 'TEXT' },
+            { t: 'transactions', c: 'kategori', type: 'TEXT' },
+            { t: 'transactions', c: 'nota', type: 'TEXT' },
+            { t: 'transactions', c: 'toko', type: 'TEXT' },
+            { t: 'transactions', c: 'status', type: 'TEXT' },
+            { t: 'transactions', c: 'posisi', type: 'TEXT' },
+            { t: 'transactions', c: 'sparepart_id', type: 'TEXT' }
+        ];
+        for (const m of migrations) {
+            try {
+                // Tambah kolom jika belum ada (Safe Alter)
+                await query(`ALTER TABLE ${m.t} ADD COLUMN IF NOT EXISTS ${m.c} ${m.type}`);
+            } catch (err) { 
+                console.warn(`⚠️ Info Migrasi (${m.t}.${m.c}): ${err.message}`); 
+            }
+        }
+        console.log('✅ Sinkronisasi skema selesai');
+
         // Seed admin jika kosong
         const adminCheck = await query('SELECT COUNT(*) FROM admins');
         if (parseInt(adminCheck.rows[0].count) === 0) {
@@ -167,7 +197,25 @@ async function init() {
             );
         }
 
-        // Seed settings jika kosong
+        // Seed armada jika kosong
+        const fleetCheck = await query('SELECT COUNT(*) FROM fleet');
+        if (parseInt(fleetCheck.rows[0].count) === 0) {
+            console.log('🌱 Seeding default fleet units...');
+            const defaultFleet = [
+                ['f1', 'B 1234 CD', 'Budi Santoso', 'jalan', '2025-07-20', '2025-07-18'],
+                ['f2', 'B 5678 EF', 'Andi Pratama', 'jalan', '2025-09-15', '2025-10-01'],
+                ['f3', 'B 9012 GH', 'Rudi Hartono', 'bengkel', '2025-08-05', '2025-08-10'],
+                ['f4', 'B 3456 IJ', 'Sari Dewi', 'antre', '2025-07-22', '2025-07-25'],
+                ['f5', 'B 7890 KL', 'Hendra Wijaya', 'jalan', '2025-12-01', '2025-11-15'],
+                ['f6', 'B 2345 MN', 'Teguh Purnomo', 'jalan', '2025-10-10', '2025-09-20']
+            ];
+            for (const f of defaultFleet) {
+                await query(
+                    'INSERT INTO fleet (id, nopol, driver, status, pajak, kir) VALUES ($1, $2, $3, $4, $5, $6)',
+                    f
+                );
+            }
+        }
         const settingsCheck = await query('SELECT COUNT(*) FROM settings');
         if (parseInt(settingsCheck.rows[0].count) === 0) {
             console.log('🌱 Seeding default settings...');
@@ -480,11 +528,18 @@ registerAdmin: async (username, password, role = 'admin') => {
     },
 
     addInventory: async (sp) => {
+        // Handle mapping from both camelCase (frontend legacy) and snake_case (standard)
+        const harga = sp.harga_satuan !== undefined ? sp.harga_satuan : (sp.hargaSatuan || 0);
+        const tgl = sp.tgl_masuk || sp.tglMasuk || '';
+        const sAwal = sp.stok_awal !== undefined ? sp.stok_awal : (sp.stokAwal || 0);
+        const sSisa = sp.stok_sisa !== undefined ? sp.stok_sisa : (sp.stokSisa || 0);
+        const sMin = sp.stok_min !== undefined ? sp.stok_min : (sp.stokMin || 5);
+
         await pool.query(
             `INSERT INTO inventory 
             (id, nama, spek, kategori, toko, nota, tgl_masuk, stok_awal, stok_sisa, stok_min, harga_satuan, catatan)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-            [sp.id, sp.nama, sp.spek || '', sp.kategori || '', sp.toko || '', sp.nota || '', sp.tgl_masuk, sp.stok_awal, sp.stok_sisa, sp.stok_min || 5, sp.hargaSatuan || 0, sp.catatan || '']
+            [sp.id, sp.nama, sp.spek || '', sp.kategori || '', sp.toko || '', sp.nota || '', tgl, sAwal, sSisa, sMin, harga, sp.catatan || '']
         );
     },
 
@@ -528,8 +583,8 @@ registerAdmin: async (username, password, role = 'admin') => {
             // Tambah catatan terpasang (bisa beberapa jika jml > 1)
             for (let i = 0; i < jml; i++) {
                 await client.query(
-                    'INSERT INTO inventory_installed (inventory_id, armada, tgl_pasang, ritase, txn_id) VALUES ($1, $2, $3, $4, $5)',
-                    [id, installData.armada, installData.tgl_pasang, 0, installData.txnId]
+                    'INSERT INTO inventory_installed (inventory_id, armada, tgl_pasang, ritase, txn_id, posisi) VALUES ($1, $2, $3, $4, $5, $6)',
+                    [id, installData.armada, installData.tgl_pasang, 0, installData.txnId, installData.posisi || '']
                 );
             }
             
