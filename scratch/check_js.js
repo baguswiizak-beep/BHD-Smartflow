@@ -255,19 +255,35 @@ function getSpCatIcon(kat, svg=false){
   if(k.includes('rem')||k.includes('brake')||k.includes('kampas')) return 'ðŸ”´';
   if(k.includes('filter')) return svg&&spCatIconSVG['Filter']?spCatIconSVG['Filter']:'ðŸŸ ';
   if(k.includes('lampu')||k.includes('light')||k.includes('bohlam')||k.includes('led')) return svg&&spCatIconSVG['Lampu']?spCatIconSVG['Lampu']:'ðŸ’¡';
+  if(k.includes('truk')||k.includes('tronton')||k.includes('fuso')||k.includes('trailer')) return 'ðŸšš';
+  if(k.includes('pickup')||k.includes('losbak')||k.includes('blindvan')) return 'ðŸ›»';
+  if(k.includes('mobil')||k.includes('car')||k.includes('kendaraan')) return 'ðŸš—';
+  if(k.includes('alat berat')||k.includes('traktor')||k.includes('excavator')||k.includes('forklift')) return 'ðŸšœ';
+  if(k.includes('tambah')||k.includes('baru')||k.includes('plus')) return 'âž•';
   if(k.includes('mesin')||k.includes('engine')||k.includes('motor')) return 'âš™ï¸';
   if(k.includes('baut')||k.includes('mur')||k.includes('bolt')||k.includes('screw')) return 'ðŸ”©';
-  if(k.includes('tool')||k.includes('alat')||k.includes('kunci')) return 'ðŸ› ï¸';
+  if(k.includes('kunci')||k.includes('obeng')||k.includes('tang')||k.includes('tool')||k.includes('alat')) return 'ðŸ› ï¸';
+  if(k.includes('dongkrak')||k.includes('katrol')||k.includes('kerekan')||k.includes('jack')) return 'ðŸ—ï¸';
   if(k.includes('kopling')||k.includes('clutch')) return 'ðŸ”—';
-  if(k.includes('knalpot')||k.includes('exhaust')||k.includes('muffler')) return 'ðŸ’¨';
+  if(k.includes('knalpot')||k.includes('exhaust')||k.includes('muffler')||k.includes('asap')) return 'ðŸ’¨';
   if(k.includes('radiator')||k.includes('coolant')||k.includes('pendingin')) return 'ðŸŒ¡ï¸';
-  if(k.includes('pompa')||k.includes('pump')) return 'ðŸ’§';
-  if(k.includes('kaca')||k.includes('glass')||k.includes('cermin')) return 'ðŸªŸ';
+  if(k.includes('pompa')||k.includes('pump')||k.includes('air')) return 'ðŸ’§';
+  if(k.includes('kaca')||k.includes('glass')||k.includes('cermin')||k.includes('spion')) return 'ðŸªŸ';
+  if(k.includes('wiper')||k.includes('karet kaca')) return 'ðŸª’';
   if(k.includes('selang')||k.includes('hose')||k.includes('pipa')) return 'ðŸ”—';
-  if(k.includes('suspensi')||k.includes('shock')||k.includes('per ')) return 'ðŸ”„';
+  if(k.includes('suspensi')||k.includes('shock')||k.includes('per ')||k.includes('pegas')) return 'ðŸ”„';
   if(k.includes('gear')||k.includes('transmisi')||k.includes('gardan')) return 'âš™ï¸';
+  if(k.includes('velg')||k.includes('pelek')||k.includes('rim')||k.includes('steer')||k.includes('setir')) return 'ðŸ›ž';
+  if(k.includes('cat ')||k.includes('paint')||k.includes('dempul')||k.includes('thinner')) return 'ðŸŽ¨';
+  if(k.includes('klakson')||k.includes('horn')||k.includes('telolet')||k.includes('toa')) return 'ðŸ“£';
+  if(k.includes('kabin')||k.includes('cabin')||k.includes('jok')||k.includes('kursi')) return 'ðŸ’º';
+  if(k.includes('sensor')||k.includes('indikator')||k.includes('gps')) return 'ðŸ“¡';
+  if(k.includes('bearing')||k.includes('laher')||k.includes('laker')) return 'ðŸ§¿';
+  if(k.includes('terpal')||k.includes('tenda')||k.includes('tutup')) return 'â›º';
+  if(k.includes('tali')||k.includes('strap')||k.includes('klem')||k.includes('webbing')) return 'ðŸª¢';
   if(k.includes('listrik')||k.includes('elektrik')||k.includes('kabel')||k.includes('wiring')) return 'âš¡';
-  if(k.includes('body')||k.includes('karoseri')||k.includes('plat')) return 'ðŸš›';
+  if(k.includes('gembok')||k.includes('kunci ganda')||k.includes('segel')) return 'ðŸ”’';
+  if(k.includes('body')||k.includes('karoseri')||k.includes('plat')||k.includes('bumper')) return 'ðŸš›';
   return 'ðŸ“¦';
 }
 
@@ -280,14 +296,27 @@ function autoDetectIcon(namaInput){
   if(n.includes('ban')||n.includes('tire')) detected='Ban';
   else if(n.includes('oli')||n.includes('oil')) detected='Oli';
   else if(n.includes('aki')||n.includes('accu')) detected='Aki';
-  else if(n.includes('rem')||n.includes('brake')) detected='Rem';
+  else if(n.includes('rem')||n.includes('brake')||n.includes('kampas')) detected='Rem';
   else if(n.includes('filter')) detected='Filter';
   else if(n.includes('lampu')||n.includes('bohlam')) detected='Lampu';
   else if(n.includes('mesin')||n.includes('engine')) detected='Mesin';
-  else if(n.includes('baut')||n.includes('mur')) detected='Baut';
+  else if(n.includes('baut')||n.includes('mur')||n.includes('screw')) detected='Baut';
+  else if(n.includes('kunci')||n.includes('obeng')||n.includes('tang')) detected='Tool';
+  else if(n.includes('truk')||n.includes('mobil')||n.includes('kendaraan')) detected='Armada';
+  else if(n.includes('kaca')||n.includes('wiper')||n.includes('spion')) detected='Kaca';
+  else if(n.includes('cat ')||n.includes('dempul')||n.includes('thinner')) detected='Cat';
+  
   if(detected && el.value!==detected){
-    // Hanya auto-set jika kategori masih default
-    if(!el.value||el.value===gudangKategori[0]){
+    // Update daftar bila kategori yang dideteksi belum ada sama sekali
+    if(!gudangKategori.includes(detected)) {
+       gudangKategori.push(detected);
+       gudangKategori.sort();
+       apiFetch('/api/settings', { method: 'POST', body: { key: 'inventory_categories', value: JSON.stringify(gudangKategori) } });
+       el.innerHTML = '<option value="">Pilih Kategori...</option>' + gudangKategori.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
+    }
+    
+    // Hanya auto-set jika belum diubah / masih null
+    if(!el.value||el.value===gudangKategori[0]||el.value===''){
       el.value=detected;
       // Visual feedback
       const preview=document.getElementById('cat-icon-preview');
