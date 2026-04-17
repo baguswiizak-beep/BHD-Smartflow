@@ -3095,7 +3095,7 @@ async function syncFromSupabase(){
     }
     // Sync armada
     const fleet = await sbFetch('fleet',{select:'*',limit:100});
-    if(Array.isArray(fleet)&&fleet.length>0){
+    if(Array.isArray(fleet)){
       fleetData.length=0;
       fleet.forEach(f=>fleetData.push({id:f.id,nopol:f.nopol,driver:f.driver,status:f.status||'jalan',pajak:f.pajak||'',kir:f.kir||''}));
       FLEET_COUNT=fleetData.length;
@@ -3103,7 +3103,7 @@ async function syncFromSupabase(){
     // Sync inventory/spareparts
     try {
       const inv = await apiFetch('/api/inventory');
-      if(Array.isArray(inv)&&inv.length>0){
+      if(Array.isArray(inv)){
         sparepartStock.length=0;
         inv.forEach(sp=>sparepartStock.push({
           id: sp.id,
