@@ -620,7 +620,7 @@ function openAddStockModal(editId){
     +'</div>'
     +'<div style="font-size:10.5px;color:var(--text3);background:var(--bg3);border-radius:10px;padding:9px 11px;line-height:1.6;">ðŸ’¡ Stok masuk tanpa potong kas â€” sistem tempo.</div>'
     +'<button class="sm-btn orange" onclick="saveSparepart(\''+(editId||'')+'\')">'+(sp?'Simpan':'Tambah Stok')+'</button>'
-    +(sp?'<button class="sm-btn danger" onclick="deleteSparepart(\''+sp.id+'\');closeSm()">Hapus Item</button>':'');
+    +(sp?'<button class="sm-btn danger" onclick="deleteSparepart(\''+sp.id+'\')">Hapus Item</button>':'');
   setupCurrencyInput('sp-harga');
   document.getElementById('sm-overlay').classList.add('open');
 }
@@ -1230,11 +1230,11 @@ function renderTxnCards(elId,list,showActions=true){
 }
 
 function toggleTxn(id){
-  const el=document.getElementById('txn-'+id);if(el)el.classList.toggle('expanded');
+  const el=document.getElementById('txn-'+String(id));if(el)el.classList.toggle('expanded');
   vibrate(15);
 }
 function deleteTxn(id){
-  const txn=transactions.find(t=>t.id===id);
+  const txn=transactions.find(t=>String(t.id)===String(id));
   if(!txn) return;
   const stockMsg = txn.type==='outflow' && txn.sparepartId
     ? '<br><span style="color:var(--success);font-size:11px;">âœ… Stok onderdil akan otomatis kembali +'+(txn.jmlPasang||1)+' unit</span>'
@@ -1267,7 +1267,7 @@ function deleteTxn(id){
       await syncFromSupabase();
 
       // Re-apply after sync to prevent data flicker due to race conditions
-      transactions = transactions.filter(t => t.id !== id);
+      transactions = transactions.filter(t => String(t.id) !== String(id));
       localStorage.setItem('bhd_cache_transactions', JSON.stringify(transactions));
       if (typeof applyTxnFilters === 'function') applyTxnFilters();
 
@@ -1286,7 +1286,7 @@ function editTxn(id){
 }
 
 function confirmSaveEditTxn(id){
-  const txn=transactions.find(t=>t.id===id);if(!txn)return;
+  const txn=transactions.find(t=>String(t.id)===String(id));if(!txn)return;
   const newLabel=document.getElementById('et-label')?.value||txn.label;
   const newAmount=parseFloat(getRaw('et-amount'))||txn.amount;
   const newDate=document.getElementById('et-date')?.value||txn.date;
