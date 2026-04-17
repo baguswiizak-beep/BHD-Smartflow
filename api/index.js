@@ -492,18 +492,31 @@ app.put('/api/inventory/:id', async (req, res) => {
 });
 
 app.delete('/api/inventory/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    
+    // 1. Audit Log 
+    await db.addAuditLog({
+      user_id: req.admin?.id || 'system', 
+      user_name: req.admin?.name || 'System',
+      action: 'delete', module: 'inventory', doc_id: id,
+      metadata: { ip: req.ip, agent: req.get('user-agent') }
+    });
 
-  // Audit Log
-  await db.addAuditLog({
-    user_id: req.admin.id, user_name: req.admin.name,
-    action: 'delete', module: 'inventory', doc_id: req.params.id,
-    metadata: { ip: req.ip, agent: req.get('user-agent') }
-  });
+    // 2. Perform actual deletion in DB
+    const ok = await db.deleteInventory(id);
+    if (!ok) {
+        return res.status(404).json({ error: 'Item tidak ditemukan atau gagal dihapus' });
+    }
 
-  res.json({ ok: true });
-  broadcastChange({ type: 'inventory', action: 'delete', id: req.params.id });
-
+    broadcastChange({ type: 'inventory', action: 'delete', id });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Error in DELETE /api/inventory:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
+
 
 app.post('/api/inventory/sync-multi', async (req, res) => {
   const result = await db.bulkUpdateInventory(req.body || []);

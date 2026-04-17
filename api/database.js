@@ -607,21 +607,30 @@ const db = {
             const { rows } = await client.query('SELECT * FROM inventory_installed WHERE id = $1', [installId]);
             if (rows.length === 0) throw new Error('Data pemasangan tidak ditemukan');
             
-            // Hapus pemasangan
+            const txnId = rows[0].txn_id;
+
+            // 1. Hapus catatan terpasang
             await client.query('DELETE FROM inventory_installed WHERE id = $1', [installId]);
             
-            // Kembalikan stok (asumsi per baris = 1 unit)
+            // 2. Kembalikan stok
             await client.query('UPDATE inventory SET stok_sisa = stok_sisa + 1 WHERE id = $1', [id]);
+
+            // 3. Hapus transaksi terkait jika ada
+            if (txnId) {
+                await client.query('DELETE FROM transactions WHERE id = $1', [txnId]);
+            }
             
             await client.query('COMMIT');
             return true;
         } catch (e) {
             await client.query('ROLLBACK');
+            console.error('Uninstall failure:', e.message);
             return false;
         } finally {
             client.release();
         }
     },
+
     resetTransactions: async () => {
         await query('DELETE FROM transactions');
         return true;

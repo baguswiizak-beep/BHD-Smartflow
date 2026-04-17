@@ -1813,8 +1813,12 @@ function openArmadaUsagePopup(spId, instIdx){
         <span style="font-size:10px;font-weight:700;color:${barColor};">${pct}% terpakai</span>
       </div>
     </div>
-    <button onclick="showPage('armada',document.getElementById('sb-armada'),'bn-armada');closeSm();" style="padding:11px;border-radius:12px;border:none;background:var(--green-bg);color:var(--green2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">🚛 Lihat Detail Armada</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+      <button onclick="showPage('armada',document.getElementById('sb-armada'),'bn-armada');closeSm();" style="padding:11px;border-radius:12px;border:none;background:var(--bg3);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">🚛 Detail Armada</button>
+      <button onclick="deleteUsage('${sp.id}','${i.id}')" style="padding:11px;border-radius:12px;border:none;background:rgba(224,48,48,.1);color:var(--danger);font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">🗑️ Hapus Pasang</button>
+    </div>
   </div>`;
+
   document.getElementById('sm-overlay').classList.add('open');
 }
 
@@ -1974,18 +1978,41 @@ async function saveSparepart(editId){
 async function deleteSparepart(id){
   const sp = sparepartStock.find(s=>s.id===id);
   if(!sp) return;
-  if(!confirm(`Hapus ${sp.nama}?`)) return;
-  try {
-    await sbFetch('inventory',{method:'DELETE',filters:{id:id}});
-    await syncFromSupabase();
-    showToast('Item dihapus');
-    vibrate(40);
-  } catch(e) {
-    console.warn('Gagal hapus sparepart:', e);
-    showToast('❌ Gagal menghapus data. Periksa koneksi server.');
-  }
-
+  
+  showConfirmPopup('🗑️ Hapus Item', 
+    `Hapus master data item: <b>${sp.nama}</b> (Spek: ${sp.spek})?<br><br><span style="color:var(--danger);font-size:11px;">⚠️ Tindakan ini akan gagal jika item masih memiliki riwayat pemakaian.</span>`,
+    async () => {
+      // DELETE via backend
+      const result = await apiFetch(`/api/inventory/${id}`, { method: 'DELETE' });
+      if (!result || result.ok === false) throw new Error(result?.error || 'Hapus gagal (Mungkin item sedang digunakan)');
+      
+      await syncFromSupabase();
+      showToast('Item dihapus');
+      vibrate(40);
+    }
+  );
 }
+
+async function deleteUsage(spId, installId){
+  const sp = sparepartStock.find(s=>s.id===spId);
+  const ins = sp?.installed?.find(i=>i.id==installId);
+  if(!sp || !ins) return;
+
+  showConfirmPopup('🗑️ Hapus Pemasangan',
+    `Hapus riwayat pasang di <b>${ins.armada}</b>?<br><br>✅ Stok <b>${sp.nama}</b> akan otomatis bertambah +1.<br>✅ Transaksi keuangan yang terkait juga akan dihapus.`,
+    async () => {
+      // DELETE via backend uninstall endpoint
+      // URL: DELETE /api/inventory/:id/install/:installId
+      const result = await apiFetch(`/api/inventory/${spId}/install/${installId}`, { method: 'DELETE' });
+      if (!result || result.ok === false) throw new Error(result?.error || 'Gagal menghapus riwayat');
+      
+      await syncFromSupabase();
+      showToast('Pemasangan dibatalkan & stok dikembalikan');
+      vibrate(40);
+    }
+  );
+}
+
 
 function openPasangModal(spId){
   const sp=sparepartStock.find(s=>s.id===spId);if(!sp)return;
