@@ -2679,19 +2679,30 @@ function toggleTheme(){setTheme(isDark?'light':'dark');}
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• OTHER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function updateFleetCount(v){const n=parseInt(v);if(n>0){FLEET_COUNT=n;renderDashboard();}}
 async function confirmReset(){
-  if(confirm('Yakin hapus SEMUA transaksi? Data akan dihapus permanen dari database.')){
-    try {
-      await apiFetch('/api/transactions/reset', { method: 'DELETE' });
+  showConfirmPopup('â— Riset Data Keuangan',
+    'Hapus SEMUA data transaksi permanen dari database?<br><br><span style="color:var(--danger);font-size:11px;">âš ï¸ Tindakan ini tidak dapat dibatalkan.</span>',
+    async () => {
+      // 1. DELETE via backend
+      const result = await apiFetch('/api/transactions/reset', { method: 'DELETE' });
+      if (!result || result.ok === false) throw new Error(result?.error || 'Gagal meriset data');
+
+      // 2. Clear Local Cache immediately to prevent flicker on refresh
+      localStorage.removeItem('bhd_cache_transactions');
+      localStorage.removeItem('bhd_cache_fleet');
+      localStorage.removeItem('bhd_cache_inventory');
+      
+      // 3. Update local state
       transactions = [];
-      renderDashboard();
-      applyTxnFilters();
-      renderLaporanTable();
-      showToast('Semua transaksi dihapus dari database');
-    } catch(e) {
-      showToast('âŒ Gagal menghapus. Periksa koneksi server.');
+      
+      // 4. Full Sync to get fresh (zeroed) state from server
+      await syncFromSupabase();
+      
+      showToast('Semua data transaksi di-reset ke Nol');
+      vibrate(40);
     }
-  }
+  );
 }
+
 
 document.getElementById('bg-upload').addEventListener('change',function(e){
   const r=new FileReader();r.onload=ev=>{document.getElementById('bg-layer').style.backgroundImage=`url(${ev.target.result})`;applyBg();};r.readAsDataURL(e.target.files[0]);

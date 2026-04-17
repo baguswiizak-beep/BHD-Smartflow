@@ -632,9 +632,27 @@ const db = {
     },
 
     resetTransactions: async () => {
-        await query('DELETE FROM transactions');
-        return true;
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            // 1. Clear usage history
+            await client.query('DELETE FROM inventory_installed');
+            // 2. Clear transactions
+            await client.query('DELETE FROM transactions');
+            // 3. Reset stocks to initial values
+            await client.query('UPDATE inventory SET stok_sisa = stok_awal');
+            // 4. (Optional) Clear audit logs? Let's keep them for now as they are system records.
+            await client.query('COMMIT');
+            return true;
+        } catch (e) {
+            await client.query('ROLLBACK');
+            console.error('Reset failed:', e.message);
+            throw e;
+        } finally {
+            client.release();
+        }
     },
+
 
 };
 
