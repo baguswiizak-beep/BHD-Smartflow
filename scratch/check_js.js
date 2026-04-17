@@ -1166,36 +1166,32 @@ function toggleTxn(id){
 function deleteTxn(id){
   const txn=transactions.find(t=>t.id===id);
   if(!txn) return;
-  const stockMsg=txn.type==='outflow'&&txn.sparepartId
-    ?'<br><span style="color:var(--success);font-size:11px;">âœ… Stok onderdil akan otomatis kembali +'+(txn.jmlPasang||1)+' unit</span>'
-    :'';
-  showConfirmPopup('ðŸ—‘ï¸ Hapus Transaksi',
+  const stockMsg = txn.type==='outflow' && txn.sparepartId
+    ? '<br><span style="color:var(--success);font-size:11px;">âœ… Stok onderdil akan otomatis kembali +'+(txn.jmlPasang||1)+' unit</span>'
+    : '';
+  showConfirmPopup(
+    'ðŸ—‘ï¸ Hapus Transaksi',
     `<b>${txn.type==='inflow'?'Pemasukan':'Pengeluaran'}</b>: ${txn.label||''}<br>
      Nominal: <b>${fmt(txn.amount)}</b> Â· ${fmtDate(txn.date)}${stockMsg}`,
-    async ()=>{
-      const waktu=new Date().toLocaleString('id-ID');
-      const adminName=window.activeAdmin?.name||'System';
-      const jml=txn.jmlPasang||1;
-      
-      try {
-        // 1. Delete the transaction (Backend will automatically handle inventory_installed and stok_sisa restoration)
-        await sbFetch('transactions', {method:'DELETE', filters:{id:id}});
+    async () => {
+      const waktu = new Date().toLocaleString('id-ID');
+      const adminName = window.activeAdmin?.name || 'System';
+      const jml = txn.jmlPasang || 1;
 
-        await syncFromSupabase();
-        
-        logAudit('delete','transaksi', `[${waktu}] - [${adminName}] - [Hapus Transaksi] - [${txn.label}, Rp ${fmt(txn.amount)}${txn.sparepartId?', Qty '+jml+' unit dikembalikan':''}]`);
-        refreshDetailHero();
-        vibrate(40);
-        showToast('Transaksi dihapus'+(txn.sparepartId?' Â· Stok +'+jml+' dikembalikan':''));
-      } catch(e) {
-        console.warn('Gagal hapus transaksi:', e);
-        showToast('âŒ Gagal menghapus transaksi. Periksa koneksi server.');
-      }
+      // DELETE via backend API â€” backend handles inventory restore
+      const result = await apiFetch(`/api/transactions/${id}`, { method: 'DELETE' });
+      if (!result || result.ok === false) throw new Error(result?.error || 'Hapus gagal di server');
 
+      // Sync & UI update
+      await syncFromSupabase();
+      logAudit('delete','transaksi', `[${waktu}] - [${adminName}] - [Hapus Transaksi] - [${txn.label}, Rp ${fmt(txn.amount)}${txn.sparepartId?', Qty '+jml+' unit dikembalikan':''}]`);
+      refreshDetailHero();
+      vibrate(40);
+      showToast('Transaksi dihapus'+(txn.sparepartId?' Â· Stok +'+jml+' dikembalikan':''));
     }
-
   );
 }
+
 
 function editTxn(id){
   openModal('edit', {id});
@@ -1239,21 +1235,53 @@ function confirmSaveEditTxn(id){
 
 // Custom confirm popup (ganti browser confirm())
 function showConfirmPopup(title, message, onConfirm, onCancel){
-  const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
-  tEl.textContent=title;
-  body.innerHTML=`<div style="display:grid;gap:16px;text-align:center;">
-    <div style="font-size:12.5px;color:var(--text2);line-height:1.5;">${message}</div>
+  const smOverlay = document.getElementById('sm-overlay');
+  const tEl = document.getElementById('sm-title-text');
+  const body = document.getElementById('sm-body');
+  if(!tEl || !body || !smOverlay) return;
+  tEl.textContent = title;
+  body.innerHTML = `<div style="display:grid;gap:16px;text-align:center;">
+    <div style="font-size:12.5px;color:var(--text2);line-height:1.6;">${message}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <button onclick="closeSm();${onCancel?'('+onCancel.toString()+')()'  :''}" style="padding:10px;border-radius:9px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;">Batal</button>
+      <button id="confirm-cancel-btn" style="padding:10px;border-radius:9px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;">Batal</button>
       <button id="confirm-ok-btn" style="padding:10px;border-radius:9px;border:none;background:var(--danger);color:#fff;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(224,48,48,.3);">Ya, Hapus</button>
     </div>
+    <div id="confirm-err" style="display:none;font-size:11px;color:var(--danger);margin-top:-8px;"></div>
   </div>`;
-  document.getElementById('sm-overlay').classList.add('open');
-  setTimeout(()=>{
-    const btn=document.getElementById('confirm-ok-btn');
-    if(btn) btn.onclick=()=>{closeSm();onConfirm();};
-  },50);
+  smOverlay.classList.add('open');
+  
+  setTimeout(() => {
+    const okBtn = document.getElementById('confirm-ok-btn');
+    const cancelBtn = document.getElementById('confirm-cancel-btn');
+    const errEl = document.getElementById('confirm-err');
+    
+    if(cancelBtn) cancelBtn.onclick = () => { closeSm(); if(onCancel) onCancel(); };
+    
+    if(okBtn) okBtn.onclick = async () => {
+      // Show loading state
+      okBtn.textContent = 'â³ Memproses...';
+      okBtn.disabled = true;
+      if(cancelBtn) cancelBtn.disabled = true;
+      if(errEl) errEl.style.display = 'none';
+      
+      try {
+        await onConfirm();
+        closeSm(); // Only close on success
+      } catch(e) {
+        // Show error inline â€” don't close modal
+        okBtn.textContent = 'Coba Lagi';
+        okBtn.disabled = false;
+        if(cancelBtn) cancelBtn.disabled = false;
+        if(errEl) {
+          errEl.textContent = 'âŒ ' + (e.message || 'Gagal. Periksa koneksi.');
+          errEl.style.display = 'block';
+        }
+        console.error('Confirm action failed:', e);
+      }
+    };
+  }, 50);
 }
+
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• FILTER & SEARCH â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 let txnFilterGroup='all';
