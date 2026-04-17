@@ -1095,20 +1095,6 @@ input,select,textarea{font-size:16px!important;}
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="txn-search" type="text" placeholder="Cari transaksi, armada, supir..." oninput="applyTxnFilters()"/>
     </div>
-    <!-- Quick Input Buttons -->
-    <div style="display:flex;gap:7px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;">
-      <button onclick="openModal('outflow',{category:'UMUM'})" style="flex:1;min-width:max-content;padding:8px 12px;border:1px solid rgba(224,48,48,0.2);background:rgba(224,48,48,0.1);color:var(--danger);border-radius:10px;font-size:11.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Out Umum
-      </button>
-      <button onclick="openModal('outflow',{category:'Tunai'})" style="flex:1;min-width:max-content;padding:8px 12px;border:1px solid rgba(250,180,0,0.2);background:rgba(250,180,0,0.1);color:#C38F00;border-radius:10px;font-size:11.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Out Tunai
-      </button>
-      <button onclick="openModal('outflow',{category:'Onderdil'})" style="flex:1;min-width:max-content;padding:8px 12px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.1);color:var(--primary);border-radius:10px;font-size:11.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Out Onderdil
-      </button>
-    </div>
-
-    <!-- Filters -->
     <div class="filter-strip" style="flex-wrap: wrap;">
       <div class="fs-chip active" onclick="setTxnFilter('tipe','all',this)"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Semua</div>
       <div class="fs-chip" onclick="setTxnFilter('tipe','inflow',this)"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Pemasukan</div>
@@ -2585,16 +2571,15 @@ function editTxn(id){
     <div><label class="form-label">Jumlah Pasang (unit)</label>
       <input class="form-input" id="et-jml" type="number" min="0" value="${jmlLama}"/></div>`;
   }
-  body.innerHTML=`<div style="display:grid;gap:10px;">
+  body.innerHTML=`<div style="display:grid;gap:12px;">
     <div style="background:var(--${txn.type==='inflow'?'green':'orange'}-bg);border:1px solid var(--${txn.type==='inflow'?'green':'orange'}-bd);border-radius:10px;padding:8px 11px;font-size:11px;font-weight:600;color:var(--${txn.type==='inflow'?'green2':'orange'});">
       ${txn.type==='inflow'?'📈 Pemasukan':'📉 Pengeluaran'} · ${fmtDate(txn.date)}
     </div>
-    <div><label class="form-label">Label / Deskripsi</label>
-      <input class="form-input" id="et-label" value="${txn.label||''}"/></div>
-    <div><label class="form-label">Jumlah (Rp)</label>
-      <input class="form-input" id="et-amount" type="number" value="${txn.amount||0}"/></div>
-    <div><label class="form-label">Tanggal</label>
-      <input class="form-input" id="et-date" type="date" value="${txn.date||today()}"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div><label class="form-label">Tgl</label><input class="form-input" id="et-date" type="date" value="${txn.date||today()}"/></div>
+      <div><label class="form-label">Jumlah</label><input class="form-input" id="et-amount" type="number" value="${txn.amount||0}"/></div>
+    </div>
+    <div><label class="form-label">Keterangan</label><input class="form-input" id="et-label" value="${txn.label||''}"/></div>
     <div><label class="form-label">Armada</label>
       <select class="form-select" id="et-armada">
         <option value="">— Tidak ada —</option>
@@ -2711,11 +2696,11 @@ function confirmSaveEditTxn(id){
 function showConfirmPopup(title, message, onConfirm, onCancel){
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent=title;
-  body.innerHTML=`<div style="display:grid;gap:14px;">
-    <div style="font-size:13px;color:var(--text2);line-height:1.6;">${message}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <button onclick="closeSm();${onCancel?'('+onCancel.toString()+')()'  :''}" style="padding:11px;border-radius:11px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Batal</button>
-      <button id="confirm-ok-btn" style="padding:11px;border-radius:11px;border:none;background:var(--danger);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Ya, Lanjutkan</button>
+  body.innerHTML=`<div style="display:grid;gap:16px;text-align:center;">
+    <div style="font-size:12.5px;color:var(--text2);line-height:1.5;">${message}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button onclick="closeSm();${onCancel?'('+onCancel.toString()+')()'  :''}" style="padding:10px;border-radius:9px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;">Batal</button>
+      <button id="confirm-ok-btn" style="padding:10px;border-radius:9px;border:none;background:var(--danger);color:#fff;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(224,48,48,.3);">Ya, Hapus</button>
     </div>
   </div>`;
   document.getElementById('sm-overlay').classList.add('open');
@@ -2736,7 +2721,7 @@ function setTxnFilter(key,val,btn){
      txnFilterGroup='outflow';
      txnFilterCat=val;
   }
-  document.querySelectorAll('#view-keuangan .fs-chip').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#page-keuangan .fs-chip').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   txnPage=5;applyTxnFilters();
 }
@@ -4368,25 +4353,27 @@ async function syncFromSupabase(){
       FLEET_COUNT=fleetData.length;
     }
     // Sync inventory/spareparts
-    const inv = await sbFetch('inventory',{select:'*',limit:500});
-    if(Array.isArray(inv)&&inv.length>0){
-      sparepartStock.length=0;
-      inv.forEach(sp=>sparepartStock.push({
-        id: sp.id,
-        nama: sp.nama,
-        spek: sp.spek,
-        kategori: sp.kategori,
-        toko: sp.toko,
-        nota: sp.nota,
-        tglMasuk: sp.tgl_masuk || '',
-        stokAwal: Number(sp.stok_awal || 0),
-        stokSisa: Number(sp.stok_sisa || 0),
-        stokMin: Number(sp.stok_min || 5),
-        hargaSatuan: Number(sp.harga_satuan || 0),
-        catatan: sp.catatan || '',
-        installed: sp.installed || []
-      }));
-    }
+    try {
+      const inv = await apiFetch('/api/inventory');
+      if(Array.isArray(inv)&&inv.length>0){
+        sparepartStock.length=0;
+        inv.forEach(sp=>sparepartStock.push({
+          id: sp.id,
+          nama: sp.nama,
+          spek: sp.spek,
+          kategori: sp.kategori,
+          toko: sp.toko,
+          nota: sp.nota,
+          tglMasuk: sp.tgl_masuk || '',
+          stokAwal: Number(sp.stok_awal || 0),
+          stokSisa: Number(sp.stok_sisa || 0),
+          stokMin: Number(sp.stok_min || 5),
+          hargaSatuan: Number(sp.harga_satuan || 0),
+          catatan: sp.catatan || '',
+          installed: sp.installed || []
+        }));
+      }
+    } catch(e) { console.warn('Sync inventory failing:', e); }
     // Sync settings (Registration Code)
     try {
       const settings = await sbFetch('settings',{select:'*',limit:100});
