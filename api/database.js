@@ -1,7 +1,11 @@
+<<<<<<< HEAD
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+=======
 // Vercel handles environment variables natively.
 if (process.env.NODE_ENV !== 'production' && !process.env.POSTGRES_URL) {
     require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 }
+>>>>>>> main
 // Fix: Explicitly using 'pg' for Supabase connectivity (replacing accidental @vercel/postgres)
 const { Pool } = require('pg');
 
@@ -11,6 +15,19 @@ const { Pool } = require('pg');
  */
 
 // Parsing connection string manual (untuk menghindari error karakter spesial di username)
+<<<<<<< HEAD
+const dbUrl = new URL(process.env.POSTGRES_URL);
+const pool = new Pool({
+    user: decodeURIComponent(dbUrl.username),
+    password: decodeURIComponent(dbUrl.password),
+    host: dbUrl.hostname,
+    port: dbUrl.port || 5432,
+    database: dbUrl.pathname.split('/')[1] || 'postgres',
+    ssl: {
+        rejectUnauthorized: false
+    }
+});
+=======
 let pool;
 
 
@@ -40,6 +57,7 @@ try {
 const query = async (text, params) => {
     return pool.query(text, params);
 };
+>>>>>>> main
 
 // ─── SQL SCHEMA ──────────────────────────────────────────────
 const SCHEMA = `
@@ -48,8 +66,12 @@ CREATE TABLE IF NOT EXISTS admins (
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
+<<<<<<< HEAD
+    role TEXT
+=======
     role TEXT,
     active BOOLEAN DEFAULT TRUE
+>>>>>>> main
 );
 
 -- Transactions
@@ -57,8 +79,11 @@ CREATE TABLE IF NOT EXISTS transactions (
     id TEXT PRIMARY KEY,
     type TEXT NOT NULL,
     amount BIGINT DEFAULT 0,
+<<<<<<< HEAD
+=======
     muat TEXT,
     bongkar TEXT,
+>>>>>>> main
     label TEXT,
     sub TEXT,
     date TEXT,
@@ -68,8 +93,12 @@ CREATE TABLE IF NOT EXISTS transactions (
     nota TEXT,
     kategori TEXT,
     status TEXT,
+<<<<<<< HEAD
+    sparepart_id TEXT
+=======
     sparepart_id TEXT,
     posisi TEXT
+>>>>>>> main
 );
 
 -- Fleet (Armada)
@@ -98,11 +127,16 @@ CREATE TABLE IF NOT EXISTS inventory (
     tgl_masuk TEXT,
     stok_awal INTEGER DEFAULT 0,
     stok_sisa INTEGER DEFAULT 0,
+<<<<<<< HEAD
+=======
     stok_min INTEGER DEFAULT 5,
+>>>>>>> main
     harga_satuan BIGINT DEFAULT 0,
     catatan TEXT
 );
 
+<<<<<<< HEAD
+=======
 -- Fleet Tires Tracking (Phase 2)
 CREATE TABLE IF NOT EXISTS fleet_tires (
     id SERIAL PRIMARY KEY,
@@ -114,6 +148,7 @@ CREATE TABLE IF NOT EXISTS fleet_tires (
     installed_date TEXT
 );
 
+>>>>>>> main
 -- Installed Spareparts tracking
 CREATE TABLE IF NOT EXISTS inventory_installed (
     id SERIAL PRIMARY KEY,
@@ -121,8 +156,12 @@ CREATE TABLE IF NOT EXISTS inventory_installed (
     armada TEXT,
     tgl_pasang TEXT,
     ritase INTEGER DEFAULT 0,
+<<<<<<< HEAD
+    txn_id TEXT
+=======
     txn_id TEXT,
     posisi TEXT
+>>>>>>> main
 );
 
 -- Settings
@@ -130,6 +169,32 @@ CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
 );
+<<<<<<< HEAD
+`;
+
+async function init() {
+    try {
+        console.log('⏳ Menghubungkan ke Postgres (via pg)...');
+        
+        // Cek koneksi
+        await pool.query('SELECT NOW()');
+        
+        // Buat tabel jika belum ada
+        await pool.query(SCHEMA);
+        console.log('✅ Skema database SQL siap');
+
+        // Seed admin jika kosong
+        const adminCheck = await pool.query('SELECT COUNT(*) FROM admins');
+        if (parseInt(adminCheck.rows[0].count) === 0) {
+            console.log('🌱 Seeding default admin...');
+            await pool.query(
+                "INSERT INTO admins (id, username, password, role) VALUES ('admin-1', 'admin', 'bhd2024', 'superadmin')"
+            );
+        }
+
+        // Seed settings jika kosong
+        const settingsCheck = await pool.query('SELECT COUNT(*) FROM settings');
+=======
 
 -- Audit Logs
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -217,12 +282,23 @@ async function init() {
             }
         }
         const settingsCheck = await query('SELECT COUNT(*) FROM settings');
+>>>>>>> main
         if (parseInt(settingsCheck.rows[0].count) === 0) {
             console.log('🌱 Seeding default settings...');
             const defaults = [
                 ['company_name', 'PT. BAGUS HARYA DWIPRIMA'],
                 ['fleet_count', '6'],
                 ['login_username', 'admin'],
+<<<<<<< HEAD
+                ['login_password', 'bhd2024']
+            ];
+            for (const [key, val] of defaults) {
+                await pool.query('INSERT INTO settings (key, value) VALUES ($1, $2)', [key, val]);
+            }
+        }
+    } catch (e) {
+        console.error('⚠ Gagal inisialisasi SQL:', e.message);
+=======
                 ['login_password', 'bhd2024'],
                 ['admin_reg_code', 'BHD2024']
             ];
@@ -232,6 +308,7 @@ async function init() {
         }
     } catch (e) {
         console.error('❌ Gagal terhubung ke Database Asli:', e.message);
+>>>>>>> main
         throw e;
     }
 }
@@ -241,20 +318,36 @@ const db = {
 
     // ----- SETTINGS & AUTH -----
     getSettings: async () => {
+<<<<<<< HEAD
+        const { rows } = await pool.query('SELECT * FROM settings');
+=======
         const { rows } = await query('SELECT * FROM settings');
+>>>>>>> main
         const settings = {};
         rows.forEach(r => settings[r.key] = r.value);
         return settings;
     },
 
     updateSetting: async (key, value) => {
+<<<<<<< HEAD
+        await pool.query(
+            'INSERT INTO settings (key, value) ON CONFLICT (key) DO UPDATE SET value = $2',
+=======
         await query(
             'INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+>>>>>>> main
             [key, value]
         );
     },
 
     validateAdmin: async (username, password) => {
+<<<<<<< HEAD
+        const { rows } = await pool.query(
+            'SELECT * FROM admins WHERE username = $1 AND password = $2',
+            [username, password]
+        );
+        return rows[0] || null;
+=======
         const { rows } = await query(
             'SELECT * FROM admins WHERE username = $1 AND password = $2',
             [username, password]
@@ -264,10 +357,18 @@ const db = {
             throw new Error('Akun ditangguhkan (Blokir). Hubungi Superadmin.');
         }
         return user;
+>>>>>>> main
     },
 
     registerAdmin: async (username, password, role = 'admin') => {
         const id = 'admin-' + Date.now();
+<<<<<<< HEAD
+        await pool.query(
+            'INSERT INTO admins (id, username, password, role) VALUES ($1, $2, $3, $4)',
+            [id, username, password, role]
+        );
+        return { id, username, role };
+=======
         await query(
             'INSERT INTO admins (id, username, password, role, active) VALUES ($1, $2, $3, $4, $5)',
             [id, username, password, role, true]
@@ -344,15 +445,40 @@ const db = {
 
     deleteAuditLogs: async () => {
         await query('DELETE FROM audit_logs');
+>>>>>>> main
     },
 
     // ----- TRANSACTIONS -----
     getTransactions: async (filters = {}) => {
+<<<<<<< HEAD
+        let query = 'SELECT * FROM transactions WHERE 1=1';
+=======
         let sql = 'SELECT * FROM transactions WHERE 1=1';
+>>>>>>> main
         const params = [];
         let i = 1;
 
         if (filters.from) {
+<<<<<<< HEAD
+            query += ` AND date >= $${i++}`;
+            params.push(filters.from);
+        }
+        if (filters.to) {
+            query += ` AND date <= $${i++}`;
+            params.push(filters.to);
+        }
+        if (filters.type) {
+            query += ` AND type = $${i++}`;
+            params.push(filters.type);
+        }
+        if (filters.armada) {
+            query += ` AND armada = $${i++}`;
+            params.push(filters.armada);
+        }
+
+        query += ' ORDER BY date DESC';
+        const { rows } = await pool.query(query, params);
+=======
             sql += ` AND date >= $${i++}`;
             params.push(filters.from);
         }
@@ -371,11 +497,16 @@ const db = {
 
         sql += ' ORDER BY date DESC';
         const { rows } = await query(sql, params);
+>>>>>>> main
         return rows.map(r => ({ ...r, amount: parseInt(r.amount) }));
     },
 
     addTransaction: async (t) => {
+<<<<<<< HEAD
+        await pool.query(
+=======
         await query(
+>>>>>>> main
             `INSERT INTO transactions 
             (id, type, amount, label, sub, date, armada, driver, toko, nota, kategori, status, sparepart_id)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
@@ -393,7 +524,11 @@ const db = {
             params.push(val);
         }
         params.push(id);
+<<<<<<< HEAD
+        const { rowCount } = await pool.query(
+=======
         const { rowCount } = await query(
+>>>>>>> main
             `UPDATE transactions SET ${fields.join(', ')} WHERE id = $${i}`,
             params
         );
@@ -408,19 +543,26 @@ const db = {
             // Ambil info transaksi sebelum dihapus
             const { rows } = await client.query('SELECT * FROM transactions WHERE id = $1', [id]);
             if (rows.length > 0) {
+<<<<<<< HEAD
+=======
 // ... existing logic ...
+>>>>>>> main
                 const t = rows[0];
                 // Jika ini adalah outflow onderdil yang terhubung ke stok
                 if (t.type === 'outflow' && t.kategori === 'Onderdil' && t.sparepart_id) {
                     // Kembalikan stok
                     await client.query('UPDATE inventory SET stok_sisa = stok_sisa + 1 WHERE id = $1', [t.sparepart_id]);
                     // Hapus entry di inventory_installed yang sesuai
+<<<<<<< HEAD
+                    await client.query('DELETE FROM inventory_installed WHERE txn_id = $1 OR (inventory_id = $2 AND armada = $3 AND tgl_pasang = $4 LIMIT 1)', 
+=======
                     await client.query(
                         `DELETE FROM inventory_installed WHERE id = (
                             SELECT id FROM inventory_installed 
                             WHERE txn_id = $1 OR (inventory_id = $2 AND armada = $3 AND tgl_pasang = $4)
                             LIMIT 1
                         )`,
+>>>>>>> main
                         [t.id, t.sparepart_id, t.armada, t.date]);
                 }
             }
@@ -475,6 +617,8 @@ const db = {
         return rowCount > 0;
     },
 
+<<<<<<< HEAD
+=======
     // ----- FLEET TIRES -----
     getFleetTires: async (fleetId) => {
         const { rows } = await pool.query('SELECT * FROM fleet_tires WHERE fleet_id = $1 ORDER BY position ASC', [fleetId]);
@@ -501,6 +645,7 @@ const db = {
         return rowCount > 0;
     },
 
+>>>>>>> main
     // ----- DRIVERS -----
     getDrivers: async () => {
         const { rows } = await pool.query('SELECT * FROM drivers');
@@ -528,6 +673,13 @@ const db = {
     },
 
     addInventory: async (sp) => {
+<<<<<<< HEAD
+        await pool.query(
+            `INSERT INTO inventory 
+            (id, nama, spek, kategori, toko, nota, tgl_masuk, stok_awal, stok_sisa, harga_satuan, catatan)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+            [sp.id, sp.nama, sp.spek || '', sp.kategori || '', sp.toko || '', sp.nota || '', sp.tgl_masuk, sp.stok_awal, sp.stok_sisa, sp.hargaSatuan || 0, sp.catatan || '']
+=======
         // Handle mapping from both camelCase (frontend legacy) and snake_case (standard)
         const harga = sp.harga_satuan !== undefined ? sp.harga_satuan : (sp.hargaSatuan || 0);
         const tgl = sp.tgl_masuk || sp.tglMasuk || '';
@@ -540,6 +692,7 @@ const db = {
             (id, nama, spek, kategori, toko, nota, tgl_masuk, stok_awal, stok_sisa, stok_min, harga_satuan, catatan)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             [sp.id, sp.nama, sp.spek || '', sp.kategori || '', sp.toko || '', sp.nota || '', tgl, sAwal, sSisa, sMin, harga, sp.catatan || '']
+>>>>>>> main
         );
     },
 
@@ -561,6 +714,12 @@ const db = {
     },
 
     deleteInventory: async (id) => {
+<<<<<<< HEAD
+        const { rowCount } = await pool.query('DELETE FROM inventory WHERE id = $1', [id]);
+        return rowCount > 0;
+    },
+
+=======
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -593,6 +752,7 @@ const db = {
     },
 
 
+>>>>>>> main
     installInventory: async (id, installData) => {
         const client = await pool.connect();
         try {
@@ -611,8 +771,13 @@ const db = {
             // Tambah catatan terpasang (bisa beberapa jika jml > 1)
             for (let i = 0; i < jml; i++) {
                 await client.query(
+<<<<<<< HEAD
+                    'INSERT INTO inventory_installed (inventory_id, armada, tgl_pasang, ritase, txn_id) VALUES ($1, $2, $3, $4, $5)',
+                    [id, installData.armada, installData.tgl_pasang, 0, installData.txnId]
+=======
                     'INSERT INTO inventory_installed (inventory_id, armada, tgl_pasang, ritase, txn_id, posisi) VALUES ($1, $2, $3, $4, $5, $6)',
                     [id, installData.armada, installData.tgl_pasang, 0, installData.txnId, installData.posisi || '']
+>>>>>>> main
                 );
             }
             
@@ -635,6 +800,13 @@ const db = {
             const { rows } = await client.query('SELECT * FROM inventory_installed WHERE id = $1', [installId]);
             if (rows.length === 0) throw new Error('Data pemasangan tidak ditemukan');
             
+<<<<<<< HEAD
+            // Hapus pemasangan
+            await client.query('DELETE FROM inventory_installed WHERE id = $1', [installId]);
+            
+            // Kembalikan stok (asumsi per baris = 1 unit)
+            await client.query('UPDATE inventory SET stok_sisa = stok_sisa + 1 WHERE id = $1', [id]);
+=======
             const txnId = rows[0].txn_id;
 
             // 1. Hapus catatan terpasang
@@ -647,17 +819,26 @@ const db = {
             if (txnId) {
                 await client.query('DELETE FROM transactions WHERE id = $1', [txnId]);
             }
+>>>>>>> main
             
             await client.query('COMMIT');
             return true;
         } catch (e) {
             await client.query('ROLLBACK');
+<<<<<<< HEAD
+=======
             console.error('Uninstall failure:', e.message);
+>>>>>>> main
             return false;
         } finally {
             client.release();
         }
     },
+<<<<<<< HEAD
+};
+
+module.exports = db;
+=======
 
     // ----- SETTINGS -----
     getSettings: async (key) => {
@@ -711,3 +892,4 @@ const exportedDb = {
 };
 
 module.exports = exportedDb;
+>>>>>>> main

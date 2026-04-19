@@ -1,0 +1,10 @@
+﻿// ════════════════════════════════════════════════════════
+// ════════════════════════════════════
+// SPAREPART STOCK (terpisah dari transactions)
+// ════════════════════════════════════
+let gudangFilter='all';
+let waDataReady=false,waTextCache='';
+
+let sparepartStock=[];
+let gudangKategori=['Ban','Oli','Filter','Spare']; // dynamic categories
+

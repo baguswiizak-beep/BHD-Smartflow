@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+const express = require('express');
+const cors = require('cors');
+const db = require('./database');
+=======
 const express = require('express');
 const cors = require('cors');
 
@@ -8,10 +14,16 @@ try {
 } catch (e) {
     console.error('Database module load failed:', e.message);
 }
+>>>>>>> main
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+<<<<<<< HEAD
+// ── DATABASE INITIALIZATION PROMISE ──
+let dbInitPromise = null;
+const ensureDb = async () => {
+=======
 // ── SSE REALTIME DISPATCHER ──────────────────────────
 let clients = [];
 function broadcastChange(payload = { type: 'refresh' }) {
@@ -26,6 +38,7 @@ function broadcastChange(payload = { type: 'refresh' }) {
 let dbInitPromise = null;
 const ensureDb = async () => {
     if (!db) throw new Error('Database module not loaded. Check environment variables (POSTGRES_URL / SUPABASE_URL_POOLER).');
+>>>>>>> main
     if (!dbInitPromise) dbInitPromise = db.init();
     return dbInitPromise;
 };
@@ -34,6 +47,11 @@ const ensureDb = async () => {
 app.use(cors());
 app.use(express.json());
 
+<<<<<<< HEAD
+// Middleware untuk memastikan DB siap sebelum request diproses
+app.use(async (req, res, next) => {
+    // Abaikan ping/health check jika ingin respons cepat, atau tetap cek DB
+=======
 // Middleware untuk mengekstrak info Admin dari header (untuk Audit Trail)
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -96,6 +114,7 @@ app.get('/api/health', async (req, res) => {
 
 // Middleware untuk memastikan DB siap sebelum request diproses
 app.use(async (req, res, next) => {
+>>>>>>> main
     try {
         await ensureDb();
         next();
@@ -104,13 +123,33 @@ app.use(async (req, res, next) => {
     }
 });
 
+<<<<<<< HEAD
+// ── HEALTH CHECK ─────────────────────────────────────────────
+app.get('/api/health', async (req, res) => {
+  try {
+    res.json({ status: 'ok', db: 'postgres', timestamp: new Date().toISOString() });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+app.get('/api/ping', async (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+=======
+>>>>>>> main
 // ── AUTH ─────────────────────────────────────────────────────
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body || {};
     const user = await db.validateAdmin(username, password);
     if (user) {
+<<<<<<< HEAD
+      return res.json({ ok: true, username: user.username, role: user.role });
+=======
       return res.json({ ok: true, id: user.id, username: user.username, role: user.role });
+>>>>>>> main
     }
     res.status(401).json({ ok: false, error: 'Username atau password salah' });
   } catch (e) {
@@ -130,6 +169,18 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
+app.post('/api/auth/change-password', async (req, res) => {
+  const { oldPassword, newPassword } = req.body || {};
+  const settings = await db.getSettings();
+  if (oldPassword !== settings.login_password) {
+    return res.status(403).json({ error: 'Password lama tidak cocok' });
+  }
+  await db.updateSetting('login_password', newPassword);
+  res.json({ ok: true });
+});
+
+=======
 // PRESENCE
 app.post('/api/auth/heartbeat', async (req, res) => {
   const { username, avatar } = req.body || {};
@@ -213,6 +264,7 @@ app.delete('/api/audit-logs', async (req, res) => {
   }
 });
 
+>>>>>>> main
 // ── SETTINGS ─────────────────────────────────────────────────
 app.get('/api/settings', async (_req, res) => {
   try {
@@ -228,6 +280,8 @@ app.put('/api/settings', async (req, res) => {
   const { key, value } = req.body || {};
   if (!key) return res.status(400).json({ error: 'key diperlukan' });
   await db.updateSetting(key, String(value));
+<<<<<<< HEAD
+=======
   broadcastChange({ type: 'settings', action: 'update', key });
   res.json({ ok: true });
 });
@@ -237,6 +291,7 @@ app.put('/api/settings/admin_reg_code', async (req, res) => {
   if (!value) return res.status(400).json({ error: 'Kode registrasi diperlukan' });
   await db.updateSetting('admin_reg_code', String(value));
   broadcastChange({ type: 'settings', action: 'update', key: 'admin_reg_code' });
+>>>>>>> main
   res.json({ ok: true });
 });
 
@@ -254,6 +309,10 @@ app.post('/api/transactions', async (req, res) => {
     const body = req.body;
     if (!body.id) body.id = 'txn-' + Date.now();
     await db.addTransaction(body);
+<<<<<<< HEAD
+    res.json({ ok: true, id: body.id });
+  } catch (e) {
+=======
     
     // Log Audit (Safe)
     try {
@@ -272,10 +331,17 @@ app.post('/api/transactions', async (req, res) => {
     res.json({ ok: true, id: body.id });
   } catch (e) {
     console.error('Error in POST /api/transactions:', e.stack);
+>>>>>>> main
     res.status(500).json({ error: e.message });
   }
 });
 
+<<<<<<< HEAD
+app.put('/api/transactions/:id', async (req, res) => {
+  try {
+    const ok = await db.updateTransaction(req.params.id, req.body);
+    res.json({ ok });
+=======
 
 app.put('/api/transactions/:id', async (req, res) => {
   try {
@@ -299,6 +365,7 @@ app.put('/api/transactions/:id', async (req, res) => {
     res.json({ ok });
     if (ok) broadcastChange({ type: 'transactions', action: 'update', id: req.params.id });
 
+>>>>>>> main
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -306,6 +373,9 @@ app.put('/api/transactions/:id', async (req, res) => {
 
 app.delete('/api/transactions/:id', async (req, res) => {
   try {
+<<<<<<< HEAD
+    await db.deleteTransaction(req.params.id);
+=======
     const id = req.params.id;
     const items = await db.getTransactions({ id: id });
     if (!items || items.length === 0) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
@@ -352,6 +422,7 @@ app.delete('/api/transactions/reset', async (req, res) => {
   try {
     await db.resetTransactions();
     broadcastChange({ type: 'refresh' });
+>>>>>>> main
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -359,8 +430,13 @@ app.delete('/api/transactions/reset', async (req, res) => {
 });
 
 app.delete('/api/transactions-all', async (req, res) => {
+<<<<<<< HEAD
+  await db.deleteAllTransactions();
+  res.json({ ok: true });
+=======
     await db.resetTransactions();
     res.json({ ok: true });
+>>>>>>> main
 });
 
 // ── FLEET (ARMADA) ───────────────────────────────────────────
@@ -376,11 +452,19 @@ app.post('/api/fleet', async (req, res) => {
   const f = req.body;
   if (!f.id || !f.nopol) return res.status(400).json({ error: 'id dan nopol diperlukan' });
   await db.addFleet(f);
+<<<<<<< HEAD
+=======
   broadcastChange({ type: 'fleet', action: 'create' });
+>>>>>>> main
   res.status(201).json({ ok: true });
 });
 
 app.put('/api/fleet/:id', async (req, res) => {
+<<<<<<< HEAD
+  const ok = await db.updateFleet(req.params.id, req.body);
+  if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
+  res.json({ ok: true });
+=======
   try {
     const ok = await db.updateFleet(req.params.id, req.body);
     if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
@@ -432,11 +516,15 @@ app.delete('/api/fleet/tires/:tireId', async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
+>>>>>>> main
 });
 
 app.delete('/api/fleet/:id', async (req, res) => {
   await db.deleteFleet(req.params.id);
+<<<<<<< HEAD
+=======
   broadcastChange({ type: 'fleet', action: 'delete', id: req.params.id });
+>>>>>>> main
   res.json({ ok: true });
 });
 
@@ -449,13 +537,19 @@ app.post('/api/drivers', async (req, res) => {
   const { nama } = req.body || {};
   if (!nama) return res.status(400).json({ error: 'Nama diperlukan' });
   await db.addDriver(nama);
+<<<<<<< HEAD
+=======
   broadcastChange({ type: 'drivers', action: 'create' });
+>>>>>>> main
   res.status(201).json({ ok: true });
 });
 
 app.delete('/api/drivers/:nama', async (req, res) => {
   await db.deleteDriver(decodeURIComponent(req.params.nama));
+<<<<<<< HEAD
+=======
   broadcastChange({ type: 'drivers', action: 'delete' });
+>>>>>>> main
   res.json({ ok: true });
 });
 
@@ -465,6 +559,24 @@ app.get('/api/inventory', async (_req, res) => {
 });
 
 app.post('/api/inventory', async (req, res) => {
+<<<<<<< HEAD
+  const sp = req.body;
+  if (!sp.id || !sp.nama) return res.status(400).json({ error: 'id dan nama diperlukan' });
+  await db.addInventory(sp);
+  res.status(201).json({ ok: true });
+});
+
+app.put('/api/inventory/:id', async (req, res) => {
+  const ok = await db.updateInventory(req.params.id, req.body);
+  if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
+  res.json({ ok: true });
+});
+
+app.delete('/api/inventory/:id', async (req, res) => {
+  const ok = await db.deleteInventory(req.params.id);
+  if (!ok) return res.status(404).json({ error: 'Tidak ditemukan' });
+  res.json({ ok: true });
+=======
   try {
     const sp = req.body;
     if (!sp.id || !sp.nama) return res.status(400).json({ error: 'id dan nama diperlukan' });
@@ -541,6 +653,7 @@ app.delete('/api/inventory/:id', async (req, res) => {
 app.post('/api/inventory/sync-multi', async (req, res) => {
   const result = await db.bulkUpdateInventory(req.body || []);
   res.status(200).json({ ok: true });
+>>>>>>> main
 });
 
 app.post('/api/inventory/:id/install', async (req, res) => {
@@ -555,6 +668,10 @@ app.delete('/api/inventory/:id/install/:installId', async (req, res) => {
   res.json({ ok: true });
 });
 
+<<<<<<< HEAD
+// ── DASHBOARD SUMMARY ───────────────────────────────────────
+=======
+>>>>>>> main
 app.get('/api/summary', async (req, res) => {
   try {
     const txns = await db.getTransactions(req.query);
@@ -571,6 +688,26 @@ app.get('/api/summary', async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
+<<<<<<< HEAD
+});
+
+// ── START SERVER ─────────────────────────────────────────────
+db.init().then(() => {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`
+  ╔══════════════════════════════════════════════════════════════╗
+  ║          BHD SmartFlow API - Terhubung ke SQL                ║
+  ╟──────────────────────────────────────────────────────────────╢
+  ║  ✅ PC/Laptop : http://127.0.0.1:${PORT}             ║
+  ║  🚀 Status    : Database SQL Aktif                           ║
+  ╚══════════════════════════════════════════════════════════════╝
+    `);
+  });
+}).catch(err => {
+  console.error('❌ Gagal inisialisasi database:', err.message);
+  process.exit(1);
+});
+=======
 
 });
 
@@ -643,5 +780,6 @@ if (require.main === module) {
     });
   }
 }
+>>>>>>> main
 
 module.exports = app;
