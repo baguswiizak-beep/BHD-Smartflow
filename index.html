@@ -89,7 +89,8 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
   box-shadow:var(--sh);
 }
 .sb-logo{display:flex;align-items:center;gap:11px;padding:18px 18px 14px;border-bottom:1px solid var(--card-b);}
-.logo-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#5FA00D,#7DCE13,#A8F040);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;color:#1A3300;letter-spacing:.5px;box-shadow:0 2px 10px rgba(125,206,19,.3);flex-shrink:0;}
+.logo-mark{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#8B6914,#D4A843,#F0C75E);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#3A1E08;letter-spacing:.5px;box-shadow:0 2px 10px rgba(212,168,67,.3);flex-shrink:0;overflow:hidden;}
+.logo-mark img{width:100%;height:100%;object-fit:cover;border-radius:11px;}
 .lt-main{font-size:13px;font-weight:800;color:var(--text);}
 .lt-sub{font-size:9px;color:var(--text3);font-weight:500;letter-spacing:.03em;margin-top:1px;}
 .sb-clock{padding:10px 18px 12px;border-bottom:1px solid var(--card-b);text-align:center;}
@@ -116,13 +117,14 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 /* ══════════════════════════════════════
    TOPBAR (mobile)
 ══════════════════════════════════════ */
-#topbar{display:none;align-items:center;gap:7px;padding:8px 12px;background:var(--card);border-bottom:1px solid var(--card-b);position:sticky;top:0;z-index:99;overflow:hidden;min-height:48px;}
+#topbar{display:none;align-items:center;gap:6px;padding:8px 10px;background:var(--card);border-bottom:1px solid var(--card-b);position:sticky;top:0;z-index:99;width:100%;box-sizing:border-box;min-height:48px;}
 .tb-menu{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 .tb-menu svg{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:2;}
 .tb-brand{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-.tb-lm{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#8B6914,#D4A843);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#3A1E08;flex-shrink:0;}
+.tb-lm{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#8B6914,#D4A843);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#3A1E08;flex-shrink:0;overflow:hidden;}
+.tb-lm img{width:100%;height:100%;object-fit:cover;border-radius:8px;}
 .tb-name{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;}
-.tb-clock{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:3px 8px;border-radius:20px;margin-left:auto;letter-spacing:.03em;white-space:nowrap;flex-shrink:0;}
+.tb-clock{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:3px 7px;border-radius:20px;margin-left:auto;letter-spacing:.02em;white-space:nowrap;flex-shrink:0;}
 .tb-acts{display:flex;gap:5px;flex-shrink:0;}
 .tb-btn{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0;}
 .tb-btn:hover{background:var(--bg4);}
@@ -4846,6 +4848,7 @@ function onLogoUpload(input){
       const txt = document.getElementById('cp-logo-text');
       if(txt) txt.style.display='none';
     }
+    updateSidebarLogo();
     showToast('✅ Logo dipilih — klik Simpan untuk menyimpan');
   };
   reader.readAsDataURL(file);
@@ -4874,6 +4877,26 @@ async function saveCompanyProfile(){
   }
 }
 
+function updateSidebarLogo(){
+  const cp=_companyProfile||{};
+  const logo=cp.logoDataUrl||'';
+  // Update logo di sidebar (.logo-mark) dan topbar (.tb-lm)
+  document.querySelectorAll('.logo-mark,.tb-lm').forEach(el=>{
+    if(logo){
+      // Tampilkan gambar
+      el.innerHTML=`<img src="${logo}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"/>`;
+      el.style.background='#fff';
+      el.style.padding='0';
+    } else {
+      // Fallback teks BHD dengan warna gold
+      el.innerHTML='BHD';
+      el.style.background='linear-gradient(135deg,#8B6914,#D4A843,#F0C75E)';
+      el.style.color='#3A1E08';
+      el.style.padding='';
+    }
+  });
+}
+
 function loadCompanyProfileUI(){
   const cp=_companyProfile;
   const nameEl=document.getElementById('cp-name');
@@ -4886,7 +4909,7 @@ function loadCompanyProfileUI(){
   if(addrEl) addrEl.value=cp.address||'';
   if(phoneEl) phoneEl.value=cp.phone||'';
   if(emailEl) emailEl.value=cp.email||'';
-  // Restore logo preview
+  // Restore logo preview di settings
   if(cp.logoDataUrl){
     const preview=document.getElementById('cp-logo-preview');
     if(preview){
@@ -4899,6 +4922,8 @@ function loadCompanyProfileUI(){
       if(txt) txt.style.display='none';
     }
   }
+  // Update sidebar & topbar logo
+  updateSidebarLogo();
 }
 
 // Logout
