@@ -235,6 +235,9 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
    CHARTS
 ══════════════════════════════════════ */
 .chart-wrap{background:var(--card);border:1px solid var(--card-b);border-radius:var(--r);padding:14px;margin-bottom:14px;}
+.chart-slide.chart-wrap{margin-bottom:0!important;}
+#chart-carousel{overflow:hidden;}
+#chart-slides{align-items:flex-start;}
 .cw-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .cw-title{font-size:13px;font-weight:700;color:var(--text);}
 .cw-filters{display:flex;gap:5px;flex-wrap:wrap;}
@@ -870,7 +873,8 @@ input,select,textarea{font-size:16px!important;}
     <div class="login-err" id="login-err"></div>
     
   </div>
-</div>
+
+          </div><!-- /chart-slides fixed --></div>
 
 <div id="bg-layer"></div><div id="bg-overlay"></div>
 <div id="app" style="display:none;">
@@ -1016,7 +1020,7 @@ input,select,textarea{font-size:16px!important;}
                   <div class="dl-item"><div class="dl-dot" style="background:var(--danger)"></div><div class="dl-info"><div class="dl-label">Outflow</div><div class="dl-val" id="dl-out">—</div><div class="dl-pct" id="dl-out-pct">—%</div></div></div>
                 </div>
               </div>
-            </div>
+            
             <!-- Slide 2: Trend Line -->
             <div class="chart-slide chart-wrap" style="min-width:100%;box-sizing:border-box;margin-bottom:0;">
               <div class="cw-hdr" style="flex-direction:column;align-items:flex-start;gap:7px;">
@@ -1035,7 +1039,7 @@ input,select,textarea{font-size:16px!important;}
                   <button onclick="applyTrendCustom()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--green-bd);background:var(--green-bg);color:var(--green2);font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;white-space:nowrap;">Terapkan</button>
                 </div>
               </div>
-              <canvas id="miniLineChart" style="max-height:130px;"></canvas>
+              <canvas id="miniLineChart" style="max-height:130px;height:130px;"></canvas>
             </div>
             <!-- Slide 3: Monthly Bar -->
             <div class="chart-slide chart-wrap" style="min-width:100%;box-sizing:border-box;margin-bottom:0;">
@@ -1126,16 +1130,7 @@ input,select,textarea{font-size:16px!important;}
         </div>
       </div>
 
-      <div class="sec-title">Status Armada</div>
-      <div class="card" style="margin-bottom:14px;">
-        <div class="card-hdr"><span class="card-title">Armada</span><span class="chip chip-green" id="fleet-total-chip">12 Unit</span></div>
-        <div class="fleet-grid3">
-          <div class="fs-box jalan"><div class="fs-icon-wrap jalan"><span class="pulse-ring"></span><svg viewBox="0 0 24 24" class="fs-svg"><path d="M1 3h15v11H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/></svg></div><div class="fs-num" id="fs-jalan">0</div><div class="fs-lbl">Jalan</div></div>
-          <div class="fs-box bengkel"><div class="fs-icon-wrap bengkel"><svg viewBox="0 0 24 24" class="fs-svg"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div><div class="fs-num" id="fs-bengkel">0</div><div class="fs-lbl">Bengkel</div></div>
-          <div class="fs-box antre"><div class="fs-icon-wrap antre"><svg viewBox="0 0 24 24" class="fs-svg"><path d="M5 3h14M5 21h14M12 3v2M12 19v2"/><ellipse cx="12" cy="8" rx="4" ry="2.5"/><ellipse cx="12" cy="16" rx="4" ry="2.5"/></svg></div><div class="fs-num" id="fs-antre">0</div><div class="fs-lbl">Antre</div></div>
-        </div>
-        <div class="fleet-rows" id="fleet-rows-dash"></div>
-      </div>
+
 
       <div class="sec-title">Transaksi Terakhir</div>
       <div class="txn-list" id="txn-dash"></div>
@@ -4138,27 +4133,40 @@ async function removeFoto(unitId){
 
 function renderFleetUnits(){
   const el=document.getElementById('fleet-unit-list');if(!el)return;
+  // Update status strip counts
+  const cnt={jalan:0,antre:0,bengkel:0};
+  fleetData.forEach(f=>{const s=f.status||'jalan';if(cnt[s]!==undefined)cnt[s]++;});
+  ['jalan','antre','bengkel'].forEach(s=>{const e=document.getElementById('fss-'+s);if(e)e.textContent=cnt[s];});
   if(fleetData.length===0){
     el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px;">Belum ada armada. Tambah unit baru di atas.</div>';
     return;
   }
+  const svgCam='<svg viewBox="0 0 24 24" width="16" height="16" style="fill:none;stroke:var(--text3);stroke-width:1.5;stroke-linecap:round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+  const svgEdit='<svg viewBox="0 0 24 24" width="12" height="12" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
   el.innerHTML=fleetData.map(f=>{
     const pW=daysUntil(f.pajak)<=7,kW=daysUntil(f.kir)<=7,aW=pW||kW;
     const status=f.status||'jalan';
-    const initials=(f.nopol||'??').replace(/\s/g,'').slice(-4);
-    const sl={jalan:'chip-green',bengkel:'chip-orange',antre:'chip-gray'};
-    return `<div class="fleet-card-unit">
-      <div class="fcu-av ${status}" onclick="openUnitDetail('${f.id}')">${initials}</div>
-      <div class="fcu-info" onclick="openUnitDetail('${f.id}')">
-        <div class="fcu-nopol">${f.nopol||'—'}</div>
-        <div class="fcu-driver"><svg viewBox="0 0 24 24" width="10" height="10" style="fill:none;stroke:var(--text3);stroke-width:2;stroke-linecap:round;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${f.driver||'—'}</div>
-      </div>
-      <div class="fcu-right">
-        ${status==='antre'?'<span class="antre-pulse"><span class="ap-dot"></span>Antre</span>':`<span class="chip ${sl[status]||'chip-gray'}">${sIcoFn(status)} ${status.charAt(0).toUpperCase()+status.slice(1)}</span>`}
-        ${aW?'<span class="doc-warn">⚠ Dokumen</span>':''}
-        <button class="fcu-edit-btn" onclick="openSmModal('unit','${f.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-      </div>
-    </div>`;
+    const sdot={jalan:'🟢',antre:'🟡',bengkel:'🔴'};
+    const fotoEl=f.foto_url
+      ?('<img class="fcu-foto" src="'+f.foto_url+'" alt="'+f.nopol+'" onclick="openUnitDetail(\''+f.id+'\')" onerror="this.style.display=\'none\'">')
+      :('<div class="fcu-foto-placeholder" onclick="openSmModal(\'unit\',\''+f.id+'\')">'+svgCam+'</div>');
+    return '<div class="fleet-card-unit">'
+      +fotoEl
+      +'<div class="fcu-info" onclick="openUnitDetail(\''+f.id+'\')">'
+        +'<div class="fcu-nopol">'+(f.nopol||'—')+' <span style="font-size:10px;">'+(sdot[status]||'')+'</span></div>'
+        +'<div class="fcu-driver"><svg viewBox="0 0 24 24" width="10" height="10" style="fill:none;stroke:var(--text3);stroke-width:2;stroke-linecap:round;flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+(f.driver||'—')+'</div>'
+        +(f.catatan?'<div class="unit-notes">'+f.catatan+'</div>':'')
+        +(aW?'<div style="font-size:9px;color:var(--orange);margin-top:3px;">⚠ Dokumen hampir kadaluarsa</div>':'')
+      +'</div>'
+      +'<div class="fcu-right" style="gap:6px;">'
+        +'<div style="display:flex;flex-direction:column;gap:3px;">'
+          +'<button class="sqb jalan'+(status==='jalan'?' active':'')+'" onclick="quickSetStatus(\''+f.id+'\',\'jalan\',event)" title="Jalan">🟢</button>'
+          +'<button class="sqb antre'+(status==='antre'?' active':'')+'" onclick="quickSetStatus(\''+f.id+'\',\'antre\',event)" title="Antre">🟡</button>'
+          +'<button class="sqb bengkel'+(status==='bengkel'?' active':'')+'" onclick="quickSetStatus(\''+f.id+'\',\'bengkel\',event)" title="Bengkel">🔴</button>'
+        +'</div>'
+        +'<button class="fcu-edit-btn" onclick="openSmModal(\'unit\',\''+f.id+'\')">'+svgEdit+'</button>'
+      +'</div>'
+    +'</div>';
   }).join('');
 }
 
@@ -4247,7 +4255,7 @@ function refreshDetailHero(){
   const heroEl=document.getElementById('dp-hero');if(!heroEl)return;
   heroEl.innerHTML=`
     <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px;position:relative;z-index:1;">
-      ${f.foto_url?`<img class="dp-foto-hero" src="${f.foto_url}" alt="${f.nopol}" onerror="this.outerHTML='<div class=dp-foto-hero-placeholder>'+f.nopol.replace(/\\s/g,'').slice(-4)+'</div>'"/>`:`<div class="dp-foto-hero-placeholder">${f.nopol.replace(/\s/g,'').slice(-4)}</div>`}
+      ${(()=>{ const ini=f.nopol.replace(/\s/g,'').slice(-4); return f.foto_url?'<img class="dp-foto-hero" src="'+f.foto_url+'" alt="'+f.nopol+'" onerror="this.style.display=\'none\';this.insertAdjacentHTML(\'afterend\',\'<div class=dp-foto-hero-placeholder>'+ini+'</div>\')"/>'  :'<div class="dp-foto-hero-placeholder">'+ini+'</div>'; })()}
       <div><div class="dp-nopol">${f.nopol}</div><div class="dp-driver">${f.driver}</div>${periodLabel}</div>
       <div style="margin-left:auto;">${f.status==='antre'?'<span class="antre-pulse"><span class="ap-dot"></span>Antre</span>':`<span class="chip ${f.status==='jalan'?'chip-green':'chip-orange'}">${sIcoFn(f.status)} ${f.status.charAt(0).toUpperCase()+f.status.slice(1)}</span>`}</div>
     </div>
@@ -5885,8 +5893,4 @@ async function _appInit(){
 
 </script>
 </body>
-</html> 
-
-/ /   B u i l d   t r i g g e r :   0 4 / 1 5 / 2 0 2 6   1 9 : 4 8 : 1 1  
- 
- 
+</html>
