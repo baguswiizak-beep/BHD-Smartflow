@@ -71,7 +71,7 @@ body:has(#login-overlay[style*="display"]:not([style*="none"])) { background: #1
 
 body{font-family:'Inter',-apple-system,sans-serif;background:#1A0F05;color:var(--text);min-height:100vh;overflow-x:hidden;scroll-behavior:smooth;}
 #main{-webkit-overflow-scrolling:touch;}
-.page{contain:layout style;}
+/* contain removed */
 
 /* ── BG ── */
 #bg-layer{position:fixed;inset:0;z-index:0;background:var(--bg);background-size:cover;background-position:center;transition:all .4s;}
@@ -880,7 +880,7 @@ input,select,textarea{font-size:16px!important;}
 
 
 <div id="bg-layer"></div><div id="bg-overlay"></div>
-<div id="app" style="display:none;">
+<div id="app" style="display:flex;">
 
 <!-- SIDEBAR -->
 <div id="sidebar">
@@ -1569,10 +1569,8 @@ async function doLogin(){
     const overlay=document.getElementById('login-overlay');
     const app=document.getElementById('app');
     if(overlay){overlay.style.opacity='0';overlay.style.transition='opacity .4s';setTimeout(()=>{overlay.style.display='none';},400);}
-    if(app){app.style.display='flex';}
-    // Reset body background ke var(--bg) setelah login
     document.body.style.background='';
-    setTimeout(()=>{_appInit();},150);
+    setTimeout(()=>{_appInit();},100);
   }
 }
 
