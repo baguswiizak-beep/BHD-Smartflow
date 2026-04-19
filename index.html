@@ -947,9 +947,11 @@ input,select,textarea{font-size:16px!important;}
       <div id="chart-carousel-wrap" style="margin-bottom:14px;position:relative;">
         <!-- Dots indicator -->
         <div style="display:flex;justify-content:center;gap:6px;margin-bottom:8px;">
-          <span class="chart-dot active" id="cdot-0" onclick="goToChart(0)" style="width:6px;height:6px;border-radius:50%;background:var(--green);cursor:pointer;transition:all .2s;"></span>
-          <span class="chart-dot" id="cdot-1" onclick="goToChart(1)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;"></span>
-          <span class="chart-dot" id="cdot-2" onclick="goToChart(2)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;"></span>
+          <span class="chart-dot active" id="cdot-0" onclick="goToChart(0)" style="width:6px;height:6px;border-radius:50%;background:var(--green);cursor:pointer;transition:all .2s;" title="Rasio Kas"></span>
+          <span class="chart-dot" id="cdot-1" onclick="goToChart(1)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;" title="Tren Cashflow"></span>
+          <span class="chart-dot" id="cdot-2" onclick="goToChart(2)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;" title="Bulanan"></span>
+          <span class="chart-dot" id="cdot-3" onclick="goToChart(3)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;" title="Heatmap"></span>
+          <span class="chart-dot" id="cdot-4" onclick="goToChart(4)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;" title="Prediksi"></span>
         </div>
         <div id="chart-carousel" style="overflow:hidden;touch-action:pan-y;">
           <div id="chart-slides" style="display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform;">
@@ -995,7 +997,81 @@ input,select,textarea{font-size:16px!important;}
               </div>
               <canvas id="barChart" style="max-height:160px;"></canvas>
             </div>
+            <!-- Slide 4: Heatmap Aktivitas -->
+            <div class="chart-slide chart-wrap" style="min-width:100%;box-sizing:border-box;margin-bottom:0;">
+              <div class="cw-hdr"><span class="cw-title">🔥 Heatmap Aktivitas</span><span style="font-size:10px;color:var(--text3);">Transaksi per Hari</span></div>
+              <div id="heatmap-container" style="overflow-x:auto;padding-bottom:4px;">
+                <div id="heatmap-grid" style="display:grid;grid-template-columns:40px repeat(7,1fr);gap:3px;min-width:280px;"></div>
+                <div style="display:flex;justify-content:flex-end;align-items:center;gap:4px;margin-top:8px;font-size:9px;color:var(--text3);">
+                  <span>Sedikit</span>
+                  <div style="display:flex;gap:2px;">
+                    <div style="width:10px;height:10px;border-radius:2px;background:var(--bg3);"></div>
+                    <div style="width:10px;height:10px;border-radius:2px;background:rgba(125,206,19,.25);"></div>
+                    <div style="width:10px;height:10px;border-radius:2px;background:rgba(125,206,19,.5);"></div>
+                    <div style="width:10px;height:10px;border-radius:2px;background:rgba(125,206,19,.75);"></div>
+                    <div style="width:10px;height:10px;border-radius:2px;background:var(--green);"></div>
+                  </div>
+                  <span>Banyak</span>
+                </div>
+              </div>
+            </div>
+            <!-- Slide 5: Prediksi Cashflow -->
+            <div class="chart-slide chart-wrap" style="min-width:100%;box-sizing:border-box;margin-bottom:0;">
+              <div class="cw-hdr"><span class="cw-title">🔮 Prediksi Cashflow</span><span style="font-size:10px;color:var(--text3);">Bulan Depan</span></div>
+              <div id="prediction-content" style="font-size:12px;color:var(--text2);">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+                  <div style="background:var(--green-bg);border:1px solid var(--green-bd);border-radius:10px;padding:10px;">
+                    <div style="font-size:9px;font-weight:700;color:var(--green2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Prediksi Inflow</div>
+                    <div id="pred-inflow" style="font-size:16px;font-weight:800;color:var(--green2);">—</div>
+                    <div id="pred-inflow-sub" style="font-size:9px;color:var(--text3);margin-top:2px;">berdasarkan rata-rata 3 bln</div>
+                  </div>
+                  <div style="background:rgba(255,59,48,.08);border:1px solid rgba(255,59,48,.18);border-radius:10px;padding:10px;">
+                    <div style="font-size:9px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Prediksi Outflow</div>
+                    <div id="pred-outflow" style="font-size:16px;font-weight:800;color:var(--danger);">—</div>
+                    <div style="font-size:9px;color:var(--text3);margin-top:2px;">estimasi pengeluaran</div>
+                  </div>
+                </div>
+                <div style="background:var(--bg3);border-radius:10px;padding:10px;margin-bottom:8px;">
+                  <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Prediksi Net Profit</div>
+                  <div id="pred-nett" style="font-size:20px;font-weight:900;">—</div>
+                  <div style="margin-top:8px;height:4px;border-radius:2px;background:var(--bg4);overflow:hidden;"><div id="pred-bar" style="height:100%;border-radius:2px;background:var(--green);width:0%;transition:width .8s;"></div></div>
+                  <div id="pred-bar-label" style="font-size:9px;color:var(--text3);margin-top:3px;">Margin Prediksi: —%</div>
+                </div>
+                <!-- Alert Threshold -->
+                <div style="display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:10px;padding:8px 10px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <span style="font-size:11px;color:var(--text2);flex:1;">Alert jika outflow &gt; </span>
+                  <input type="number" id="threshold-input" placeholder="Rp..." style="width:110px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg2);color:var(--text);font-size:11px;font-family:inherit;outline:none;" oninput="saveThreshold(this.value)"/>
+                </div>
+                <div id="threshold-alert" style="display:none;margin-top:6px;padding:8px 10px;background:rgba(255,149,0,.1);border:1px solid rgba(255,149,0,.3);border-radius:8px;font-size:11px;color:var(--warning);font-weight:600;"></div>
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Analytics Strip -->
+      <div class="sec-title" style="margin-top:4px;">📊 Analitik Cepat</div>
+      <div id="analytics-strip" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+        <div class="card" style="padding:12px;text-align:center;">
+          <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">Hari Tersibuk</div>
+          <div id="busiest-day" style="font-size:15px;font-weight:800;color:var(--text);margin:4px 0;">—</div>
+          <div id="busiest-day-count" style="font-size:10px;color:var(--text3);">— transaksi</div>
+        </div>
+        <div class="card" style="padding:12px;text-align:center;">
+          <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">Rata-rata Harian</div>
+          <div id="avg-daily-txn" style="font-size:15px;font-weight:800;color:var(--green2);margin:4px 0;">—</div>
+          <div style="font-size:10px;color:var(--text3);">transaksi/hari</div>
+        </div>
+        <div class="card" style="padding:12px;text-align:center;">
+          <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">MoM Inflow</div>
+          <div id="mom-inflow" style="font-size:15px;font-weight:800;margin:4px 0;">—</div>
+          <div style="font-size:10px;color:var(--text3);">vs bulan lalu</div>
+        </div>
+        <div class="card" style="padding:12px;text-align:center;">
+          <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">Margin Rata-rata</div>
+          <div id="avg-margin" style="font-size:15px;font-weight:800;color:var(--orange);margin:4px 0;">—</div>
+          <div style="font-size:10px;color:var(--text3);">profit / inflow</div>
         </div>
       </div>
 
@@ -2603,6 +2679,8 @@ function renderDashboard(){
   renderDonut(inf,out);
   renderMiniLine();
   renderBarChart(currentBarFilter);
+  renderHeatmap();
+  renderPrediction();
   renderFleetUnits();
   renderLaporanTable();
   checkDocWarnings();
@@ -5437,6 +5515,197 @@ function goToChart(idx){
   if(idx===0) setTimeout(()=>{renderDonut(totalInflow(transactions),totalOutflow(transactions));},50);
   if(idx===1) setTimeout(()=>{renderMiniLine();},50);
   if(idx===2) setTimeout(()=>{renderBarChart(currentBarFilter);},50);
+  if(idx===3) setTimeout(()=>{renderHeatmap();},50);
+  if(idx===4) setTimeout(()=>{renderPrediction();},50);
+}
+
+
+// ═══════════════════════════════════════════════════════
+// HEATMAP AKTIVITAS TRANSAKSI
+// ═══════════════════════════════════════════════════════
+function renderHeatmap(){
+  const grid = document.getElementById('heatmap-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  const days = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  // Build count map: key = "day-week" (last 8 weeks)
+  const now = new Date();
+  const counts = {}; // key: "YYYY-MM-DD" -> count
+  transactions.forEach(t=>{
+    if(!t.date) return;
+    const d = t.date.slice(0,10);
+    counts[d] = (counts[d]||0) + 1;
+  });
+  // Generate 8 weeks x 7 days grid
+  const WEEKS = 8;
+  // Header row: empty + day labels
+  const emptyHdr = document.createElement('div');
+  emptyHdr.style.cssText='font-size:8px;color:var(--text3);display:flex;align-items:center;';
+  grid.appendChild(emptyHdr);
+  days.forEach(d=>{
+    const lbl = document.createElement('div');
+    lbl.style.cssText='font-size:8px;font-weight:700;color:var(--text3);text-align:center;';
+    lbl.textContent=d;
+    grid.appendChild(lbl);
+  });
+  // Build week rows (oldest first)
+  const maxVal = Math.max(1, ...Object.values(counts));
+  for(let w = WEEKS-1; w >= 0; w--){
+    // Row label
+    const wStart = new Date(now);
+    wStart.setDate(now.getDate() - w*7 - now.getDay());
+    const lbl = document.createElement('div');
+    lbl.style.cssText='font-size:8px;color:var(--text3);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;';
+    lbl.textContent = w===0?'ini':(wStart.getDate()+'/'+(wStart.getMonth()+1));
+    grid.appendChild(lbl);
+    for(let d=0; d<7; d++){
+      const date = new Date(now);
+      date.setDate(now.getDate() - w*7 - (now.getDay() - d));
+      const key = date.toISOString().slice(0,10);
+      const cnt = counts[key]||0;
+      const intensity = cnt===0?0:Math.ceil((cnt/maxVal)*4);
+      const colors = ['var(--bg3)','rgba(125,206,19,.2)','rgba(125,206,19,.4)','rgba(125,206,19,.65)','var(--green)'];
+      const cell = document.createElement('div');
+      cell.style.cssText=`aspect-ratio:1;border-radius:3px;background:${colors[intensity]};cursor:default;transition:transform .1s;`;
+      cell.title=`${key}: ${cnt} transaksi`;
+      cell.onmouseenter=function(){this.style.transform='scale(1.2)';};
+      cell.onmouseleave=function(){this.style.transform='scale(1)';};
+      grid.appendChild(cell);
+    }
+  }
+  // Update analytics strip
+  updateAnalyticsStrip();
+}
+
+function updateAnalyticsStrip(){
+  // Busiest day of week
+  const dayCounts = [0,0,0,0,0,0,0];
+  const dayNames = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  transactions.forEach(t=>{
+    if(!t.date) return;
+    const dow = new Date(t.date).getDay();
+    dayCounts[dow]++;
+  });
+  const maxDay = dayCounts.indexOf(Math.max(...dayCounts));
+  const busiestEl = document.getElementById('busiest-day');
+  const busiestCntEl = document.getElementById('busiest-day-count');
+  if(busiestEl) busiestEl.textContent = dayNames[maxDay]||'—';
+  if(busiestCntEl) busiestCntEl.textContent = dayCounts[maxDay]+' transaksi';
+
+  // Avg daily transactions
+  const allDates = [...new Set(transactions.map(t=>t.date?.slice(0,10)).filter(Boolean))];
+  const avgDaily = allDates.length? (transactions.length/allDates.length).toFixed(1) : '—';
+  const avgEl = document.getElementById('avg-daily-txn');
+  if(avgEl) avgEl.textContent = avgDaily;
+
+  // MoM Inflow
+  const now = new Date();
+  const thisMonthInf = transactions.filter(t=>t.type==='inflow'&&t.date?.slice(0,7)===now.toISOString().slice(0,7)).reduce((s,t)=>s+t.amount,0);
+  const lastMonth = new Date(now.getFullYear(),now.getMonth()-1,1).toISOString().slice(0,7);
+  const lastMonthInf = transactions.filter(t=>t.type==='inflow'&&t.date?.slice(0,7)===lastMonth).reduce((s,t)=>s+t.amount,0);
+  const momEl = document.getElementById('mom-inflow');
+  if(momEl){
+    if(lastMonthInf>0){
+      const pct = Math.round(((thisMonthInf-lastMonthInf)/lastMonthInf)*100);
+      momEl.textContent = (pct>=0?'+':'')+pct+'%';
+      momEl.style.color = pct>=0?'var(--success)':'var(--danger)';
+    } else {
+      momEl.textContent='—';
+      momEl.style.color='var(--text3)';
+    }
+  }
+
+  // Average margin
+  const totInf = totalInflow(transactions);
+  const totOut = totalOutflow(transactions);
+  const margin = totInf>0?Math.round(((totInf-totOut)/totInf)*100):0;
+  const marginEl = document.getElementById('avg-margin');
+  if(marginEl){
+    marginEl.textContent = margin+'%';
+    marginEl.style.color = margin>=0?'var(--orange)':'var(--danger)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// PREDIKSI CASHFLOW
+// ═══════════════════════════════════════════════════════
+let _outflowThreshold = 0;
+
+function saveThreshold(val){
+  _outflowThreshold = parseFloat(val)||0;
+  localStorage.setItem('bhd_threshold', _outflowThreshold);
+  renderPrediction();
+}
+
+function renderPrediction(){
+  // Load threshold from storage
+  if(!_outflowThreshold){
+    const stored = localStorage.getItem('bhd_threshold');
+    if(stored) _outflowThreshold = parseFloat(stored)||0;
+    const inp = document.getElementById('threshold-input');
+    if(inp && _outflowThreshold) inp.value = _outflowThreshold;
+  }
+
+  // Avg of last 3 months
+  const now = new Date();
+  let inflowSums=[], outflowSums=[];
+  for(let i=1;i<=3;i++){
+    const ym = new Date(now.getFullYear(), now.getMonth()-i, 1).toISOString().slice(0,7);
+    const inf = transactions.filter(t=>t.type==='inflow'&&t.date?.slice(0,7)===ym).reduce((s,t)=>s+t.amount,0);
+    const out = transactions.filter(t=>t.type==='outflow'&&t.date?.slice(0,7)===ym).reduce((s,t)=>s+t.amount,0);
+    if(inf>0||out>0){ inflowSums.push(inf); outflowSums.push(out); }
+  }
+  const predInf = inflowSums.length? Math.round(inflowSums.reduce((a,b)=>a+b,0)/inflowSums.length) : 0;
+  const predOut = outflowSums.length? Math.round(outflowSums.reduce((a,b)=>a+b,0)/outflowSums.length) : 0;
+  const predNett = predInf - predOut;
+  const margin = predInf>0? Math.round((predNett/predInf)*100) : 0;
+
+  const infEl=document.getElementById('pred-inflow');
+  const outEl=document.getElementById('pred-outflow');
+  const nettEl=document.getElementById('pred-nett');
+  const barEl=document.getElementById('pred-bar');
+  const barLblEl=document.getElementById('pred-bar-label');
+  const alertEl=document.getElementById('threshold-alert');
+  const subEl=document.getElementById('pred-inflow-sub');
+
+  if(infEl) infEl.textContent = predInf? fmtFull(predInf) : 'Belum cukup data';
+  if(outEl) outEl.textContent = predOut? fmtFull(predOut) : '—';
+  if(nettEl){
+    nettEl.textContent = predNett? fmtFull(predNett) : '—';
+    nettEl.style.color = predNett>=0?'var(--success)':'var(--danger)';
+  }
+  if(barEl){
+    const barPct = Math.max(0,Math.min(100,margin));
+    setTimeout(()=>{ barEl.style.width=barPct+'%'; barEl.style.background=predNett>=0?'var(--green)':'var(--danger)'; },100);
+  }
+  if(barLblEl) barLblEl.textContent = 'Margin Prediksi: '+(predInf>0?margin+'%':'—');
+  if(subEl) subEl.textContent = 'rata-rata '+inflowSums.length+' bulan terakhir';
+
+  // Threshold alert
+  if(alertEl){
+    if(_outflowThreshold>0 && predOut>_outflowThreshold){
+      alertEl.style.display='block';
+      alertEl.innerHTML='⚠️ Prediksi outflow <strong>'+fmtFull(predOut)+'</strong> melebihi threshold <strong>'+fmtFull(_outflowThreshold)+'</strong>! Perlu perhatian.';
+    } else if(_outflowThreshold>0) {
+      alertEl.style.display='block';
+      alertEl.style.background='rgba(125,206,19,.08)';
+      alertEl.style.borderColor='rgba(125,206,19,.2)';
+      alertEl.style.color='var(--green2)';
+      alertEl.innerHTML='✅ Prediksi outflow dalam batas aman (threshold: '+fmtFull(_outflowThreshold)+')';
+    } else {
+      alertEl.style.display='none';
+    }
+  }
+
+  // Check current period outflow vs threshold (real-time alert)
+  if(_outflowThreshold>0){
+    const curOut = totalOutflow(transactions.filter(t=>{
+      const d=t.date?.slice(0,7); const now2=new Date().toISOString().slice(0,7); return d===now2;
+    }));
+    if(curOut>_outflowThreshold){
+      showToast('⚠️ Outflow bulan ini sudah melewati threshold!');
+    }
+  }
 }
 
 function initCarouselSwipe(){
