@@ -3633,18 +3633,29 @@ function exportPDF(){
   }
 
   /* ── MOBILE ── */
-  @media(max-width:600px){
-    .topbar{padding:10px 14px;}
-    .topbar-title{font-size:11px;}
-    .btn-back,.btn-print{padding:9px 14px;font-size:12px;}
-    .page-wrap{padding:10px;}
-    .container{padding:20px 14px;border-radius:10px;}
-    .header{flex-direction:column;gap:12px;}
-    .header-right{text-align:left;}
+  .table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  @media(max-width:700px){
+    .topbar{padding:8px 12px;gap:6px;}
+    .topbar-title{font-size:10px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .topbar-btns{gap:6px;}
+    .btn-back,.btn-print{padding:8px 12px;font-size:11px;gap:4px;}
+    .page-wrap{padding:8px;}
+    .container{padding:14px 10px;border-radius:10px;}
+    .header{flex-direction:column;gap:10px;}
+    .header-left{gap:10px;}
+    .header-info h1{font-size:16px;}
+    .header-info p{font-size:10px;}
+    .header-right{text-align:left;font-size:10px;}
+    .company-box{padding:10px 12px;font-size:11px;}
+    .company-box h3{font-size:13px;}
+    .table-wrap{border-radius:8px;border:1px solid rgba(212,168,67,.2);}
+    table{font-size:10px;min-width:520px;margin-bottom:0;}
+    thead th{padding:8px 7px;font-size:9.5px;}
+    tbody td{padding:7px 7px;}
+    .total-row td{padding:9px 7px;font-size:11px;}
     .sum-grid{grid-template-columns:1fr;}
-    .footer{flex-direction:column;gap:8px;}
-    table{font-size:11px;}
-    thead th,td{padding:8px 9px;}
+    .sum-item{font-size:11px;padding:7px 0;}
+    .footer{flex-direction:column;gap:6px;font-size:10px;}
   }
 </style></head><body>
 
@@ -3698,6 +3709,7 @@ function exportPDF(){
   </div>
 
   <!-- TABLE -->
+  <div class="table-wrap">
   <table>
     <thead><tr>
       <th>No. Pol</th>
@@ -3718,6 +3730,7 @@ function exportPDF(){
       <td style="text-align:right;color:${totNett>=0?'#7a5a10':'#c0392b'};font-size:14px;">${M(totNett)}</td>
     </tr></tfoot>
   </table>
+  </div>
 
   <!-- SUMMARY -->
   <div class="summary">
