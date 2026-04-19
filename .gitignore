@@ -1,4 +1,9 @@
 .vercel
 node_modules
 .env
+<<<<<<< HEAD
 package-lock.json
+=======
+package-lock.json
+.vercel
+>>>>>>> main

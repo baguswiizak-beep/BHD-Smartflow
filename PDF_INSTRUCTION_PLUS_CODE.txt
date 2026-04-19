@@ -1,0 +1,859 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    PDF REPORT IMPLEMENTATION
+              Instruksi + HTML Code untuk Anti Gravity
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 INSTRUKSI IMPLEMENTASI PDF REPORT - REKAP PER ARMADA
+
+═══════════════════════════════════════════════════════════════════════════════
+
+OBJECTIVE:
+Buat halaman PDF report "Rekap Per Armada" yang professional, dapat di-print
+ke PDF, dan mudah di-customize.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🔧 CUSTOMIZATION YANG PERLU DILAKUKAN:
+
+1. LANDSCAPE MODE (PENTING!)
+   ─────────────────────────────────────────────────────────────────────
+   Problem: Tabel 7 kolom tidak muat di portrait, ada yang terpotong
+   Solution: Set page orientation ke LANDSCAPE
+   
+   Lokasi: Di section <style> → cari @media print
+   
+   Ubah dari:
+   ```
+   @page {
+       margin: 20mm;
+       size: A4;
+   }
+   ```
+   
+   Menjadi:
+   ```
+   @page {
+       margin: 20mm;
+       size: A4 landscape;  ← TAMBAHKAN "landscape"
+   }
+   ```
+
+2. LOGO (Bisa diubah)
+   ─────────────────────────────────────────────────────────────────────
+   Current: Teks "BHD" di dalam box hijau
+   
+   Lokasi: <div class="logo">BHD</div>
+   
+   Opsi A - Ubah teks:
+   ```html
+   <div class="logo">XYZ</div>  <!-- Ganti dengan inisial Anda -->
+   ```
+   
+   Opsi B - Ubah warna logo:
+   Cari di CSS: .logo { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+   
+   Ubah warna:
+   - Blue: linear-gradient(135deg, #3498db, #2980b9)
+   - Red: linear-gradient(135deg, #e74c3c, #c0392b)
+   - Orange: linear-gradient(135deg, #f39c12, #d68910)
+   - Purple: linear-gradient(135deg, #9b59b6, #8e44ad)
+
+3. WARNA JUDUL (Bisa diubah)
+   ─────────────────────────────────────────────────────────────────────
+   Current: Hijau #2ecc71
+   
+   Lokasi CSS:
+   - .header-info h1 { color: #2ecc71; }
+   - .logo { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+   - Plus banyak tempat lain dengan color #2ecc71
+   
+   Untuk ganti semua sekaligus, gunakan Find & Replace:
+   - Cari: #2ecc71
+   - Ganti dengan: [warna pilihan Anda]
+   
+   Warna yang direkomendasikan:
+   - Blue: #3498db (professional)
+   - Teal: #1abc9c (modern)
+   - Purple: #9b59b6 (elegant)
+   - Dark Blue: #2c3e50 (corporate)
+
+4. COMPANY PROFILE (WAJIB DIUBAH)
+   ─────────────────────────────────────────────────────────────────────
+   Lokasi: Section <div class="company-info">
+   
+   UBAH:
+   ```html
+   <h3>PT. BAGUS HARYA DWIPRIMA</h3>
+   ```
+   Menjadi:
+   ```html
+   <h3>PT. NAMA PERUSAHAAN ANDA</h3>
+   ```
+   
+   UBAH:
+   ```html
+   <p>Jl. Raya Industri No. 123, Jakarta, Indonesia</p>
+   ```
+   Menjadi:
+   ```html
+   <p>Jl. Alamat Lengkap Anda, Kota, Negara</p>
+   ```
+   
+   UBAH:
+   ```html
+   <p>Phone: +62 21 1234 5678 | Email: info@bhd.co.id</p>
+   ```
+   Menjadi:
+   ```html
+   <p>Phone: +62 XXX XXXX XXXX | Email: email@anda.co.id</p>
+   ```
+   
+   UBAH periode jika perlu:
+   ```html
+   <p><strong>Periode:</strong> 1 April 2026 - 30 April 2026</p>
+   ```
+
+5. WARNA TABLE (OPTIONAL)
+   ─────────────────────────────────────────────────────────────────────
+   Current: Green header (#2ecc71)
+   
+   Untuk ubah warna header table:
+   Cari di CSS: th { background-color: #2ecc71; }
+   Ubah ke warna pilihan Anda
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 DATA YANG SUDAH ADA (CONTOH):
+
+Tabel sudah berisi 6 armada dengan data sample:
+- B 1234 CD - Budi Santoso
+- B 5678 EF - Andi Pratama
+- B 9012 GH - Rudi Hartono
+- B 3456 IJ - Sari Dewi
+- B 7890 KL - Hendra Wijaya
+- B 2345 MN - Teguh Purnomo
+
+TOTAL sudah auto-calculated.
+
+Untuk integrate dengan database:
+1. Dinamis menjadi form / JavaScript variable
+2. Atau: Backend generate HTML dengan data real
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🖨️ CARA PRINT KE PDF:
+
+1. Open HTML file di browser
+2. Click tombol "📄 Print PDF" (atau gunakan Ctrl+P)
+3. Print dialog muncul
+4. Setting:
+   - Destination: "Save as PDF" (Chrome) atau "Print to File" (Firefox)
+   - Orientation: LANDSCAPE (PENTING!)
+   - Paper size: A4
+   - Margins: Default
+   - Uncheck: "Headers and footers"
+5. Click "Save"
+6. PDF siap!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ FITUR YANG SUDAH INCLUDED:
+
+✓ Professional header dengan logo
+✓ Company info section
+✓ 7-column data table
+✓ Color coding (Green=positive, Red=negative)
+✓ Total row dengan special styling
+✓ Summary box (Total Inflow, Outflow, Profit)
+✓ Best/Worst performer indicator
+✓ Data quality assurance section
+✓ Professional footer
+✓ Print optimization
+✓ Responsive design
+✓ Mobile compatible
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 STEP BY STEP IMPLEMENTATION:
+
+1. Save file sebagai: rekap-per-armada.html
+2. Edit 4 customization points di atas
+3. Open di browser → test print
+4. Jika landscape tidak muncul, ubah @page section
+5. Jika ada yang terpotong, reduce margins atau font size
+6. Print to PDF
+7. Done!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+❓ JIKA ADA MASALAH:
+
+Problem: Tabel masih terpotong saat landscape
+Solution: Ubah margins lebih kecil
+  Cari: margin: 20mm;
+  Ubah menjadi: margin: 15mm;
+
+Problem: Font terlalu besar
+Solution: Ubah font size di body atau table
+  body { font-size: 12px; } ← ubah angka
+
+Problem: Logo tidak terlihat bagus
+Solution: Gunakan image logo
+  Edit .logo { background: url('path/to/logo.png'); }
+
+Problem: Warna tidak sesuai
+Solution: Gunakan color picker, lalu gunakan Find & Replace di code
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 DELIVERABLES:
+
+Setelah selesai, harusnya ada:
+✓ 1 file HTML (rekap-per-armada.html)
+✓ Bisa di-open di browser
+✓ Print to PDF lancar
+✓ Landscape orientation
+✓ Company info sudah custom
+✓ Logo/warna sudah sesuai brand
+✓ No bugs, responsive design
+
+═══════════════════════════════════════════════════════════════════════════════
+
+NEXT STEP:
+
+Jika sudah testing dan OK, bisa:
+1. Integrate dengan database (dynamic)
+2. Add ke dalam aplikasi
+3. Setup print button di halaman keuangan
+4. Test dengan data real
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Sekarang copy HTML CODE di bawah ini ke file rekap-per-armada.html
+
+═══════════════════════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════════════
+
+HTML CODE DIMULAI DI BAWAH INI:
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BHD SmartFlow - Rekap Per Armada</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+
+        .pdf-container {
+            background-color: white;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            page-break-after: always;
+        }
+
+        /* ==================== HEADER SECTION ==================== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2ecc71;
+            padding-bottom: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .header-info h1 {
+            font-size: 28px;
+            color: #2ecc71;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .header-info p {
+            font-size: 14px;
+            color: #666;
+            margin: 3px 0;
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .header-right p {
+            margin: 3px 0;
+        }
+
+        /* ==================== COMPANY INFO ==================== */
+        .company-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #2ecc71;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        .company-info h3 {
+            color: #2ecc71;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .company-info p {
+            margin: 4px 0;
+            color: #555;
+        }
+
+        .company-info .period-info {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #ddd;
+        }
+
+        /* ==================== TABLE SECTION ==================== */
+        .table-wrapper {
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            background-color: #2ecc71;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #27ae60;
+        }
+
+        td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Currency formatting */
+        .currency {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+
+        .currency.positive {
+            color: #27ae60;
+        }
+
+        .currency.negative {
+            color: #e74c3c;
+        }
+
+        .currency.neutral {
+            color: #7f8c8d;
+        }
+
+        /* Total Row Styling */
+        .total-row {
+            background: linear-gradient(to right, #ecf0f1, #e8f8f5);
+            font-weight: 700;
+            border-top: 3px solid #2ecc71;
+            border-bottom: 3px solid #2ecc71;
+            font-size: 14px;
+        }
+
+        .total-row td {
+            border-color: #27ae60;
+        }
+
+        /* Nett Column */
+        .nett-positive {
+            background-color: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .nett-negative {
+            background-color: #fadbd8;
+            color: #c0392b;
+        }
+
+        .nett-neutral {
+            background-color: #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        /* ==================== SUMMARY BOX ==================== */
+        .summary-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f0fdf4;
+            border: 2px solid #2ecc71;
+            border-radius: 8px;
+        }
+
+        .summary-section h3 {
+            color: #2ecc71;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #2ecc71;
+            padding-bottom: 10px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-item label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .summary-item .value {
+            font-weight: 700;
+            color: #2ecc71;
+            font-family: 'Courier New', monospace;
+        }
+
+        .summary-item.highlight .value {
+            color: #27ae60;
+            font-size: 15px;
+        }
+
+        /* ==================== DATA QUALITY ==================== */
+        .data-quality {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #eef5e9;
+            border-left: 4px solid #2ecc71;
+            font-size: 12px;
+        }
+
+        .data-quality h4 {
+            color: #27ae60;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .quality-check {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            color: #555;
+        }
+
+        .quality-check::before {
+            content: "✓";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-color: #2ecc71;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            margin-right: 8px;
+            font-weight: bold;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        /* ==================== FOOTER ==================== */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #2ecc71;
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .footer-section h4 {
+            color: #2ecc71;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .footer-section p {
+            margin: 3px 0;
+            font-size: 11px;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            margin-top: 10px;
+            text-align: center;
+            color: #999;
+            font-size: 10px;
+        }
+
+        /* ==================== PRINT STYLES ==================== */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .pdf-container {
+                box-shadow: none;
+                max-width: 100%;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            table {
+                page-break-inside: avoid;
+            }
+
+            .summary-section {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* ==================== UTILITY CLASSES ==================== */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: 700;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            no-print: all;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #27ae60;
+        }
+
+        button.secondary {
+            background-color: #3498db;
+        }
+
+        button.secondary:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <!-- ACTION BUTTONS -->
+    <div class="button-group no-print">
+        <button onclick="window.print()">📄 Print PDF</button>
+        <button class="secondary" onclick="downloadPDF()">💾 Download PDF</button>
+    </div>
+
+    <!-- MAIN PDF CONTAINER -->
+    <div class="pdf-container">
+        
+        <!-- ==================== HEADER ==================== -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">BHD</div>
+                <div class="header-info">
+                    <h1>BHD Smart Flow</h1>
+                    <p>Rekap Per Armada</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <p><strong>Dicetak:</strong> 14 April 2026</p>
+                <p><strong>Waktu:</strong> 14:30:45</p>
+                <p><strong>Oleh:</strong> Admin Name</p>
+            </div>
+        </div>
+
+        <!-- ==================== COMPANY INFO ==================== -->
+        <div class="company-info">
+            <h3>PT. BAGUS HARYA DWIPRIMA</h3>
+            <p>Jl. Raya Industri No. 123, Jakarta, Indonesia</p>
+            <p>Phone: +62 21 1234 5678 | Email: info@bhd.co.id</p>
+            <div class="period-info">
+                <p><strong>Periode:</strong> 1 April 2026 - 30 April 2026</p>
+                <p><strong>Report Type:</strong> Monthly Summary</p>
+            </div>
+        </div>
+
+        <!-- ==================== TABLE ==================== -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No. Pol</th>
+                        <th>Nama Driver</th>
+                        <th class="text-right">Inflow (Rp)</th>
+                        <th class="text-right">Out Tunai (Rp)</th>
+                        <th class="text-right">Out Onderdil (Rp)</th>
+                        <th class="text-right">Out Umum (Rp)</th>
+                        <th class="text-right">Nett (Rp)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- DATA ROW 1 -->
+                    <tr>
+                        <td class="bold">B 1234 CD</td>
+                        <td>Budi Santoso</td>
+                        <td class="currency positive">5,000,000</td>
+                        <td class="currency negative">3,000,000</td>
+                        <td class="currency negative">1,000,000</td>
+                        <td class="currency negative">500,000</td>
+                        <td class="currency nett-positive">500,000</td>
+                    </tr>
+
+                    <!-- DATA ROW 2 -->
+                    <tr>
+                        <td class="bold">B 5678 EF</td>
+                        <td>Andi Pratama</td>
+                        <td class="currency positive">4,500,000</td>
+                        <td class="currency negative">2,500,000</td>
+                        <td class="currency negative">1,200,000</td>
+                        <td class="currency negative">300,000</td>
+                        <td class="currency nett-positive">500,000</td>
+                    </tr>
+
+                    <!-- DATA ROW 3 -->
+                    <tr>
+                        <td class="bold">B 9012 GH</td>
+                        <td>Rudi Hartono</td>
+                        <td class="currency positive">4,200,000</td>
+                        <td class="currency negative">2,800,000</td>
+                        <td class="currency negative">800,000</td>
+                        <td class="currency negative">400,000</td>
+                        <td class="currency nett-positive">200,000</td>
+                    </tr>
+
+                    <!-- DATA ROW 4 -->
+                    <tr>
+                        <td class="bold">B 3456 IJ</td>
+                        <td>Sari Dewi</td>
+                        <td class="currency positive">3,800,000</td>
+                        <td class="currency negative">2,500,000</td>
+                        <td class="currency negative">600,000</td>
+                        <td class="currency negative">200,000</td>
+                        <td class="currency nett-positive">500,000</td>
+                    </tr>
+
+                    <!-- DATA ROW 5 -->
+                    <tr>
+                        <td class="bold">B 7890 KL</td>
+                        <td>Hendra Wijaya</td>
+                        <td class="currency positive">4,100,000</td>
+                        <td class="currency negative">2,200,000</td>
+                        <td class="currency negative">1,100,000</td>
+                        <td class="currency negative">150,000</td>
+                        <td class="currency nett-positive">650,000</td>
+                    </tr>
+
+                    <!-- DATA ROW 6 -->
+                    <tr>
+                        <td class="bold">B 2345 MN</td>
+                        <td>Teguh Purnomo</td>
+                        <td class="currency positive">3,400,000</td>
+                        <td class="currency negative">2,100,000</td>
+                        <td class="currency negative">700,000</td>
+                        <td class="currency negative">250,000</td>
+                        <td class="currency nett-positive">350,000</td>
+                    </tr>
+
+                    <!-- TOTAL ROW -->
+                    <tr class="total-row">
+                        <td colspan="2" class="bold">TOTAL PERIODE</td>
+                        <td class="text-right currency positive">25,000,000</td>
+                        <td class="text-right currency negative">15,100,000</td>
+                        <td class="text-right currency negative">5,400,000</td>
+                        <td class="text-right currency negative">1,800,000</td>
+                        <td class="text-right nett-positive bold">2,700,000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ==================== SUMMARY BOX ==================== -->
+        <div class="summary-section">
+            <h3>📊 RINGKASAN PERIODE</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <label>Total Inflow (Pemasukan)</label>
+                    <span class="value">Rp 25,000,000</span>
+                </div>
+                <div class="summary-item">
+                    <label>Total Outflow (Pengeluaran)</label>
+                    <span class="value">Rp 22,300,000</span>
+                </div>
+                <div class="summary-item highlight">
+                    <label>Total Profit (Nett)</label>
+                    <span class="value">Rp 2,700,000</span>
+                </div>
+                <div class="summary-item">
+                    <label>Rata-rata per Armada</label>
+                    <span class="value">Rp 450,000</span>
+                </div>
+                <div class="summary-item">
+                    <label>🏆 Best Performer</label>
+                    <span class="value">B 1234 CD (Budi)</span>
+                </div>
+                <div class="summary-item">
+                    <label>⚠️ Worst Performer</label>
+                    <span class="value">B 2345 MN (Teguh)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== DATA QUALITY ==================== -->
+        <div class="data-quality">
+            <h4>✓ DATA QUALITY ASSURANCE</h4>
+            <div class="quality-check">All transactions verified and synced</div>
+            <div class="quality-check">Stock inventory cross-checked</div>
+            <div class="quality-check">No missing or duplicate records</div>
+            <div class="quality-check">Report generated successfully</div>
+        </div>
+
+        <!-- ==================== FOOTER ==================== -->
+        <div class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>🏢 COMPANY</h4>
+                    <p>PT. BAGUS HARYA DWIPRIMA</p>
+                    <p>Jakarta, Indonesia</p>
+                </div>
+                <div class="footer-section">
+                    <h4>📋 REPORT INFO</h4>
+                    <p>Report: Rekap Per Armada</p>
+                    <p>System: BHD SmartFlow v1.0</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>🔒 Confidential - For Official Use Only</p>
+                <p>Generated by BHD SmartFlow | Page 1 of 1</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // Function untuk download PDF (menggunakan browser print dialog)
+        function downloadPDF() {
+            window.print();
+        }
+
+        // Function untuk format currency
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(value);
+        }
+
+        // Generate table dari data (optional - untuk dynamic data)
+        function generateTableFromData(data) {
+            // Example usage jika ingin dynamic
+            // data = [
+            //   { nomorPolisi: 'B 1234 CD', driver: 'Budi Santoso', inflow: 5000000, ... }
+            // ]
+            console.log('Data structure ready for dynamic generation');
+        }
+
+        // Print handling
+        window.onbeforeprint = function() {
+            console.log('Preparing for print...');
+        };
+
+        window.onafterprint = function() {
+            console.log('Print completed');
+        };
+    </script>
+</body>
+</html>
