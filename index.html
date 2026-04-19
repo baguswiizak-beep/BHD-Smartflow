@@ -759,8 +759,8 @@ input,select,textarea{font-size:16px!important;}
 .form-input,.form-select{font-size:16px!important;}
 /* But keep display text size */
 .txn-amt,.hist-amt,.ar-num,.kc-val,.dp-stat-v{font-size:inherit!important;}
-@media(max-width:480px){.tb-clock{display:none\!important;}}
-#api-status-badge{display:none\!important;}
+@media(max-width:480px){.tb-clock{display:none!important;}}
+#api-status-badge{display:none!important;}
 @media(max-width:480px){
   input,select,textarea,.form-input,.form-select{font-size:16px!important;}
   .kas-grid{grid-template-columns:1fr 1fr;}
@@ -3439,23 +3439,20 @@ function exportPDF(){
   const printWindow=window.open('','_blank');
   if(!printWindow){showToast('⚠️ Popup diblokir browser. Izinkan popup untuk export PDF.');return;}
 
-  // Ambil company profile
   const cp=_companyProfile||{};
   const cpName=cp.name||'PT. BAGUS HARYA DWIPRIMA';
-  const cpTagline=cp.tagline||'Sistem Manajemen Operasional Armada';
+  const cpTagline=cp.tagline||'Contractor · Engineering · Supplies';
   const cpAddress=cp.address||'';
   const cpPhone=cp.phone||'';
   const cpEmail=cp.email||'';
   const cpLogo=cp.logoDataUrl||'';
 
-  // Logo HTML — gambar jika ada, fallback teks
   const logoHTML=cpLogo
-    ?`<div style="width:64px;height:64px;border-radius:14px;overflow:hidden;flex-shrink:0;border:2px solid rgba(212,168,67,.3);background:#fff;">
+    ?`<div style="width:72px;height:72px;border-radius:12px;overflow:hidden;flex-shrink:0;border:2px solid #E8D5A0;background:#fff;display:flex;align-items:center;justify-content:center;">
         <img src="${cpLogo}" style="width:100%;height:100%;object-fit:contain;"/>
       </div>`
-    :`<div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#8B6914,#D4A843,#F0C75E);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#3A1E08;flex-shrink:0;letter-spacing:.5px;">BHD</div>`;
+    :`<div style="width:72px;height:72px;border-radius:12px;background:linear-gradient(135deg,#8B6914,#D4A843,#F0C75E);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#3A1E08;flex-shrink:0;letter-spacing:.5px;border:2px solid #E8D5A0;">BHD</div>`;
 
-  // Hitung data per armada
   const umum=list.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount,0);
   const bebanPerUnit=FLEET_COUNT>0?umum/FLEET_COUNT:0;
   const dataRows=fleetData.map(f=>{
@@ -3476,344 +3473,482 @@ function exportPDF(){
   const best=sorted[0];const worst=sorted[sorted.length-1];
   const rataRata=dataRows.length?Math.round(totNett/dataRows.length):0;
 
-  // Info periode
   const now=new Date();
   const nowStr=now.toLocaleString('id-ID',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
   let periodeStr='';
   if(lapFilter==='bulan-ini') periodeStr=now.toLocaleDateString('id-ID',{month:'long',year:'numeric'});
   else if(lapFilter==='bulan-lalu'){const lm=new Date(now.getFullYear(),now.getMonth()-1,1);periodeStr=lm.toLocaleDateString('id-ID',{month:'long',year:'numeric'});}
-  else{const fr=document.getElementById('lap-from')?.value||'';const to=document.getElementById('lap-to')?.value||'';periodeStr=fr&&to?fr+' s/d '+to:'Semua';}
+  else{const fr=document.getElementById('lap-from')?.value||'';const to=document.getElementById('lap-to')?.value||'';periodeStr=fr&&to?fr+' s/d '+to:'Semua Periode';}
 
-  const M=n=>`<span style="font-family:'Courier New',monospace;font-weight:600;">${fmtFull(n)}</span>`;
-
-  // Warna tema: dark gold seperti halaman login
-  const GOLD='#D4A843'; const GOLD2='#8B6914'; const GOLD3='#F0C75E';
-  const DARK='#2C1810'; const DARK2='#1A0F05'; const DARKBG='#3A2212';
+  const fmt=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n);
+  const fmtShort=n=>{
+    const abs=Math.abs(n);
+    if(abs>=1000000000) return (n<0?'-':'')+'Rp '+(abs/1000000000).toFixed(1)+'M';
+    if(abs>=1000000) return (n<0?'-':'')+'Rp '+(abs/1000000).toFixed(1)+'Jt';
+    if(abs>=1000) return (n<0?'-':'')+'Rp '+(abs/1000).toFixed(0)+'rb';
+    return fmt(n);
+  };
 
   const tableRows=dataRows.map((r,i)=>{
-    const nc=r.nett>=0?'rgba(212,168,67,.12)':'rgba(231,76,60,.1)';
-    const ntc=r.nett>=0?'#7a5a10':'#c0392b';
-    const rowBg=i%2===1?'rgba(212,168,67,.04)':'#fff';
-    const BD='border:1px solid rgba(212,168,67,.2);padding:10px 11px;';
-    const MONO='font-family:"Courier New",Consolas,monospace;white-space:nowrap;';
-    return `<tr style="background:${rowBg};">
-      <td style="${BD}font-weight:800;color:${DARK};text-align:center;white-space:nowrap;letter-spacing:.03em;font-size:12px;">${r.nopol}</td>
-      <td style="${BD}color:#444;font-size:12px;">${r.driver}</td>
-      <td style="${BD}text-align:right;color:#1a6b3a;font-weight:700;${MONO}font-size:12px;">${M(r.inflow)}</td>
-      <td style="${BD}text-align:right;color:#c0392b;${MONO}font-size:12px;">${M(r.outTunai)}</td>
-      <td style="${BD}text-align:right;color:#c0392b;${MONO}font-size:12px;">${M(r.outOnderdil)}</td>
-      <td style="${BD}text-align:right;color:#c0392b;${MONO}font-size:12px;">${M(r.outUmum)}</td>
-      <td style="${BD}text-align:right;background:${nc};color:${ntc};font-weight:800;${MONO}font-size:13px;">${M(r.nett)}</td>
+    const isPositive=r.nett>=0;
+    const rowBg=i%2===0?'#FFFFFF':'#FAFAFA';
+    return `<tr>
+      <td class="td-nopol">${r.nopol}</td>
+      <td class="td-driver">${r.driver}</td>
+      <td class="td-money td-green">${fmt(r.inflow)}</td>
+      <td class="td-money td-red">${fmt(r.outTunai)}</td>
+      <td class="td-money td-red">${fmt(r.outOnderdil)}</td>
+      <td class="td-money td-red">${fmt(r.outUmum)}</td>
+      <td class="td-money td-nett ${isPositive?'td-profit':'td-loss'}">${fmt(r.nett)}</td>
     </tr>`;
   }).join('');
 
-  const html=`<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8">
+  const html=`<!DOCTYPE html><html lang="id"><head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>${cpName} — Rekap Per Armada</title>
+<title>Laporan Rekap Armada — ${cpName}</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:${DARK2};padding:0;color:#333;min-height:100vh;}
+/* ══════════════════ RESET ══════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 
-  /* ── TOPBAR AKSI (no-print) ── */
-  .topbar{
-    position:sticky;top:0;z-index:100;
-    background:linear-gradient(135deg,${DARK2},${DARK});
-    border-bottom:1px solid rgba(212,168,67,.25);
-    padding:12px 20px;display:flex;gap:10px;
-    align-items:center;justify-content:space-between;
-    flex-wrap:wrap;
-  }
-  .topbar-title{font-size:13px;font-weight:700;color:${GOLD};letter-spacing:.03em;}
-  .topbar-btns{display:flex;gap:10px;flex-wrap:wrap;}
-  .btn-back{
-    display:flex;align-items:center;gap:6px;
-    padding:10px 18px;border-radius:10px;border:1.5px solid rgba(212,168,67,.3);
-    background:rgba(255,255,255,.06);color:${GOLD};
-    font-size:13px;font-weight:700;cursor:pointer;
-    font-family:'Segoe UI',sans-serif;transition:all .2s;
-  }
-  .btn-back:hover{background:rgba(212,168,67,.12);border-color:${GOLD};}
-  .btn-print{
-    display:flex;align-items:center;gap:6px;
-    padding:10px 22px;border-radius:10px;border:none;
-    background:linear-gradient(135deg,${GOLD2},${GOLD});
-    color:${DARK};font-size:13px;font-weight:800;cursor:pointer;
-    font-family:'Segoe UI',sans-serif;
-    box-shadow:0 4px 16px rgba(212,168,67,.35);transition:all .2s;
-  }
-  .btn-print:hover{opacity:.9;transform:translateY(-1px);}
+/* ══════════════════ BODY ══════════════════ */
+body{
+  font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+  background:#F0EDE6;
+  color:#222;
+  font-size:13px;
+  line-height:1.5;
+}
 
-  /* ── WRAPPER ── */
-  .page-wrap{padding:20px;max-width:1080px;margin:0 auto;}
+/* ══════════════════ ACTION BAR ══════════════════ */
+.action-bar{
+  position:sticky;top:0;z-index:999;
+  background:#1C1407;
+  border-bottom:3px solid #C4993C;
+  padding:10px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+}
+.action-bar-title{
+  font-size:13px;font-weight:700;
+  color:#E8C96A;letter-spacing:.05em;
+}
+.action-btns{display:flex;gap:10px;}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 20px;border-radius:8px;
+  font-size:12px;font-weight:700;cursor:pointer;
+  font-family:inherit;border:none;transition:all .18s;
+  letter-spacing:.02em;
+}
+.btn-back{background:rgba(255,255,255,.1);color:#E8C96A;border:1.5px solid rgba(200,160,50,.35);}
+.btn-back:hover{background:rgba(200,160,50,.2);}
+.btn-print{background:linear-gradient(135deg,#8B6914,#C4993C,#E8C96A);color:#1C1407;box-shadow:0 3px 14px rgba(200,160,50,.4);}
+.btn-print:hover{opacity:.9;transform:translateY(-1px);}
 
-  /* ── CONTAINER PUTIH ── */
-  .container{
-    background:#fff;border-radius:16px;padding:40px;
-    box-shadow:0 8px 40px rgba(0,0,0,.4);
-    border:1px solid rgba(212,168,67,.15);
-  }
+/* ══════════════════ WRAP ══════════════════ */
+.page-wrap{padding:24px;max-width:1120px;margin:0 auto;}
 
-  /* ── HEADER ── */
-  .header{
-    display:flex;justify-content:space-between;align-items:flex-start;
-    margin-bottom:24px;padding-bottom:20px;
-    border-bottom:3px solid ${GOLD};
-  }
-  .header-left{display:flex;gap:16px;align-items:center;}
-  .header-info h1{font-size:26px;color:${GOLD2};font-weight:800;margin-bottom:2px;}
-  .header-info p{font-size:12px;color:#777;margin:2px 0;}
-  .header-right{text-align:right;font-size:11.5px;color:#666;line-height:2;}
-  .header-right strong{color:${DARK};}
+/* ══════════════════ DOCUMENT ══════════════════ */
+.doc{
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 4px 32px rgba(0,0,0,.14);
+  overflow:hidden;
+}
 
-  /* ── COMPANY BOX ── */
-  .company-box{
-    background:linear-gradient(135deg,rgba(212,168,67,.07),rgba(139,105,20,.04));
-    border-left:4px solid ${GOLD};border-radius:0 10px 10px 0;
-    padding:14px 18px;margin-bottom:22px;font-size:12px;
-  }
-  .company-box h3{color:${GOLD2};font-size:15px;font-weight:800;margin-bottom:6px;}
-  .company-box p{color:#555;margin:3px 0;line-height:1.6;}
-  .period-sep{margin-top:10px;padding-top:10px;border-top:1px solid rgba(212,168,67,.2);}
+/* ══════════════════ LETTERHEAD ══════════════════ */
+.letterhead{
+  background:linear-gradient(135deg,#1C1407 0%,#2E1F08 40%,#3A2A10 100%);
+  padding:28px 36px 22px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:20px;
+}
+.lh-left{display:flex;gap:18px;align-items:center;}
+.lh-logo{width:68px;height:68px;border-radius:12px;overflow:hidden;flex-shrink:0;border:2px solid rgba(212,168,67,.5);background:#fff;display:flex;align-items:center;justify-content:center;}
+.lh-logo img{width:100%;height:100%;object-fit:contain;}
+.lh-company h1{font-size:22px;font-weight:900;color:#F0C75E;letter-spacing:.04em;margin-bottom:3px;}
+.lh-company p{font-size:11px;color:rgba(240,199,94,.6);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;}
+.lh-company .lh-contact{font-size:11px;color:rgba(255,235,180,.55);line-height:1.7;}
+.lh-right{text-align:right;}
+.lh-badge{
+  display:inline-block;
+  background:linear-gradient(135deg,#8B6914,#D4A843);
+  color:#1C1407;font-size:10px;font-weight:800;
+  padding:4px 12px;border-radius:20px;letter-spacing:.08em;
+  text-transform:uppercase;margin-bottom:10px;
+}
+.lh-docinfo{font-size:11px;color:rgba(240,199,94,.65);line-height:1.9;text-align:right;}
+.lh-docinfo strong{color:#F0C75E;}
 
-  /* ── TABLE ── */
-  .table-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  table{width:100%;border-collapse:collapse;font-size:clamp(9px,1.5vw,12.5px);margin-bottom:24px;table-layout:fixed;}
-  col.c-nopol{width:10%;}col.c-driver{width:17%;}col.c-num{width:14.6%;}
-  thead th{
-    background:linear-gradient(135deg,${GOLD2},${DARK});
-    color:${GOLD3};padding:clamp(6px,1vw,12px) clamp(4px,.8vw,10px);text-align:center;
-    font-weight:700;border:1px solid ${GOLD2};font-size:clamp(8px,1.1vw,11px);
-    text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;
-  }
-  thead th:first-child{text-align:center;}
-  thead th:nth-child(2){text-align:left;}
-  tbody td{vertical-align:middle;font-size:clamp(8px,1.2vw,12px);padding:clamp(5px,.9vw,10px) clamp(4px,.7vw,9px);overflow:hidden;text-overflow:ellipsis;}
-  tbody td:first-child{white-space:nowrap;font-weight:800;text-align:center;font-size:clamp(7px,1vw,11px);letter-spacing:.01em;}
-  tbody td:nth-child(2){word-break:break-word;}
-  tbody td:nth-child(n+3){text-align:right;font-family:'Courier New',Consolas,monospace;font-weight:600;white-space:nowrap;}
-  .total-row td{
-    background:linear-gradient(to right,rgba(212,168,67,.12),rgba(212,168,67,.06));
-    font-weight:800;border-top:3px solid ${GOLD};border-bottom:3px solid ${GOLD};
-    font-size:clamp(10px,1.3vw,13px);padding:clamp(8px,1vw,13px) clamp(4px,.7vw,10px);color:${DARK};
-    border-left:1px solid rgba(212,168,67,.3);border-right:1px solid rgba(212,168,67,.3);
-    font-family:'Courier New',Consolas,monospace;white-space:nowrap;
-  }
-  .total-row td:first-child{font-family:'Segoe UI',sans-serif;text-align:left;}
+/* ══════════════════ DIVIDER ══════════════════ */
+.divider-gold{height:3px;background:linear-gradient(90deg,transparent,#C4993C 20%,#F0C75E 50%,#C4993C 80%,transparent);}
 
-  /* ── SUMMARY ── */
-  .summary{
-    padding:20px;margin-bottom:20px;border-radius:12px;
-    background:linear-gradient(135deg,rgba(212,168,67,.08),rgba(212,168,67,.03));
-    border:2px solid rgba(212,168,67,.3);
-  }
-  .summary h3{color:${GOLD2};font-size:14px;font-weight:800;margin-bottom:14px;
-    border-bottom:2px solid rgba(212,168,67,.25);padding-bottom:10px;}
-  .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .sum-item{display:flex;justify-content:space-between;align-items:center;
-    padding:9px 0;border-bottom:1px solid rgba(212,168,67,.15);font-size:12px;}
-  .sum-item:last-child{border-bottom:none;}
-  .sum-label{font-weight:600;color:#444;}
-  .sum-val{font-weight:700;color:${GOLD2};font-family:'Courier New',monospace;}
+/* ══════════════════ PERIOD BAND ══════════════════ */
+.period-band{
+  background:#FBF7EE;
+  border-bottom:1px solid #EDD88A;
+  padding:12px 36px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:8px;
+}
+.period-label{font-size:11px;font-weight:700;color:#8B6914;letter-spacing:.08em;text-transform:uppercase;}
+.period-value{font-size:14px;font-weight:800;color:#2C1810;}
+.period-meta{font-size:11px;color:#999;font-style:italic;}
 
-  /* ── QUALITY ── */
-  .quality{
-    background:rgba(212,168,67,.06);border-left:4px solid ${GOLD};
-    padding:14px 18px;margin-bottom:20px;border-radius:0 10px 10px 0;font-size:12px;
-  }
-  .quality h4{color:${GOLD2};margin-bottom:10px;font-size:13px;font-weight:800;}
-  .qc{display:flex;align-items:center;margin:6px 0;color:#555;}
-  .qc::before{content:"✓";display:inline-block;width:18px;height:18px;
-    background:linear-gradient(135deg,${GOLD2},${GOLD});color:${DARK};
-    border-radius:50%;text-align:center;line-height:18px;margin-right:10px;
-    font-weight:800;font-size:11px;flex-shrink:0;}
+/* ══════════════════ BODY CONTENT ══════════════════ */
+.doc-body{padding:28px 36px;}
 
-  /* ── FOOTER ── */
-  .footer{margin-top:28px;padding-top:18px;border-top:2px solid ${GOLD};
-    font-size:11px;color:#666;display:flex;justify-content:space-between;align-items:flex-end;}
-  .footer strong{color:${DARK};}
-  .footer-bottom{text-align:center;margin-top:14px;padding-top:10px;
-    border-top:1px solid rgba(212,168,67,.2);color:#999;font-size:10px;}
+/* ══════════════════ STATS STRIP ══════════════════ */
+.stats-strip{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:12px;margin-bottom:24px;
+}
+.stat-card{
+  background:#FAFAFA;border-radius:10px;
+  padding:14px 16px;
+  border:1px solid #EEE;
+  border-top:3px solid #D4A843;
+}
+.stat-label{font-size:10px;font-weight:700;color:#999;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
+.stat-value{font-size:18px;font-weight:800;color:#1C1407;line-height:1.2;}
+.stat-value.green{color:#1a7a3c;}
+.stat-value.red{color:#c0392b;}
+.stat-value.gold{color:#8B6914;}
+.stat-sub{font-size:10px;color:#AAA;margin-top:3px;}
 
-  /* ── PRINT ── */
-  @media print{
-    body{background:white\!important;padding:0;}
-    .topbar{display:none\!important;}
-    .page-wrap{padding:0;max-width:100%;}
-    .container{box-shadow:none;border-radius:0;padding:16px;border:none;}
-    table{page-break-inside:avoid;font-size:9pt;width:100%;}
-    thead th{font-size:8pt;padding:6pt 5pt;}
-    tbody td{font-size:8.5pt;padding:5pt 4pt;}
-    .total-row td{font-size:9pt;padding:6pt 4pt;}
-    .summary{page-break-inside:avoid;}
-    .table-scroll{overflow:visible\!important;}
-  }
-  @page{size:A4 landscape;margin:10mm;}
-  @media print and (orientation:portrait){
-    @page{size:A4 portrait;margin:8mm;}
-    table{font-size:7pt;}
-    thead th{font-size:6.5pt;padding:4pt 3pt;letter-spacing:0;}
-    tbody td{font-size:7pt;padding:4pt 3pt;}
-    tbody td:first-child{font-size:6.5pt;}
-    .total-row td{font-size:7.5pt;padding:5pt 3pt;}
-    .header{flex-direction:column;gap:8pt;}
-    .sum-grid{grid-template-columns:1fr;}
-    .container{padding:10px;}
-  }
-  }
+/* ══════════════════ TABLE ══════════════════ */
+.section-title{
+  font-size:13px;font-weight:800;color:#2C1810;
+  letter-spacing:.04em;text-transform:uppercase;
+  margin-bottom:12px;padding-bottom:8px;
+  border-bottom:2px solid #EDD88A;
+  display:flex;align-items:center;gap:8px;
+}
+.section-title::before{content:'';display:inline-block;width:4px;height:18px;background:linear-gradient(#D4A843,#8B6914);border-radius:2px;}
 
-  /* ── MOBILE ── */
-  /* table-scroll defined above */
-  @media(max-width:700px){
-    .topbar{padding:8px 12px;gap:6px;}
-    .topbar-title{font-size:10px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .topbar-btns{gap:6px;}
-    .btn-back,.btn-print{padding:8px 12px;font-size:11px;gap:4px;}
-    .page-wrap{padding:8px;}
-    .container{padding:14px 10px;border-radius:10px;}
-    .header{flex-direction:column;gap:10px;}
-    .header-left{gap:10px;}
-    .header-info h1{font-size:16px;}
-    .header-info p{font-size:10px;}
-    .header-right{text-align:left;font-size:10px;}
-    .company-box{padding:10px 12px;font-size:11px;}
-    .company-box h3{font-size:13px;}
-    .table-scroll{border-radius:8px;border:1px solid rgba(212,168,67,.2);}
-    table{font-size:clamp(9px,2.5vw,12px);table-layout:auto;}
-    col.c-nopol,col.c-driver,col.c-num{width:auto;}
-    thead th{padding:7px 5px;font-size:clamp(8px,2.2vw,10px);white-space:nowrap;}
-    tbody td{padding:6px 5px;font-size:clamp(8px,2.2vw,11px);}
-    tbody td:first-child{white-space:nowrap;font-size:clamp(7px,2vw,10px);}
-    .total-row td{padding:8px 5px;font-size:clamp(9px,2.3vw,11px);}
-    .sum-grid{grid-template-columns:1fr;}
-    .sum-item{font-size:11px;padding:7px 0;}
-    .footer{flex-direction:column;gap:6px;font-size:10px;}
-  }
+.tbl-wrap{width:100%;overflow-x:auto;border-radius:10px;border:1px solid #E8D5A0;margin-bottom:28px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead tr{background:linear-gradient(135deg,#2C1810,#4A2C17);}
+thead th{
+  color:#F0C75E;font-size:10.5px;font-weight:700;
+  padding:13px 12px;text-align:center;
+  text-transform:uppercase;letter-spacing:.06em;
+  border-right:1px solid rgba(212,168,67,.2);
+  white-space:nowrap;
+}
+thead th:last-child{border-right:none;}
+thead th.th-left{text-align:left;}
+tbody tr{border-bottom:1px solid #F0EAD6;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:nth-child(even){background:#FDFBF5;}
+tbody tr:hover{background:#FEF9EC;}
+.td-nopol{
+  padding:12px 14px;font-weight:800;color:#1C1407;
+  text-align:center;white-space:nowrap;font-size:12px;
+  letter-spacing:.04em;border-right:1px solid #F0EAD6;
+  background:rgba(212,168,67,.06);
+}
+.td-driver{
+  padding:12px 14px;color:#333;font-size:12px;
+  border-right:1px solid #F0EAD6;
+}
+.td-money{
+  padding:12px 14px;text-align:right;
+  font-family:'Courier New',Consolas,monospace;
+  font-size:11.5px;font-weight:600;white-space:nowrap;
+  border-right:1px solid #F0EAD6;
+}
+.td-money:last-child{border-right:none;}
+.td-green{color:#1a7a3c;}
+.td-red{color:#c0392b;}
+.td-nett{font-weight:800;font-size:12px;}
+.td-profit{color:#0d6b32;background:rgba(26,122,60,.07);}
+.td-loss{color:#c0392b;background:rgba(192,57,43,.07);}
+
+/* Total row */
+.total-row td{
+  padding:14px 14px;font-weight:800;
+  background:linear-gradient(135deg,#2C1810,#3A2212);
+  color:#F0C75E;font-size:12px;
+  border-top:2px solid #D4A843;
+}
+.total-row .td-money{
+  font-family:'Courier New',Consolas,monospace;
+  font-size:12px;color:#F0C75E;
+  text-align:right;border-right:1px solid rgba(212,168,67,.2);
+}
+.total-row .td-nett{color:#FFD96A;font-size:13px;}
+.total-row .td-label{text-align:left;padding-left:14px;letter-spacing:.05em;text-transform:uppercase;font-size:11px;}
+
+/* ══════════════════ SUMMARY ══════════════════ */
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;}
+.sum-box{background:#FAFAFA;border-radius:10px;padding:20px;border:1px solid #EEE;}
+.sum-box h4{font-size:11px;font-weight:800;color:#8B6914;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #EDD88A;}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #F5F0E8;font-size:12px;}
+.sum-row:last-child{border-bottom:none;padding-top:10px;margin-top:4px;border-top:2px solid #EDD88A;}
+.sum-row:last-child .sum-val{font-size:14px;font-weight:800;}
+.sum-label{color:#555;font-weight:500;}
+.sum-val{font-weight:700;font-family:'Courier New',monospace;font-size:12px;}
+.sum-val.green{color:#1a7a3c;}
+.sum-val.red{color:#c0392b;}
+.sum-val.gold{color:#8B6914;font-size:15px;}
+
+/* Performer */
+.performer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.perf-card{border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.perf-best{background:linear-gradient(135deg,rgba(26,122,60,.08),rgba(26,122,60,.04));border:1px solid rgba(26,122,60,.2);}
+.perf-worst{background:linear-gradient(135deg,rgba(192,57,43,.08),rgba(192,57,43,.04));border:1px solid rgba(192,57,43,.2);}
+.perf-icon{font-size:22px;}
+.perf-label{font-size:10px;font-weight:700;color:#999;letter-spacing:.06em;text-transform:uppercase;}
+.perf-nopol{font-size:15px;font-weight:900;color:#1C1407;letter-spacing:.04em;}
+.perf-driver{font-size:11px;color:#666;}
+.perf-val{font-size:11px;font-weight:700;font-family:'Courier New',monospace;margin-top:2px;}
+.perf-best .perf-val{color:#1a7a3c;}
+.perf-worst .perf-val{color:#c0392b;}
+
+/* ══════════════════ FOOTER ══════════════════ */
+.doc-footer{
+  background:#F8F4EC;
+  border-top:2px solid #EDD88A;
+  padding:16px 36px;
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:10px;
+}
+.footer-left{font-size:10.5px;color:#888;line-height:1.7;}
+.footer-left strong{color:#555;}
+.footer-right{text-align:right;font-size:10.5px;color:#AAA;}
+.footer-brand{font-size:11px;font-weight:800;color:#8B6914;letter-spacing:.04em;}
+
+/* ══════════════════ PRINT ══════════════════ */
+@media print{
+  .action-bar{display:none!important;}
+  body{background:#fff;}
+  .page-wrap{padding:0;max-width:100%;}
+  .doc{box-shadow:none;border-radius:0;}
+  .doc-body{padding:20px 28px;}
+  .letterhead{padding:20px 28px 16px;}
+  .period-band{padding:10px 28px;}
+  table{font-size:10pt;}
+  thead th{font-size:9pt;padding:10pt 9pt;}
+  .td-nopol,.td-driver,.td-money{font-size:9.5pt;padding:9pt 10pt;}
+  .total-row td{padding:10pt 10pt;}
+  .stats-strip{grid-template-columns:repeat(4,1fr);}
+  .stat-value{font-size:14pt;}
+  .tbl-wrap{overflow:visible;}
+  .summary-grid{grid-template-columns:1fr 1fr;}
+}
+@page{size:A4 landscape;margin:10mm;}
+@media print and (orientation:portrait){
+  @page{size:A4 portrait;margin:8mm;}
+  .letterhead{flex-direction:column;gap:12pt;}
+  .lh-right{text-align:left;}
+  .stats-strip{grid-template-columns:1fr 1fr;}
+  table{font-size:7.5pt;}
+  thead th{font-size:7pt;padding:7pt 5pt;letter-spacing:0;}
+  .td-nopol,.td-driver{font-size:7.5pt;padding:7pt 6pt;}
+  .td-money{font-size:7pt;padding:7pt 5pt;}
+  .total-row td{font-size:7.5pt;padding:8pt 5pt;}
+  .summary-grid{grid-template-columns:1fr;}
+  .doc-body{padding:14px 18px;}
+}
 </style></head><body>
 
-<!-- TOPBAR — sticky, tampil di layar, hilang saat print -->
-<div class="topbar">
-  <div class="topbar-title">📄 Preview Laporan PDF — ${periodeStr||'Semua Periode'}</div>
-  <div class="topbar-btns">
-    <button class="btn-back" onclick="window.close()">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-      Kembali ke Aplikasi
+<div class="action-bar">
+  <span class="action-bar-title">📄 Preview Laporan — ${periodeStr}</span>
+  <div class="action-btns">
+    <button class="btn btn-back" onclick="window.close()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Kembali
     </button>
-    <button class="btn-print" onclick="window.print()">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
-      Cetak / Save PDF
+    <button class="btn btn-print" onclick="window.print()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+      Cetak / Simpan PDF
     </button>
   </div>
 </div>
 
 <div class="page-wrap">
-<div class="container">
+<div class="doc">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-left">
-      ${logoHTML}
-      <div class="header-info">
+  <!-- LETTERHEAD -->
+  <div class="letterhead">
+    <div class="lh-left">
+      <div class="lh-logo">${cpLogo?`<img src="${cpLogo}" style="width:100%;height:100%;object-fit:contain;"/>`:`<span style="font-size:20px;font-weight:900;color:#3A1E08;">BHD</span>`}</div>
+      <div class="lh-company">
         <h1>${cpName}</h1>
         <p>${cpTagline}</p>
-        ${cpAddress?`<p style="color:#888;font-size:11px;">📍 ${cpAddress}</p>`:''}
-        ${cpPhone||cpEmail?`<p style="color:#888;font-size:11px;">${cpPhone?'📞 '+cpPhone:''}${cpPhone&&cpEmail?' &nbsp;|&nbsp; ':''}${cpEmail?'✉ '+cpEmail:''}</p>`:''}
+        <div class="lh-contact">
+          ${cpAddress?`<div>📍 ${cpAddress}</div>`:''}
+          ${cpPhone?`<div>📞 ${cpPhone}</div>`:''}
+          ${cpEmail?`<div>✉️ ${cpEmail}</div>`:''}
+        </div>
       </div>
     </div>
-    <div class="header-right">
-      <p><strong>Dicetak:</strong> ${nowStr}</p>
-      <p><strong>Periode:</strong> ${periodeStr||'Semua'}</p>
-      <p><strong>Armada:</strong> ${fleetData.length} unit</p>
-      <p><strong>Transaksi:</strong> ${list.length} record</p>
+    <div class="lh-right">
+      <div class="lh-badge">Laporan Resmi</div>
+      <div class="lh-docinfo">
+        <div>Laporan: <strong>Rekap Per Armada</strong></div>
+        <div>Periode: <strong>${periodeStr}</strong></div>
+        <div>Dicetak: <strong>${nowStr}</strong></div>
+        <div>Armada: <strong>${dataRows.length} Unit</strong></div>
+        <div>Transaksi: <strong>${list.length} Record</strong></div>
+      </div>
     </div>
   </div>
 
-  <!-- COMPANY BOX -->
-  <div class="company-box">
-    <h3>🏢 ${cpName}</h3>
-    ${cpAddress?`<p>📍 ${cpAddress}</p>`:''}
-    ${cpPhone?`<p>📞 ${cpPhone}</p>`:''}
-    ${cpEmail?`<p>✉ ${cpEmail}</p>`:''}
-    <div class="period-sep">
-      <p><strong>Periode Laporan:</strong> ${periodeStr||'Semua Transaksi'}</p>
-      <p><strong>Report Type:</strong> Rekap Operasional Per Armada &nbsp;|&nbsp; <strong>System:</strong> BHD SmartFlow</p>
-    </div>
-  </div>
+  <div class="divider-gold"></div>
 
-  <!-- TABLE -->
-  <div class="table-scroll">
-  <table>
-    <colgroup>
-      <col class="c-nopol"/><col class="c-driver"/>
-      <col class="c-num"/><col class="c-num"/><col class="c-num"/><col class="c-num"/><col class="c-num"/>
-    </colgroup>
-    <thead><tr>
-      <th>No. Pol</th>
-      <th style="text-align:left;">Nama Driver</th>
-      <th>Inflow (Rp)</th>
-      <th>Out Tunai (Rp)</th>
-      <th>Out Onderdil (Rp)</th>
-      <th>Out Umum (Rp)</th>
-      <th>Nett (Rp)</th>
-    </tr></thead>
-    <tbody>${tableRows}</tbody>
-    <tfoot><tr class="total-row">
-      <td colspan="2" style="font-weight:800;letter-spacing:.03em;">TOTAL PERIODE</td>
-      <td style="text-align:right;color:#1a6b3a;">${M(totInf)}</td>
-      <td style="text-align:right;color:#c0392b;">${M(totTunai)}</td>
-      <td style="text-align:right;color:#c0392b;">${M(totOnderdil)}</td>
-      <td style="text-align:right;color:#c0392b;">${M(umum)}</td>
-      <td style="text-align:right;color:${totNett>=0?'#7a5a10':'#c0392b'};font-size:14px;">${M(totNett)}</td>
-    </tr></tfoot>
-  </table>
-  </div>
-
-  <!-- SUMMARY -->
-  <div class="summary">
-    <h3>📊 RINGKASAN PERIODE</h3>
-    <div class="sum-grid">
-      <div class="sum-item"><span class="sum-label">Total Inflow (Pemasukan)</span><span class="sum-val" style="color:#1a6b3a;">${fmtFull(totInf)}</span></div>
-      <div class="sum-item"><span class="sum-label">Total Outflow (Pengeluaran)</span><span class="sum-val" style="color:#c0392b;">${fmtFull(totOut)}</span></div>
-      <div class="sum-item"><span class="sum-label">Total Profit / Nett</span><span class="sum-val" style="color:${totNett>=0?GOLD2:'#c0392b'};font-size:14px;">${fmtFull(totNett)}</span></div>
-      <div class="sum-item"><span class="sum-label">Rata-rata per Armada</span><span class="sum-val">${fmtFull(rataRata)}</span></div>
-      ${best?`<div class="sum-item"><span class="sum-label">🏆 Best Performer</span><span class="sum-val">${best.nopol} — ${best.driver}</span></div>`:''}
-      ${worst&&worst.nopol!==best?.nopol?`<div class="sum-item"><span class="sum-label">⚠️ Perlu Perhatian</span><span class="sum-val" style="color:#c0392b;">${worst.nopol} — ${worst.driver}</span></div>`:''}
-    </div>
-  </div>
-
-  <!-- DATA QUALITY -->
-  <div class="quality">
-    <h4>✓ DATA QUALITY ASSURANCE</h4>
-    <div class="qc">Semua transaksi terverifikasi dari database Supabase</div>
-    <div class="qc">Data inventory & stok onderdil sudah direkonsiliasi</div>
-    <div class="qc">Beban UMUM dibagi rata ke ${fleetData.length} armada aktif (${fmtFull(Math.round(bebanPerUnit))}/unit)</div>
-    <div class="qc">Laporan digenerate otomatis pada: ${nowStr}</div>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="footer">
+  <!-- PERIOD BAND -->
+  <div class="period-band">
     <div>
-      <strong>🏢 ${cpName}</strong><br>
-      ${cpAddress||''}${cpAddress&&(cpPhone||cpEmail)?'<br>':''}
-      ${cpPhone?'📞 '+cpPhone+' &nbsp;':''}${cpEmail?'✉ '+cpEmail:''}
+      <div class="period-label">Periode Laporan</div>
+      <div class="period-value">${periodeStr}</div>
+    </div>
+    <div style="text-align:center;">
+      <div class="period-label">Tipe Laporan</div>
+      <div class="period-value" style="font-size:13px;">Rekap Operasional Per Armada</div>
     </div>
     <div style="text-align:right;">
-      <strong>📋 LAPORAN REKAP PER ARMADA</strong><br>
-      Periode: ${periodeStr||'Semua'}<br>
-      Generated by BHD SmartFlow
+      <div class="period-label">Sistem</div>
+      <div class="period-value" style="font-size:13px;">BHD SmartFlow</div>
     </div>
   </div>
-  <div class="footer-bottom">🔒 Confidential — For Official Use Only &nbsp;|&nbsp; ${cpName} &nbsp;|&nbsp; Page 1 of 1</div>
 
-</div>
-</div>
+  <!-- DOC BODY -->
+  <div class="doc-body">
+
+    <!-- STATS STRIP -->
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="stat-label">Total Inflow</div>
+        <div class="stat-value green">${fmtShort(totInf)}</div>
+        <div class="stat-sub">${fmt(totInf)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Outflow</div>
+        <div class="stat-value red">${fmtShort(totOut)}</div>
+        <div class="stat-sub">${fmt(totOut)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Profit / Nett</div>
+        <div class="stat-value ${totNett>=0?'green':'red'}">${fmtShort(totNett)}</div>
+        <div class="stat-sub">${fmt(totNett)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Rata-rata / Armada</div>
+        <div class="stat-value gold">${fmtShort(rataRata)}</div>
+        <div class="stat-sub">${fmt(rataRata)}</div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="section-title">Data Rekap Per Armada</div>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:10%;">No. Polisi</th>
+        <th class="th-left" style="width:18%;">Nama Driver</th>
+        <th style="width:14.4%;">Inflow</th>
+        <th style="width:14.4%;">Out Tunai</th>
+        <th style="width:14.4%;">Out Onderdil</th>
+        <th style="width:14.4%;">Out Umum</th>
+        <th style="width:14.4%;">Nett</th>
+      </tr></thead>
+      <tbody>${tableRows}</tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td colspan="2" class="td-label">TOTAL PERIODE</td>
+          <td class="td-money">${fmt(totInf)}</td>
+          <td class="td-money">${fmt(totTunai)}</td>
+          <td class="td-money">${fmt(totOnderdil)}</td>
+          <td class="td-money">${fmt(umum)}</td>
+          <td class="td-money td-nett">${fmt(totNett)}</td>
+        </tr>
+      </tfoot>
+    </table>
+    </div>
+
+    <!-- SUMMARY + PERFORMER -->
+    <div class="summary-grid">
+      <div class="sum-box">
+        <h4>📊 Ringkasan Keuangan</h4>
+        <div class="sum-row"><span class="sum-label">Total Inflow (Pemasukan)</span><span class="sum-val green">${fmt(totInf)}</span></div>
+        <div class="sum-row"><span class="sum-label">Total Out Tunai</span><span class="sum-val red">${fmt(totTunai)}</span></div>
+        <div class="sum-row"><span class="sum-label">Total Out Onderdil</span><span class="sum-val red">${fmt(totOnderdil)}</span></div>
+        <div class="sum-row"><span class="sum-label">Total Out Umum</span><span class="sum-val red">${fmt(umum)}</span></div>
+        <div class="sum-row"><span class="sum-label">Total Outflow</span><span class="sum-val red">${fmt(totOut)}</span></div>
+        <div class="sum-row"><span class="sum-label" style="font-weight:700;">Total Profit / Nett</span><span class="sum-val ${totNett>=0?'green gold':'red'}">${fmt(totNett)}</span></div>
+      </div>
+      <div class="sum-box">
+        <h4>🏆 Performa Armada</h4>
+        <div style="margin-bottom:16px;">
+          <div class="sum-row"><span class="sum-label">Rata-rata per Armada</span><span class="sum-val gold">${fmt(rataRata)}</span></div>
+          <div class="sum-row"><span class="sum-label">Jumlah Armada Aktif</span><span class="sum-val">${dataRows.length} Unit</span></div>
+          <div class="sum-row"><span class="sum-label">Total Transaksi</span><span class="sum-val">${list.length} Record</span></div>
+        </div>
+        <div class="performer-grid">
+          <div class="perf-card perf-best">
+            <div class="perf-icon">🏆</div>
+            <div>
+              <div class="perf-label">Best Performer</div>
+              <div class="perf-nopol">${best?best.nopol:'—'}</div>
+              <div class="perf-driver">${best?best.driver:'—'}</div>
+              <div class="perf-val">${best?fmt(best.nett):'—'}</div>
+            </div>
+          </div>
+          <div class="perf-card perf-worst">
+            <div class="perf-icon">⚠️</div>
+            <div>
+              <div class="perf-label">Perlu Perhatian</div>
+              <div class="perf-nopol">${worst?worst.nopol:'—'}</div>
+              <div class="perf-driver">${worst?worst.driver:'—'}</div>
+              <div class="perf-val">${worst?fmt(worst.nett):'—'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATA QUALITY -->
+    <div style="background:#F8F4EC;border-radius:10px;padding:16px 20px;border:1px solid #EDD88A;margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:800;color:#8B6914;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">✓ Data Quality Assurance</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;font-size:11px;color:#555;">
+        <div>✔ Sumber transaksi terverifikasi dari database Supabase</div>
+        <div>✔ Data inventory &amp; stok onderdil sudah disinkronisasi</div>
+        <div>✔ Beban UMUM dibagi rata ke ${dataRows.length} armada aktif (Rp ${new Intl.NumberFormat('id-ID').format(Math.round(bebanPerUnit))}/unit)</div>
+        <div>✔ Laporan digenerate otomatis pada: ${nowStr}</div>
+      </div>
+    </div>
+
+  </div><!-- end doc-body -->
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <div class="footer-left">
+      <strong>${cpName}</strong><br>
+      ${cpAddress?cpAddress+'<br>':''} ${cpPhone||''} ${cpEmail?'· '+cpEmail:''}
+    </div>
+    <div class="footer-right">
+      <div class="footer-brand">BHD SmartFlow v10</div>
+      <div>Periode: ${periodeStr}</div>
+      <div>Dicetak: ${nowStr}</div>
+      <div style="margin-top:4px;font-size:9px;">Page 1 of 1</div>
+    </div>
+  </div>
+
+</div><!-- end doc -->
+</div><!-- end page-wrap -->
+
 </body></html>`;
 
   printWindow.document.write(html);
   printWindow.document.close();
-  showToast('✅ Laporan PDF siap — klik Cetak di tab baru');vibrate(30);
+  showToast('📄 Laporan PDF dibuka di tab baru');vibrate(30);
 }
 
-// ═══════════════════════════════ ARMADA MANAGEMENT ═══════════════
+
 function switchArmadaTab(tab,btn){
   document.getElementById('tab-unit-view').style.display=tab==='unit'?'block':'none';
   document.getElementById('tab-driver-view').style.display=tab==='driver'?'block':'none';
