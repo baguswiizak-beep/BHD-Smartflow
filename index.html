@@ -950,8 +950,6 @@ input,select,textarea{font-size:16px!important;}
           <span class="chart-dot active" id="cdot-0" onclick="goToChart(0)" style="width:6px;height:6px;border-radius:50%;background:var(--green);cursor:pointer;transition:all .2s;"></span>
           <span class="chart-dot" id="cdot-1" onclick="goToChart(1)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;"></span>
           <span class="chart-dot" id="cdot-2" onclick="goToChart(2)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;"></span>
-          <span class="chart-dot" id="cdot-3" onclick="goToChart(3)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;"></span>
-          <span class="chart-dot" id="cdot-4" onclick="goToChart(4)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;"></span>
         </div>
         <div id="chart-carousel" style="overflow:hidden;touch-action:pan-y;">
           <div id="chart-slides" style="display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform;">
@@ -996,53 +994,6 @@ input,select,textarea{font-size:16px!important;}
                 </div>
               </div>
               <canvas id="barChart" style="max-height:160px;"></canvas>
-            </div>
-            <!-- Slide 4: Heatmap -->
-            <div class="chart-slide chart-wrap" style="min-width:100%;box-sizing:border-box;margin-bottom:0;">
-              <div class="cw-hdr"><span class="cw-title">🔥 Heatmap Aktivitas</span><span style="font-size:10px;color:var(--text3);">Transaksi per Hari</span></div>
-              <div id="heatmap-container" style="overflow-x:auto;padding-bottom:4px;">
-                <div id="heatmap-grid" style="display:grid;grid-template-columns:40px repeat(7,1fr);gap:3px;min-width:280px;"></div>
-                <div style="display:flex;justify-content:flex-end;align-items:center;gap:4px;margin-top:8px;font-size:9px;color:var(--text3);">
-                  <span>Sedikit</span>
-                  <div style="display:flex;gap:2px;">
-                    <div style="width:10px;height:10px;border-radius:2px;background:var(--bg3);"></div>
-                    <div style="width:10px;height:10px;border-radius:2px;background:rgba(125,206,19,.25);"></div>
-                    <div style="width:10px;height:10px;border-radius:2px;background:rgba(125,206,19,.55);"></div>
-                    <div style="width:10px;height:10px;border-radius:2px;background:var(--green);"></div>
-                  </div>
-                  <span>Banyak</span>
-                </div>
-              </div>
-            </div>
-            <!-- Slide 5: Prediksi -->
-            <div class="chart-slide chart-wrap" style="min-width:100%;box-sizing:border-box;margin-bottom:0;">
-              <div class="cw-hdr"><span class="cw-title">🔮 Prediksi Cashflow</span><span style="font-size:10px;color:var(--text3);">Estimasi Bulan Depan</span></div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-                <div style="background:var(--green-bg);border:1px solid var(--green-bd);border-radius:10px;padding:10px;">
-                  <div style="font-size:9px;font-weight:700;color:var(--green2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Prediksi Inflow</div>
-                  <div id="pred-inflow" style="font-size:16px;font-weight:800;color:var(--green2);">—</div>
-                  <div style="font-size:9px;color:var(--text3);margin-top:2px;">rata-rata 3 bulan</div>
-                </div>
-                <div style="background:rgba(255,59,48,.08);border:1px solid rgba(255,59,48,.18);border-radius:10px;padding:10px;">
-                  <div style="font-size:9px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Prediksi Outflow</div>
-                  <div id="pred-outflow" style="font-size:16px;font-weight:800;color:var(--danger);">—</div>
-                  <div style="font-size:9px;color:var(--text3);margin-top:2px;">estimasi pengeluaran</div>
-                </div>
-              </div>
-              <div style="background:var(--bg3);border-radius:10px;padding:10px;margin-bottom:8px;">
-                <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Net Profit Prediksi</div>
-                <div id="pred-nett" style="font-size:20px;font-weight:900;">—</div>
-                <div style="margin-top:6px;height:4px;border-radius:2px;background:var(--bg4);overflow:hidden;">
-                  <div id="pred-bar" style="height:100%;border-radius:2px;background:var(--green);width:0%;transition:width .8s;"></div>
-                </div>
-                <div id="pred-bar-label" style="font-size:9px;color:var(--text3);margin-top:3px;">Margin: —%</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:10px;padding:8px 10px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                <span style="font-size:11px;color:var(--text2);flex:1;">Alert jika outflow &gt;</span>
-                <input type="number" id="threshold-input" placeholder="Rp..." style="width:110px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg2);color:var(--text);font-size:11px;font-family:inherit;outline:none;" oninput="saveThreshold(this.value)"/>
-              </div>
-              <div id="threshold-alert" style="display:none;margin-top:6px;padding:8px 10px;background:rgba(255,149,0,.1);border:1px solid rgba(255,149,0,.3);border-radius:8px;font-size:11px;color:var(--warning);font-weight:600;"></div>
             </div>
           </div>
         </div>
@@ -5484,119 +5435,6 @@ function goToChart(idx){
   if(idx===0) setTimeout(()=>{renderDonut(totalInflow(transactions),totalOutflow(transactions));},50);
   if(idx===1) setTimeout(()=>{renderMiniLine();},50);
   if(idx===2) setTimeout(()=>{renderBarChart(currentBarFilter);},50);
-  if(idx===3) setTimeout(()=>{renderHeatmap();},50);
-  if(idx===4) setTimeout(()=>{renderPrediction();},50);
-}
-
-
-// ======= HEATMAP & PREDICTION =======
-let _thresholdVal = parseFloat(localStorage.getItem('bhd_threshold')||'0');
-
-function saveThreshold(val){
-  _thresholdVal = parseFloat(val)||0;
-  localStorage.setItem('bhd_threshold', _thresholdVal);
-  renderPrediction();
-}
-
-function renderHeatmap(){
-  const grid = document.getElementById('heatmap-grid');
-  if(!grid) return;
-  const days=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
-  const now = new Date();
-  let html = '<div style="grid-column:1;"></div>';
-  days.forEach(function(d){
-    html += '<div style="font-size:9px;color:var(--text2);text-align:center;padding-bottom:2px;">'+d+'</div>';
-  });
-  const map = {};
-  (transactions||[]).forEach(function(t){
-    if(!t.tanggal) return;
-    const dk = t.tanggal.slice(0,10);
-    map[dk] = (map[dk]||0) + (parseFloat(t.jumlah)||0);
-  });
-  const vals = Object.values(map);
-  const maxVal = vals.length ? Math.max.apply(null,vals) : 1;
-  const totalDays = 12*7;
-  const startDate = new Date(now);
-  startDate.setDate(startDate.getDate() - totalDays + 1);
-  const dayOfWeek = startDate.getDay();
-  startDate.setDate(startDate.getDate() - dayOfWeek);
-  for(let wi=0;wi<12;wi++){
-    const wStart = new Date(startDate);
-    wStart.setDate(wStart.getDate() + wi*7);
-    const lbl = (wi===0||wStart.getDate()<=7) ? (wStart.getMonth()+1)+'/' : '';
-    html += '<div style="font-size:9px;color:var(--text2);display:flex;align-items:center;justify-content:flex-end;padding-right:3px;">'+lbl+'</div>';
-    for(let d=0;d<7;d++){
-      const cell = new Date(wStart);
-      cell.setDate(cell.getDate()+d);
-      const key = cell.toISOString().slice(0,10);
-      const v = map[key]||0;
-      const ratio = maxVal>0 ? v/maxVal : 0;
-      let bg;
-      if(v===0) bg='var(--card-b)';
-      else if(ratio<0.25) bg='#1a6b3a';
-      else if(ratio<0.5) bg='#22a85a';
-      else if(ratio<0.75) bg='#33cc6e';
-      else bg='#4eff99';
-      const isFuture = cell > now;
-      html += '<div title="'+key+': Rp'+v.toLocaleString('id-ID')+'" style="width:100%;aspect-ratio:1;border-radius:2px;background:'+(isFuture?'transparent':bg)+';'+(isFuture?'border:1px solid var(--card-b)':'')+';min-width:14px;min-height:14px;"></div>';
-    }
-  }
-  grid.innerHTML = html;
-}
-
-function renderPrediction(){
-  const now = new Date();
-  const past30 = new Date(now); past30.setDate(past30.getDate()-30);
-  const past60 = new Date(now); past60.setDate(past60.getDate()-60);
-  let inflow30=0,outflow30=0,inflow60=0,outflow60=0;
-  (transactions||[]).forEach(function(t){
-    const td = t.tanggal ? new Date(t.tanggal) : null;
-    if(!td) return;
-    const amt = parseFloat(t.jumlah)||0;
-    const tipe = (t.tipe||'').toLowerCase();
-    const isIn = tipe.includes('masuk')||tipe==='pemasukan';
-    if(td>=past30&&td<=now){
-      if(isIn) inflow30+=amt; else outflow30+=amt;
-    } else if(td>=past60&&td<past30){
-      if(isIn) inflow60+=amt; else outflow60+=amt;
-    }
-  });
-  const predIn  = inflow30*0.7  + inflow60*0.3;
-  const predOut = outflow30*0.7 + outflow60*0.3;
-  const predNett = predIn - predOut;
-  function fmt(v){ return 'Rp'+Math.round(v).toLocaleString('id-ID'); }
-  const elIn  = document.getElementById('pred-inflow');
-  const elOut = document.getElementById('pred-outflow');
-  const elNett= document.getElementById('pred-nett');
-  const elBar = document.getElementById('pred-bar');
-  const elAlert = document.getElementById('threshold-alert');
-  const elThInput = document.getElementById('threshold-input');
-  if(elIn)  elIn.textContent  = fmt(predIn);
-  if(elOut) elOut.textContent = fmt(predOut);
-  if(elNett){
-    elNett.textContent = (predNett>=0?'+':'')+fmt(predNett);
-    elNett.style.color = predNett>=0 ? 'var(--green2)' : 'var(--red,#ff5a5a)';
-  }
-  if(elBar){
-    const total = predIn + predOut || 1;
-    const pIn = Math.round(predIn/total*100);
-    const pOut = 100 - pIn;
-    elBar.innerHTML = '<div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;">'
-      +'<div style="width:'+pIn+'%;background:var(--green2);border-radius:6px 0 0 6px;transition:width .5s;"></div>'
-      +'<div style="width:'+pOut+'%;background:#ff5a5a;border-radius:0 6px 6px 0;transition:width .5s;"></div>'
-      +'</div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text2);margin-top:2px;">'
-      +'<span>Prediksi In: '+pIn+'%</span><span>Prediksi Out: '+pOut+'%</span></div>';
-  }
-  if(elThInput && _thresholdVal>0) elThInput.value = _thresholdVal;
-  if(elAlert){
-    if(_thresholdVal>0 && predOut > _thresholdVal){
-      elAlert.style.display='block';
-      elAlert.innerHTML = '&#9888;&#65039; Prediksi pengeluaran <b>'+fmt(predOut)+'</b> melebihi batas <b>'+fmt(_thresholdVal)+'</b>!';
-    } else {
-      elAlert.style.display='none';
-    }
-  }
 }
 
 function initCarouselSwipe(){
@@ -5615,7 +5453,7 @@ function initCarouselSwipe(){
     const dx=e.changedTouches[0].clientX-startX;
     const dy=e.changedTouches[0].clientY-startY;
     if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){
-      if(dx<0) goToChart(Math.min(4,_carouselIdx+1));
+      if(dx<0) goToChart(Math.min(2,_carouselIdx+1));
       else goToChart(Math.max(0,_carouselIdx-1));
     }
   },{passive:true});
@@ -5626,7 +5464,7 @@ function initCarouselSwipe(){
     isDragging=false;
     const dx=e.clientX-startX;
     if(Math.abs(dx)>40){
-      if(dx<0) goToChart(Math.min(4,_carouselIdx+1));
+      if(dx<0) goToChart(Math.min(2,_carouselIdx+1));
       else goToChart(Math.max(0,_carouselIdx-1));
     }
   });
@@ -5669,6 +5507,6 @@ async function _appInit(){
 </body>
 </html> 
 
-// Build trigger: 04/15/2026 19:48:11 
-
-
+/ /   B u i l d   t r i g g e r :   0 4 / 1 5 / 2 0 2 6   1 9 : 4 8 : 1 1  
+ 
+ 
