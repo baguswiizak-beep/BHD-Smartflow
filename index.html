@@ -117,14 +117,14 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 /* ══════════════════════════════════════
    TOPBAR (mobile)
 ══════════════════════════════════════ */
-#topbar{display:none;align-items:center;gap:6px;padding:8px 10px;background:var(--card);border-bottom:1px solid var(--card-b);position:sticky;top:0;z-index:99;width:100%;box-sizing:border-box;min-height:48px;}
+#topbar{display:none;align-items:center;gap:6px;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--card-b);position:sticky;top:0;z-index:200;width:100%;box-sizing:border-box;min-height:48px;overflow:visible;}
 .tb-menu{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 .tb-menu svg{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:2;}
-.tb-brand{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.tb-brand{display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:hidden;}
 .tb-lm{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#8B6914,#D4A843);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#3A1E08;flex-shrink:0;overflow:hidden;}
 .tb-lm img{width:100%;height:100%;object-fit:cover;border-radius:8px;}
-.tb-name{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;}
-.tb-clock{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:3px 7px;border-radius:20px;margin-left:auto;letter-spacing:.02em;white-space:nowrap;flex-shrink:0;}
+.tb-name{font-size:11px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-clock{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:3px 7px;border-radius:20px;letter-spacing:.02em;white-space:nowrap;flex-shrink:0;}
 .tb-acts{display:flex;gap:5px;flex-shrink:0;}
 .tb-btn{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0;}
 .tb-btn:hover{background:var(--bg4);}
@@ -759,6 +759,8 @@ input,select,textarea{font-size:16px!important;}
 .form-input,.form-select{font-size:16px!important;}
 /* But keep display text size */
 .txn-amt,.hist-amt,.ar-num,.kc-val,.dp-stat-v{font-size:inherit!important;}
+@media(max-width:480px){.tb-clock{display:none\!important;}}
+#api-status-badge{display:none\!important;}
 @media(max-width:480px){
   input,select,textarea,.form-input,.form-select{font-size:16px!important;}
   .kas-grid{grid-template-columns:1fr 1fr;}
@@ -874,11 +876,7 @@ input,select,textarea{font-size:16px!important;}
     <div class="tb-brand"><div class="tb-lm">BHD</div><span class="tb-name">BHD Smart Flow</span></div>
     <div class="tb-clock" id="tb-clock">00:00:00</div>
     <!-- Indikator Sync Topbar (Mobile Friendly) -->
-    <div style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);padding:3px 8px;border-radius:20px;border:1px solid var(--card-b);flex-shrink:0;" onclick="syncFromSupabase()">
-      <span class="sync-dot" style="width:6px;height:6px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 4px var(--success);"></span>
-      <span class="sync-text" style="font-size:9px;font-weight:700;color:var(--text3);white-space:nowrap;">Update: <span id='sync-time-label'>—</span></span>
-    </div>
-    <span id="api-status-badge" title="Status koneksi server" style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--text3);border:1px solid var(--card-b);letter-spacing:.03em;cursor:default;display:none;">🟡 Offline</span>
+    <span id="api-status-badge" style="display:none;"></span>
     <div class="tb-acts">
       <button class="tb-btn" onclick="toggleTheme()" id="theme-btn"><svg id="ti-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="ti-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
       <div id="notif-wrap" onclick="showImportantNotif()">
@@ -3578,23 +3576,25 @@ function exportPDF(){
   .period-sep{margin-top:10px;padding-top:10px;border-top:1px solid rgba(212,168,67,.2);}
 
   /* ── TABLE ── */
-  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:24px;}
+  .table-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table{width:100%;border-collapse:collapse;font-size:clamp(9px,1.5vw,12.5px);margin-bottom:24px;table-layout:fixed;}
+  col.c-nopol{width:10%;}col.c-driver{width:17%;}col.c-num{width:14.6%;}
   thead th{
     background:linear-gradient(135deg,${GOLD2},${DARK});
-    color:${GOLD3};padding:12px 13px;text-align:center;
-    font-weight:700;border:1px solid ${GOLD2};font-size:11px;
-    text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;
+    color:${GOLD3};padding:clamp(6px,1vw,12px) clamp(4px,.8vw,10px);text-align:center;
+    font-weight:700;border:1px solid ${GOLD2};font-size:clamp(8px,1.1vw,11px);
+    text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;
   }
   thead th:first-child{text-align:center;}
   thead th:nth-child(2){text-align:left;}
-  tbody td{vertical-align:middle;}
-  tbody td:first-child{white-space:nowrap;font-weight:700;text-align:center;min-width:60px;}
-  tbody td:nth-child(2){min-width:100px;}
+  tbody td{vertical-align:middle;font-size:clamp(8px,1.2vw,12px);padding:clamp(5px,.9vw,10px) clamp(4px,.7vw,9px);overflow:hidden;text-overflow:ellipsis;}
+  tbody td:first-child{white-space:nowrap;font-weight:800;text-align:center;font-size:clamp(7px,1vw,11px);letter-spacing:.01em;}
+  tbody td:nth-child(2){word-break:break-word;}
   tbody td:nth-child(n+3){text-align:right;font-family:'Courier New',Consolas,monospace;font-weight:600;white-space:nowrap;}
   .total-row td{
     background:linear-gradient(to right,rgba(212,168,67,.12),rgba(212,168,67,.06));
     font-weight:800;border-top:3px solid ${GOLD};border-bottom:3px solid ${GOLD};
-    font-size:13px;padding:13px;color:${DARK};
+    font-size:clamp(10px,1.3vw,13px);padding:clamp(8px,1vw,13px) clamp(4px,.7vw,10px);color:${DARK};
     border-left:1px solid rgba(212,168,67,.3);border-right:1px solid rgba(212,168,67,.3);
     font-family:'Courier New',Consolas,monospace;white-space:nowrap;
   }
@@ -3636,17 +3636,33 @@ function exportPDF(){
 
   /* ── PRINT ── */
   @media print{
-    body{background:white!important;padding:0;}
-    .topbar{display:none!important;}
+    body{background:white\!important;padding:0;}
+    .topbar{display:none\!important;}
     .page-wrap{padding:0;max-width:100%;}
-    .container{box-shadow:none;border-radius:0;padding:20px;border:none;}
-    @page{size:A4 landscape;margin:12mm;}
-    table{page-break-inside:avoid;}
+    .container{box-shadow:none;border-radius:0;padding:16px;border:none;}
+    table{page-break-inside:avoid;font-size:9pt;width:100%;}
+    thead th{font-size:8pt;padding:6pt 5pt;}
+    tbody td{font-size:8.5pt;padding:5pt 4pt;}
+    .total-row td{font-size:9pt;padding:6pt 4pt;}
     .summary{page-break-inside:avoid;}
+    .table-scroll{overflow:visible\!important;}
+  }
+  @page{size:A4 landscape;margin:10mm;}
+  @media print and (orientation:portrait){
+    @page{size:A4 portrait;margin:8mm;}
+    table{font-size:7pt;}
+    thead th{font-size:6.5pt;padding:4pt 3pt;letter-spacing:0;}
+    tbody td{font-size:7pt;padding:4pt 3pt;}
+    tbody td:first-child{font-size:6.5pt;}
+    .total-row td{font-size:7.5pt;padding:5pt 3pt;}
+    .header{flex-direction:column;gap:8pt;}
+    .sum-grid{grid-template-columns:1fr;}
+    .container{padding:10px;}
+  }
   }
 
   /* ── MOBILE ── */
-  .table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  /* table-scroll defined above */
   @media(max-width:700px){
     .topbar{padding:8px 12px;gap:6px;}
     .topbar-title{font-size:10px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -3661,11 +3677,13 @@ function exportPDF(){
     .header-right{text-align:left;font-size:10px;}
     .company-box{padding:10px 12px;font-size:11px;}
     .company-box h3{font-size:13px;}
-    .table-wrap{border-radius:8px;border:1px solid rgba(212,168,67,.2);}
-    table{font-size:10px;min-width:520px;margin-bottom:0;}
-    thead th{padding:8px 7px;font-size:9.5px;}
-    tbody td{padding:7px 7px;}
-    .total-row td{padding:9px 7px;font-size:11px;}
+    .table-scroll{border-radius:8px;border:1px solid rgba(212,168,67,.2);}
+    table{font-size:clamp(9px,2.5vw,12px);table-layout:auto;}
+    col.c-nopol,col.c-driver,col.c-num{width:auto;}
+    thead th{padding:7px 5px;font-size:clamp(8px,2.2vw,10px);white-space:nowrap;}
+    tbody td{padding:6px 5px;font-size:clamp(8px,2.2vw,11px);}
+    tbody td:first-child{white-space:nowrap;font-size:clamp(7px,2vw,10px);}
+    .total-row td{padding:8px 5px;font-size:clamp(9px,2.3vw,11px);}
     .sum-grid{grid-template-columns:1fr;}
     .sum-item{font-size:11px;padding:7px 0;}
     .footer{flex-direction:column;gap:6px;font-size:10px;}
@@ -3722,16 +3740,20 @@ function exportPDF(){
   </div>
 
   <!-- TABLE -->
-  <div class="table-wrap">
+  <div class="table-scroll">
   <table>
+    <colgroup>
+      <col class="c-nopol"/><col class="c-driver"/>
+      <col class="c-num"/><col class="c-num"/><col class="c-num"/><col class="c-num"/><col class="c-num"/>
+    </colgroup>
     <thead><tr>
-      <th style="text-align:center;width:80px;">No. Pol</th>
+      <th>No. Pol</th>
       <th style="text-align:left;">Nama Driver</th>
-      <th style="text-align:center;">Inflow (Rp)</th>
-      <th style="text-align:center;">Out Tunai (Rp)</th>
-      <th style="text-align:center;">Out Onderdil (Rp)</th>
-      <th style="text-align:center;">Out Umum (Rp)</th>
-      <th style="text-align:center;">Nett (Rp)</th>
+      <th>Inflow (Rp)</th>
+      <th>Out Tunai (Rp)</th>
+      <th>Out Onderdil (Rp)</th>
+      <th>Out Umum (Rp)</th>
+      <th>Nett (Rp)</th>
     </tr></thead>
     <tbody>${tableRows}</tbody>
     <tfoot><tr class="total-row">
