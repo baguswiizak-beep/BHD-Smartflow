@@ -118,23 +118,19 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
    TOPBAR (mobile)
 ══════════════════════════════════════ */
 #topbar{display:none;align-items:center;gap:6px;padding:8px 10px;background:var(--card);border-bottom:1px solid var(--card-b);position:sticky;top:0;z-index:99;width:100%;box-sizing:border-box;min-height:48px;}
-.tb-menu{width:34px;height:34px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.tb-menu{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 .tb-menu svg{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:2;}
-.tb-brand{display:flex;align-items:center;gap:6px;flex:1;min-width:0;}
+.tb-brand{display:flex;align-items:center;gap:6px;flex-shrink:0;}
 .tb-lm{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#8B6914,#D4A843);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#3A1E08;flex-shrink:0;overflow:hidden;}
 .tb-lm img{width:100%;height:100%;object-fit:cover;border-radius:8px;}
-.tb-name{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* Clock & sync — sembunyikan di layar sangat kecil */
-.tb-clock{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:3px 7px;border-radius:20px;letter-spacing:.02em;white-space:nowrap;flex-shrink:0;}
-.tb-sync-pill{display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);padding:3px 8px;border-radius:20px;border:1px solid var(--card-b);flex-shrink:0;}
-@media(max-width:400px){.tb-clock{display:none!important;}.tb-sync-pill{display:none!important;}}
-@media(max-width:480px){.tb-clock{display:none!important;}}
+.tb-name{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;}
+.tb-clock{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:3px 7px;border-radius:20px;margin-left:auto;letter-spacing:.02em;white-space:nowrap;flex-shrink:0;}
 .tb-acts{display:flex;gap:5px;flex-shrink:0;}
-.tb-btn{width:34px;height:34px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0;}
+.tb-btn{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0;}
 .tb-btn:hover{background:var(--bg4);}
-.tb-btn svg{width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2;}
+.tb-btn svg{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:2;}
 #notif-wrap{position:relative;flex-shrink:0;}
-#notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--danger);border-radius:50%;border:2px solid var(--card);animation:pulse-notif 1.5s ease-in-out infinite;}
+#notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--danger);border-radius:50%;border:1.5px solid var(--card);animation:pulse-notif 1.5s ease-in-out infinite;}
 @keyframes pulse-notif{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.3);opacity:.7;}}
 
 /* ══════════════════════════════════════
@@ -878,7 +874,7 @@ input,select,textarea{font-size:16px!important;}
     <div class="tb-brand"><div class="tb-lm">BHD</div><span class="tb-name">BHD Smart Flow</span></div>
     <div class="tb-clock" id="tb-clock">00:00:00</div>
     <!-- Indikator Sync Topbar (Mobile Friendly) -->
-    <div class="tb-sync-pill" onclick="syncFromSupabase()">
+    <div style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);padding:3px 8px;border-radius:20px;border:1px solid var(--card-b);flex-shrink:0;" onclick="syncFromSupabase()">
       <span class="sync-dot" style="width:6px;height:6px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 4px var(--success);"></span>
       <span class="sync-text" style="font-size:9px;font-weight:700;color:var(--text3);white-space:nowrap;">Update: <span id='sync-time-label'>—</span></span>
     </div>
@@ -3582,32 +3578,23 @@ function exportPDF(){
   .period-sep{margin-top:10px;padding-top:10px;border-top:1px solid rgba(212,168,67,.2);}
 
   /* ── TABLE ── */
-  table{width:100%;border-collapse:collapse;font-size:clamp(9px,1.4vw,12.5px);margin-bottom:24px;table-layout:fixed;}
-  col.col-nopol{width:9%;}
-  col.col-driver{width:18%;}
-  col.col-num{width:14.6%;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:24px;}
   thead th{
     background:linear-gradient(135deg,${GOLD2},${DARK});
-    color:${GOLD3};padding:clamp(6px,1vw,12px) clamp(4px,.8vw,10px);text-align:center;
-    font-weight:700;border:1px solid ${GOLD2};font-size:clamp(8px,1.1vw,11px);
-    text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;
+    color:${GOLD3};padding:12px 13px;text-align:center;
+    font-weight:700;border:1px solid ${GOLD2};font-size:11px;
+    text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;
   }
+  thead th:first-child{text-align:center;}
   thead th:nth-child(2){text-align:left;}
-  tbody td{
-    vertical-align:middle;overflow:hidden;
-    padding:clamp(5px,.9vw,10px) clamp(4px,.7vw,9px);
-    border:1px solid rgba(212,168,67,.2);
-    font-size:clamp(8px,1.2vw,12px);
-  }
-  tbody td:first-child{white-space:nowrap;font-weight:800;text-align:center;font-size:clamp(8px,1.1vw,11.5px);}
-  tbody td:nth-child(2){font-size:clamp(8px,1.1vw,11.5px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  tbody td{vertical-align:middle;}
+  tbody td:first-child{white-space:nowrap;font-weight:700;text-align:center;min-width:60px;}
+  tbody td:nth-child(2){min-width:100px;}
   tbody td:nth-child(n+3){text-align:right;font-family:'Courier New',Consolas,monospace;font-weight:600;white-space:nowrap;}
   .total-row td{
     background:linear-gradient(to right,rgba(212,168,67,.12),rgba(212,168,67,.06));
     font-weight:800;border-top:3px solid ${GOLD};border-bottom:3px solid ${GOLD};
-    font-size:clamp(9px,1.3vw,13px);
-    padding:clamp(7px,1vw,13px) clamp(4px,.8vw,11px);
-    color:${DARK};
+    font-size:13px;padding:13px;color:${DARK};
     border-left:1px solid rgba(212,168,67,.3);border-right:1px solid rgba(212,168,67,.3);
     font-family:'Courier New',Consolas,monospace;white-space:nowrap;
   }
@@ -3652,29 +3639,13 @@ function exportPDF(){
     body{background:white!important;padding:0;}
     .topbar{display:none!important;}
     .page-wrap{padding:0;max-width:100%;}
-    .container{box-shadow:none;border-radius:0;padding:15px;border:none;}
-    .table-wrap{overflow:visible!important;}
-    table{font-size:9pt;width:100%;}
-    thead th{font-size:8pt;padding:6pt 5pt;}
-    tbody td{font-size:8.5pt;padding:5pt 4pt;}
-    .total-row td{font-size:9pt;padding:6pt 5pt;}
-    .header-info h1{font-size:16pt;}
+    .container{box-shadow:none;border-radius:0;padding:20px;border:none;}
+    @page{size:A4 landscape;margin:12mm;}
     table{page-break-inside:avoid;}
     .summary{page-break-inside:avoid;}
   }
-  @page{size:A4 landscape;margin:10mm;}
-  @media print and (orientation:portrait){
-    @page{size:A4 portrait;margin:8mm;}
-    table{font-size:7pt;}
-    thead th{font-size:6.5pt;padding:4pt 3pt;}
-    tbody td{font-size:7pt;padding:4pt 3pt;}
-    .total-row td{font-size:7.5pt;}
-    .header{flex-direction:column;gap:8pt;}
-    .header-right{text-align:left;}
-    .sum-grid{grid-template-columns:1fr;}
-  }
 
-  /* ── MOBILE SCREEN ── */
+  /* ── MOBILE ── */
   .table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
   @media(max-width:700px){
     .topbar{padding:8px 12px;gap:6px;}
@@ -3691,7 +3662,10 @@ function exportPDF(){
     .company-box{padding:10px 12px;font-size:11px;}
     .company-box h3{font-size:13px;}
     .table-wrap{border-radius:8px;border:1px solid rgba(212,168,67,.2);}
-    table{font-size:clamp(9px,2.5vw,11px);min-width:480px;margin-bottom:0;}
+    table{font-size:10px;min-width:520px;margin-bottom:0;}
+    thead th{padding:8px 7px;font-size:9.5px;}
+    tbody td{padding:7px 7px;}
+    .total-row td{padding:9px 7px;font-size:11px;}
     .sum-grid{grid-template-columns:1fr;}
     .sum-item{font-size:11px;padding:7px 0;}
     .footer{flex-direction:column;gap:6px;font-size:10px;}
@@ -3750,19 +3724,14 @@ function exportPDF(){
   <!-- TABLE -->
   <div class="table-wrap">
   <table>
-    <colgroup>
-      <col class="col-nopol"/><col class="col-driver"/>
-      <col class="col-num"/><col class="col-num"/>
-      <col class="col-num"/><col class="col-num"/><col class="col-num"/>
-    </colgroup>
     <thead><tr>
-      <th>No. Pol</th>
+      <th style="text-align:center;width:80px;">No. Pol</th>
       <th style="text-align:left;">Nama Driver</th>
-      <th>Inflow (Rp)</th>
-      <th>Out Tunai (Rp)</th>
-      <th>Out Onderdil</th>
-      <th>Out Umum</th>
-      <th>Nett (Rp)</th>
+      <th style="text-align:center;">Inflow (Rp)</th>
+      <th style="text-align:center;">Out Tunai (Rp)</th>
+      <th style="text-align:center;">Out Onderdil (Rp)</th>
+      <th style="text-align:center;">Out Umum (Rp)</th>
+      <th style="text-align:center;">Nett (Rp)</th>
     </tr></thead>
     <tbody>${tableRows}</tbody>
     <tfoot><tr class="total-row">
@@ -5274,4 +5243,115 @@ async function syncFromSupabase(){
       }
     } catch(e) { console.warn('Sync settings fail:', e); }
 
-    // Selalu render gudang setelah sync (tidak tergantung txnSuccess
+    // Selalu render gudang setelah sync (tidak tergantung txnSuccess)
+    renderGudang?.();
+    refreshDetailHero?.();
+
+    if(txnSuccess){
+      setSyncStatus('ok');
+      renderDashboard();
+      applyTxnFilters?.();
+      renderLaporanTable?.();
+      if(typeof renderKeuanganStats==='function') renderKeuanganStats();
+    } else {
+      setSyncStatus('error', 'Gagal memuat transaksi');
+    }
+  }catch(e){
+    console.error('Global Sync Error:',e);
+    setSyncStatus('error', e.message);
+  } finally {
+    _isSyncing = false;
+  }
+}
+
+// ═══════════════════════════════ INIT ════════════════════════════
+// ═══ CHART CAROUSEL (Swipeable) ═══
+let _carouselIdx=0;
+function goToChart(idx){
+  _carouselIdx=idx;
+  const slides=document.getElementById('chart-slides');
+  if(slides) slides.style.transform=`translateX(-${idx*100}%)`;
+  document.querySelectorAll('.chart-dot').forEach((d,i)=>{
+    d.style.background=i===idx?'var(--green)':'var(--card-b)';
+    d.style.width=i===idx?'18px':'6px';
+    d.style.borderRadius='3px';
+  });
+  // Re-render chart on slide change (canvas resize fix)
+  if(idx===0) setTimeout(()=>{renderDonut(totalInflow(transactions),totalOutflow(transactions));},50);
+  if(idx===1) setTimeout(()=>{renderMiniLine();},50);
+  if(idx===2) setTimeout(()=>{renderBarChart(currentBarFilter);},50);
+}
+
+function initCarouselSwipe(){
+  const wrap=document.getElementById('chart-carousel');
+  if(!wrap||wrap._swipeInit) return;
+  wrap._swipeInit=true;
+  let startX=0,startY=0,isDragging=false;
+  wrap.addEventListener('touchstart',e=>{
+    startX=e.touches[0].clientX;
+    startY=e.touches[0].clientY;
+    isDragging=true;
+  },{passive:true});
+  wrap.addEventListener('touchend',e=>{
+    if(!isDragging) return;
+    isDragging=false;
+    const dx=e.changedTouches[0].clientX-startX;
+    const dy=e.changedTouches[0].clientY-startY;
+    if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){
+      if(dx<0) goToChart(Math.min(2,_carouselIdx+1));
+      else goToChart(Math.max(0,_carouselIdx-1));
+    }
+  },{passive:true});
+  // Mouse drag for desktop
+  wrap.addEventListener('mousedown',e=>{startX=e.clientX;isDragging=true;});
+  wrap.addEventListener('mouseup',e=>{
+    if(!isDragging) return;
+    isDragging=false;
+    const dx=e.clientX-startX;
+    if(Math.abs(dx)>40){
+      if(dx<0) goToChart(Math.min(2,_carouselIdx+1));
+      else goToChart(Math.max(0,_carouselIdx-1));
+    }
+  });
+}
+
+async function _appInit(){
+  try{
+    setTheme(isDark?'dark':'light');
+    updateSettingsAdminInfo();
+    initCarouselSwipe();
+    goToChart(0);
+    showToast('⏳ Memuat data...');
+    await syncFromSupabase();
+    showToast('✅ Data berhasil dimuat');
+    checkDocWarnings();
+    setInterval(syncFromSupabase, 20000);
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) syncFromSupabase(); });
+    // Audit log format: [Waktu] - [Admin] - [Aksi] - [Detail]
+    const waktu=new Date().toLocaleString('id-ID');
+    const adminName=window.activeAdmin?.name||'System';
+    logAudit('login','login',`[${waktu}] - [${adminName}] - [Login] - [Masuk ke sistem, role: ${window.activeAdmin?.role||'admin'}]`);
+  }catch(e){ console.error('Init error:',e); setSyncStatus('error'); }
+}
+// Fetch registration code on page load so it's ready for new admin registration
+(async function preFetchSettings(){
+  try {
+    const settings = await sbFetch('settings',{select:'*',limit:100});
+    if(Array.isArray(settings)){
+      const regCode = settings.find(s=>s.key==='admin_reg_code')?.value;
+      if(regCode) {
+        window._ADMIN_REG_CODE = regCode;
+        console.log('✅ Registration code synced from database');
+      }
+    }
+  } catch(e) { console.warn('Pre-fetch settings fail:', e); }
+})();
+// App init is triggered by login — do NOT auto-call here
+
+</script>
+</body>
+</html> 
+
+/ /   B u i l d   t r i g g e r :   0 4 / 1 5 / 2 0 2 6   1 9 : 4 8 : 1 1  
+ 
+ 
