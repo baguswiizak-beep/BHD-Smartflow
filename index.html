@@ -40,6 +40,9 @@
   flex-direction:column;padding:20px;
   animation:fadeUp .4s ease;overflow:hidden;
 }
+/* Paksa background body saat login visible agar tidak hitam polos */
+body:has(#login-overlay[style*="display"]:not([style*="none"])) { background: #1A0F05 !important; }
+
 #login-overlay::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 25% 75%,rgba(212,168,67,.2) 0%,transparent 55%),radial-gradient(ellipse at 75% 25%,rgba(180,120,40,.14) 0%,transparent 50%);pointer-events:none;}
 #login-overlay::after{content:'';position:absolute;bottom:-80px;left:-5%;right:-5%;height:220px;background:radial-gradient(ellipse at 40% 100%,rgba(180,130,40,.12) 0%,transparent 70%),radial-gradient(ellipse at 65% 90%,rgba(139,105,20,.15) 0%,transparent 60%);pointer-events:none;}
 .login-box{
@@ -66,7 +69,7 @@
 .login-ver{font-size:9.5px;color:rgba(255,235,205,.15);text-align:center;margin-top:22px;letter-spacing:.03em;}
 
 
-body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;scroll-behavior:smooth;}
+body{font-family:'Inter',-apple-system,sans-serif;background:#1A0F05;color:var(--text);min-height:100vh;overflow-x:hidden;scroll-behavior:smooth;}
 #main{-webkit-overflow-scrolling:touch;}
 .page{contain:layout style;}
 
@@ -1567,7 +1570,9 @@ async function doLogin(){
     const app=document.getElementById('app');
     if(overlay){overlay.style.opacity='0';overlay.style.transition='opacity .4s';setTimeout(()=>{overlay.style.display='none';},400);}
     if(app){app.style.display='flex';}
-    setTimeout(()=>{_appInit();},100);
+    // Reset body background ke var(--bg) setelah login
+    document.body.style.background='';
+    setTimeout(()=>{_appInit();},150);
   }
 }
 
@@ -5861,6 +5866,10 @@ function initCarouselSwipe(){
 async function _appInit(){
   try{
     setTheme(isDark?'dark':'light');
+    // Set body background sesuai tema agar tidak blank
+    document.body.style.background = '';
+    // Tampilkan halaman dashboard
+    showPage('dashboard', document.getElementById('sb-dashboard'), 'bn-dashboard');
     updateSettingsAdminInfo();
     initCarouselSwipe();
     goToChart(0);
