@@ -769,6 +769,57 @@ input,select,textarea{font-size:16px!important;}
   .dp-stats{grid-template-columns:1fr 1fr 1fr!important;}
 }
 
+
+/* ─── TASK10: STATUS STRIP & FOTO ARMADA ─── */
+.fleet-status-strip{display:flex;gap:8px;margin-bottom:12px;}
+.fss-card{flex:1;background:var(--card);border:1px solid var(--card-b);border-radius:12px;padding:10px 12px;text-align:center;position:relative;overflow:hidden;}
+.fss-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.fss-card.jalan::before{background:var(--green2);}
+.fss-card.bengkel::before{background:var(--orange);}
+.fss-card.antre::before{background:#F0B400;}
+.fss-num{font-size:20px;font-weight:800;color:var(--text);}
+.fss-lbl{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+
+/* Foto di fleet card */
+.fcu-foto{width:42px;height:42px;border-radius:12px;object-fit:cover;border:1.5px solid var(--card-b);flex-shrink:0;cursor:pointer;}
+.fcu-foto-placeholder{width:42px;height:42px;border-radius:12px;background:var(--bg3);border:1.5px dashed var(--card-b);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s;}
+.fcu-foto-placeholder:hover{border-color:var(--orange);background:var(--orange-bg);}
+.fcu-foto-placeholder svg{width:16px;height:16px;stroke:var(--text3);fill:none;stroke-width:1.5;}
+.fcu-foto-placeholder:hover svg{stroke:var(--orange);}
+
+/* Status badge inline */
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.status-badge.jalan{background:rgba(125,206,19,.13);color:var(--green2);border:1px solid var(--green-bd);}
+.status-badge.bengkel{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-bd);}
+.status-badge.antre{background:rgba(240,180,0,.12);color:#A07000;border:1px solid rgba(240,180,0,.22);}
+.status-badge .sb-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.status-badge.jalan .sb-dot{background:var(--green2);box-shadow:0 0 5px var(--green2);}
+.status-badge.bengkel .sb-dot{background:var(--orange);}
+.status-badge.antre .sb-dot{background:#F0B400;animation:pulse 1.5s infinite;}
+
+/* Foto di hero detail */
+.dp-foto-hero{width:60px;height:60px;border-radius:14px;object-fit:cover;border:2px solid rgba(255,255,255,.2);flex-shrink:0;}
+.dp-foto-hero-placeholder{width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#CC5200,#FF6700,#FF9A40);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
+
+/* Quick status change buttons */
+.status-quick-btns{display:flex;gap:6px;margin-top:8px;}
+.sqb{flex:1;padding:7px 4px;border-radius:10px;border:1.5px solid var(--card-b);background:var(--bg3);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;color:var(--text2);}
+.sqb:hover{transform:translateY(-1px);}
+.sqb.jalan{border-color:var(--green-bd);background:rgba(125,206,19,.1);color:var(--green2);}
+.sqb.bengkel{border-color:var(--orange-bd);background:var(--orange-bg);color:var(--orange);}
+.sqb.antre{border-color:rgba(240,180,0,.3);background:rgba(240,180,0,.1);color:#A07000;}
+.sqb.active{border-width:2px;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+
+/* Catatan unit */
+.unit-notes{font-size:11px;color:var(--text2);background:var(--bg3);border-radius:8px;padding:7px 10px;border-left:3px solid var(--orange-bd);margin-top:6px;white-space:pre-wrap;line-height:1.45;}
+
+/* Foto upload area di modal */
+.foto-upload-area{width:100%;height:80px;border:2px dashed var(--card-b);border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .15s;background:var(--bg3);overflow:hidden;position:relative;}
+.foto-upload-area:hover{border-color:var(--orange);background:var(--orange-bg);}
+.foto-upload-area img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;border-radius:10px;}
+.foto-upload-area .fua-label{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;position:relative;z-index:1;}
+.foto-upload-area .fua-label svg{width:16px;height:16px;stroke:var(--text3);fill:none;stroke-width:1.5;}
+
 </style>
 </head>
 <body>
@@ -1114,6 +1165,11 @@ input,select,textarea{font-size:16px!important;}
       </div>
       <div id="tab-unit-view">
         <div class="add-strip" onclick="openSmModal('unit','')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Tambah Unit Armada Baru</span></div>
+        <div class="fleet-status-strip" id="fleet-status-strip">
+          <div class="fss-card jalan"><div class="fss-num" id="fss-jalan">0</div><div class="fss-lbl">🟢 Jalan</div></div>
+          <div class="fss-card antre"><div class="fss-num" id="fss-antre">0</div><div class="fss-lbl">🟡 Antre</div></div>
+          <div class="fss-card bengkel"><div class="fss-num" id="fss-bengkel">0</div><div class="fss-lbl">🔴 Bengkel</div></div>
+        </div>
         <div id="fleet-unit-list"></div>
       </div>
       <div id="tab-driver-view" style="display:none;">
@@ -4035,6 +4091,51 @@ function switchArmadaTab(tab,btn){
   if(tab==='driver')renderDriverList();
 }
 
+
+// ─── TASK10: FOTO ARMADA HELPERS ───
+async function uploadFotoArmada(file, nopol){
+  // Upload ke Supabase Storage bucket 'armada-photos'
+  const SB_URL = typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : (window._SB_URL||'');
+  const SB_KEY = typeof SUPABASE_KEY !== 'undefined' ? SUPABASE_KEY : (window._SB_KEY||'');
+  if(!SB_URL || !SB_KEY) throw new Error('Supabase config missing');
+  const ext = file.name.split('.').pop().toLowerCase()||'jpg';
+  const path = `fleet/${nopol.replace(/\s/g,'_')}_${Date.now()}.${ext}`;
+  const res = await fetch(`${SB_URL}/storage/v1/object/armada-photos/${path}`,{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type||'image/jpeg','x-upsert':'true'},
+    body: file
+  });
+  if(!res.ok){
+    const txt = await res.text();
+    // Bucket mungkin belum ada atau private — fallback ke base64 local preview
+    throw new Error('Storage error '+res.status+': '+txt.slice(0,120));
+  }
+  return `${SB_URL}/storage/v1/object/public/armada-photos/${path}`;
+}
+
+function previewFoto(input){
+  const file=input.files?.[0];if(!file)return;
+  const area=document.getElementById('foto-upload-area');if(!area)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    area.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;border-radius:10px;"/><div style="position:relative;z-index:1;background:rgba(0,0,0,.55);color:#fff;padding:3px 8px;border-radius:6px;font-size:10px;">Foto dipilih ✓</div>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function removeFoto(unitId){
+  if(!confirm('Hapus foto armada ini?')) return;
+  const f=fleetData.find(x=>x.id===unitId);if(!f)return;
+  f.foto_url='';
+  try {
+    await sbFetch('fleet',{method:'PATCH',filters:{id:unitId},body:{foto_url:''}});
+    showToast('Foto dihapus');
+    renderFleetUnits();
+    closeSm();
+    openSmModal('unit', unitId);
+  } catch(e){ showToast('Gagal hapus foto: '+e.message); }
+}
+
 function renderFleetUnits(){
   const el=document.getElementById('fleet-unit-list');if(!el)return;
   if(fleetData.length===0){
@@ -4146,7 +4247,7 @@ function refreshDetailHero(){
   const heroEl=document.getElementById('dp-hero');if(!heroEl)return;
   heroEl.innerHTML=`
     <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px;position:relative;z-index:1;">
-      <div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#CC5200,#FF6700,#FF9A40);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;">${f.nopol.replace(/\s/g,'').slice(-4)}</div>
+      ${f.foto_url?`<img class="dp-foto-hero" src="${f.foto_url}" alt="${f.nopol}" onerror="this.outerHTML='<div class=dp-foto-hero-placeholder>'+f.nopol.replace(/\\s/g,'').slice(-4)+'</div>'"/>`:`<div class="dp-foto-hero-placeholder">${f.nopol.replace(/\s/g,'').slice(-4)}</div>`}
       <div><div class="dp-nopol">${f.nopol}</div><div class="dp-driver">${f.driver}</div>${periodLabel}</div>
       <div style="margin-left:auto;">${f.status==='antre'?'<span class="antre-pulse"><span class="ap-dot"></span>Antre</span>':`<span class="chip ${f.status==='jalan'?'chip-green':'chip-orange'}">${sIcoFn(f.status)} ${f.status.charAt(0).toUpperCase()+f.status.slice(1)}</span>`}</div>
     </div>
@@ -4361,6 +4462,14 @@ function openSmModal(type,val){
       <div class="form-row">
         <div><label class="form-label">Tgl Pajak</label><input type="date" class="form-input" id="sm-pajak" value="${u?u.pajak:''}"/></div>
         <div><label class="form-label">Tgl KIR</label><input type="date" class="form-input" id="sm-kir" value="${u?u.kir:''}"/></div>
+      </div>
+      <div><label class="form-label">Catatan Kondisi</label><input class="form-input" id="sm-catatan" value="${u?u.catatan||'':''}" placeholder="Contoh: AC rusak, ban depan tipis..."/></div>
+      <div><label class="form-label">Foto Armada</label>
+        <div class="foto-upload-area" id="foto-upload-area" onclick="document.getElementById('sm-foto-file').click()">
+          ${u&&u.foto_url?`<img src="${u.foto_url}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;border-radius:10px;"/><div style="position:relative;z-index:1;background:rgba(0,0,0,.5);color:#fff;padding:3px 8px;border-radius:6px;font-size:10px;">Ganti Foto</div>`:'<div class="fua-label"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Upload Foto Armada</div>'}
+        </div>
+        <input type="file" id="sm-foto-file" accept="image/*" style="display:none" onchange="previewFoto(this)"/>
+        ${u&&u.foto_url?`<button style="margin-top:4px;padding:4px 10px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text3);font-size:10px;cursor:pointer;font-family:'Inter',sans-serif;" onclick="removeFoto('${safeUnitId}')">🗑 Hapus Foto</button>`:''}
       </div>
       <button class="sm-btn orange" onclick="saveUnit('${safeUnitId}')">${isEdit?'Simpan':'Tambah Unit'}</button>
       ${isEdit?`<button class="sm-btn danger" onclick="deleteUnit('${safeUnitId}');closeSm()">Hapus Unit</button>`:''}`;
