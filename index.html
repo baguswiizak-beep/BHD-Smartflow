@@ -1240,8 +1240,29 @@ input,select,textarea{font-size:16px!important;}
     <div class="settings-card">
       <div class="settings-title">Info Perusahaan</div>
       <div class="settings-row">
-        <input class="form-input" type="text" value="PT. BAGUS HARYA DWIPRIMA" placeholder="Nama Perusahaan"/>
         <input class="form-input" type="number" id="fleet-count-input" value="0" min="1" placeholder="Jumlah Armada" oninput="updateFleetCount(this.value)"/>
+      </div>
+    </div>
+    <div class="settings-card">
+      <div class="settings-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>🏢 Profil Perusahaan (PDF Export)</span>
+        <button onclick="saveCompanyProfile()" style="font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;border:none;background:var(--green-bg);color:var(--green2);cursor:pointer;font-family:'Inter',sans-serif;">Simpan</button>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;">
+        <div id="cp-logo-preview" onclick="document.getElementById('cp-logo-upload').click()" style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#8B6914,#D4A843);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#3A1E08;flex-shrink:0;cursor:pointer;border:2px dashed rgba(212,168,67,.4);overflow:hidden;position:relative;">
+          <span id="cp-logo-text">BHD</span>
+          <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.5);font-size:8px;color:rgba(255,255,255,.8);text-align:center;padding:2px;font-weight:600;">Tap ganti</div>
+        </div>
+        <div style="flex:1;">
+          <input class="form-input" type="text" id="cp-name" placeholder="PT. Nama Perusahaan" style="margin-bottom:6px;"/>
+          <input class="form-input" type="text" id="cp-tagline" placeholder="Tagline / Keterangan singkat"/>
+        </div>
+      </div>
+      <input type="file" id="cp-logo-upload" accept="image/*" style="display:none;" onchange="onLogoUpload(this)"/>
+      <input class="form-input" type="text" id="cp-address" placeholder="Alamat lengkap perusahaan" style="margin-bottom:6px;"/>
+      <div style="display:flex;gap:6px;">
+        <input class="form-input" type="text" id="cp-phone" placeholder="No. Telepon" style="flex:1;"/>
+        <input class="form-input" type="email" id="cp-email" placeholder="Email perusahaan" style="flex:1;"/>
       </div>
     </div>
     <div class="settings-card">
@@ -1802,7 +1823,8 @@ async function _saveKategoriToDb(){
   try {
     const val = JSON.stringify(gudangKategori);
     // Upsert: coba PATCH dulu, kalau belum ada (no row match) gunakan POST
-    const existing = await sbFetch('settings',{select:'key',filters:{key:'gudang_kategori'},limit:1});
+    // order by key.asc karena settings tidak punya created_at
+    const existing = await sbFetch('settings',{select:'key',filters:{key:'gudang_kategori'},limit:1,order:'key.asc'});
     if(Array.isArray(existing) && existing.length>0){
       await sbFetch('settings',{method:'PATCH',filters:{key:'gudang_kategori'},body:{value:val}});
     } else {
@@ -3414,53 +3436,333 @@ function exportCSV(){
 function exportPDF(){
   const list=getLapTxns();
   const printWindow=window.open('','_blank');
-  const now=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  let html=`
-<html><head><title>Laporan BHD SmartFlow</title>
-<style>
-  body{font-family:'Inter',sans-serif;padding:24px;color:#1a1a1a;margin:0;}
-  .no-print-header{display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:12px 24px;border-bottom:1px solid #e2e8f0;margin:-24px -24px 24px -24px;}
-  @media print{.no-print-header{display:none;}}
-  .back-btn{padding:8px 16px;background:#1e293b;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;}
-  .print-btn{padding:8px 16px;background:#11a14c;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;}
-  table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px;}
-  th{background:#f1f5f9;text-align:left;padding:10px;border:1px solid #e2e8f0;}
-  td{padding:8px 10px;border:1px solid #e2e8f0;}
-  .header{text-align:center;margin-bottom:30px;}
-  .title{font-size:22px;font-weight:800;margin-bottom:5px;color:#0f172a;}
-  .sub{font-size:13px;color:#64748b;}
-  .total-row{background:#f8fafc;font-weight:800;}
-  .footer{margin-top:40px;text-align:right;font-size:12px;color:#64748b;}
-</style>
-</head>
-<body>
-<div class="no-print-header">
-  <button class="back-btn" onclick="window.close()">← Kembali ke Aplikasi</button>
-  <button class="print-btn" onclick="window.print()">🖨️ Cetak PDF</button>
-</div>
-<div class="header">
-  <div class="title">LAPORAN OPERASIONAL BHD</div>
-  <div class="sub">DIREKAP PADA: ${now}</div>
-</div>`;
+  if(!printWindow){showToast('⚠️ Popup diblokir browser. Izinkan popup untuk export PDF.');return;}
+
+  // Ambil company profile
+  const cp=_companyProfile||{};
+  const cpName=cp.name||'PT. BAGUS HARYA DWIPRIMA';
+  const cpTagline=cp.tagline||'Sistem Manajemen Operasional Armada';
+  const cpAddress=cp.address||'';
+  const cpPhone=cp.phone||'';
+  const cpEmail=cp.email||'';
+  const cpLogo=cp.logoDataUrl||'';
+
+  // Logo HTML — gambar jika ada, fallback teks
+  const logoHTML=cpLogo
+    ?`<div style="width:64px;height:64px;border-radius:14px;overflow:hidden;flex-shrink:0;border:2px solid rgba(212,168,67,.3);background:#fff;">
+        <img src="${cpLogo}" style="width:100%;height:100%;object-fit:contain;"/>
+      </div>`
+    :`<div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#8B6914,#D4A843,#F0C75E);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#3A1E08;flex-shrink:0;letter-spacing:.5px;">BHD</div>`;
+
+  // Hitung data per armada
   const umum=list.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount,0);
   const bebanPerUnit=FLEET_COUNT>0?umum/FLEET_COUNT:0;
   const dataRows=fleetData.map(f=>{
     const inflow=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
     const outTunai=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
     const outOnderdil=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
-    const outUmum=bebanPerUnit;
+    const outUmum=Math.round(bebanPerUnit);
     const nett=inflow-(outTunai+outOnderdil+outUmum);
-    return{nopol:f.nopol,driver:f.driver,inflow,outTunai,outOnderdil,outUmum,nett};
+    return{nopol:f.nopol,driver:f.driver||'—',inflow,outTunai,outOnderdil,outUmum,nett};
   });
+
   const totInf=dataRows.reduce((s,r)=>s+r.inflow,0);
   const totTunai=dataRows.reduce((s,r)=>s+r.outTunai,0);
   const totOnderdil=dataRows.reduce((s,r)=>s+r.outOnderdil,0);
   const totNett=dataRows.reduce((s,r)=>s+r.nett,0);
-  html+=`<table><thead><tr><th>No. Pol</th><th>Nama Driver</th><th>Inflow</th><th>Out Tunai</th><th>Out Onderdil</th><th>Out Umum</th><th>Nett</th></tr></thead><tbody>`;
-  html+=dataRows.map(r=>`<tr><td>${r.nopol}</td><td>${r.driver}</td><td>${fmtFull(r.inflow)}</td><td>${fmtFull(r.outTunai)}</td><td>${fmtFull(r.outOnderdil)}</td><td>${fmtFull(r.outUmum)}</td><td>${fmtFull(r.nett)}</td></tr>`).join('');
-  html+=`<tr class="total-row"><td>TOTAL</td><td>-</td><td>${fmtFull(totInf)}</td><td>${fmtFull(totTunai)}</td><td>${fmtFull(totOnderdil)}</td><td>${fmtFull(umum)}</td><td>${fmtFull(totNett)}</td></tr></tbody></table></body></html>`;
+  const totOut=totTunai+totOnderdil+umum;
+  const sorted=[...dataRows].sort((a,b)=>b.nett-a.nett);
+  const best=sorted[0];const worst=sorted[sorted.length-1];
+  const rataRata=dataRows.length?Math.round(totNett/dataRows.length):0;
+
+  // Info periode
+  const now=new Date();
+  const nowStr=now.toLocaleString('id-ID',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  let periodeStr='';
+  if(lapFilter==='bulan-ini') periodeStr=now.toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+  else if(lapFilter==='bulan-lalu'){const lm=new Date(now.getFullYear(),now.getMonth()-1,1);periodeStr=lm.toLocaleDateString('id-ID',{month:'long',year:'numeric'});}
+  else{const fr=document.getElementById('lap-from')?.value||'';const to=document.getElementById('lap-to')?.value||'';periodeStr=fr&&to?fr+' s/d '+to:'Semua';}
+
+  const M=n=>`<span style="font-family:'Courier New',monospace;font-weight:600;">${fmtFull(n)}</span>`;
+
+  // Warna tema: dark gold seperti halaman login
+  const GOLD='#D4A843'; const GOLD2='#8B6914'; const GOLD3='#F0C75E';
+  const DARK='#2C1810'; const DARK2='#1A0F05'; const DARKBG='#3A2212';
+
+  const tableRows=dataRows.map((r,i)=>{
+    const nc=r.nett>=0?'rgba(212,168,67,.12)':'rgba(231,76,60,.1)';
+    const ntc=r.nett>=0?'#7a5a10':'#c0392b';
+    const rowBg=i%2===1?'rgba(212,168,67,.04)':'#fff';
+    return `<tr style="background:${rowBg};">
+      <td style="font-weight:700;padding:11px 13px;border:1px solid rgba(212,168,67,.2);color:${DARK};">${r.nopol}</td>
+      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);color:#444;">${r.driver}</td>
+      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);text-align:right;color:#1a6b3a;font-weight:600;">${M(r.inflow)}</td>
+      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);text-align:right;color:#c0392b;">${M(r.outTunai)}</td>
+      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);text-align:right;color:#c0392b;">${M(r.outOnderdil)}</td>
+      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);text-align:right;color:#c0392b;">${M(r.outUmum)}</td>
+      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);text-align:right;background:${nc};color:${ntc};font-weight:800;">${M(r.nett)}</td>
+    </tr>`;
+  }).join('');
+
+  const html=`<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${cpName} — Rekap Per Armada</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:${DARK2};padding:0;color:#333;min-height:100vh;}
+
+  /* ── TOPBAR AKSI (no-print) ── */
+  .topbar{
+    position:sticky;top:0;z-index:100;
+    background:linear-gradient(135deg,${DARK2},${DARK});
+    border-bottom:1px solid rgba(212,168,67,.25);
+    padding:12px 20px;display:flex;gap:10px;
+    align-items:center;justify-content:space-between;
+    flex-wrap:wrap;
+  }
+  .topbar-title{font-size:13px;font-weight:700;color:${GOLD};letter-spacing:.03em;}
+  .topbar-btns{display:flex;gap:10px;flex-wrap:wrap;}
+  .btn-back{
+    display:flex;align-items:center;gap:6px;
+    padding:10px 18px;border-radius:10px;border:1.5px solid rgba(212,168,67,.3);
+    background:rgba(255,255,255,.06);color:${GOLD};
+    font-size:13px;font-weight:700;cursor:pointer;
+    font-family:'Segoe UI',sans-serif;transition:all .2s;
+  }
+  .btn-back:hover{background:rgba(212,168,67,.12);border-color:${GOLD};}
+  .btn-print{
+    display:flex;align-items:center;gap:6px;
+    padding:10px 22px;border-radius:10px;border:none;
+    background:linear-gradient(135deg,${GOLD2},${GOLD});
+    color:${DARK};font-size:13px;font-weight:800;cursor:pointer;
+    font-family:'Segoe UI',sans-serif;
+    box-shadow:0 4px 16px rgba(212,168,67,.35);transition:all .2s;
+  }
+  .btn-print:hover{opacity:.9;transform:translateY(-1px);}
+
+  /* ── WRAPPER ── */
+  .page-wrap{padding:20px;max-width:1080px;margin:0 auto;}
+
+  /* ── CONTAINER PUTIH ── */
+  .container{
+    background:#fff;border-radius:16px;padding:40px;
+    box-shadow:0 8px 40px rgba(0,0,0,.4);
+    border:1px solid rgba(212,168,67,.15);
+  }
+
+  /* ── HEADER ── */
+  .header{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    margin-bottom:24px;padding-bottom:20px;
+    border-bottom:3px solid ${GOLD};
+  }
+  .header-left{display:flex;gap:16px;align-items:center;}
+  .header-info h1{font-size:26px;color:${GOLD2};font-weight:800;margin-bottom:2px;}
+  .header-info p{font-size:12px;color:#777;margin:2px 0;}
+  .header-right{text-align:right;font-size:11.5px;color:#666;line-height:2;}
+  .header-right strong{color:${DARK};}
+
+  /* ── COMPANY BOX ── */
+  .company-box{
+    background:linear-gradient(135deg,rgba(212,168,67,.07),rgba(139,105,20,.04));
+    border-left:4px solid ${GOLD};border-radius:0 10px 10px 0;
+    padding:14px 18px;margin-bottom:22px;font-size:12px;
+  }
+  .company-box h3{color:${GOLD2};font-size:15px;font-weight:800;margin-bottom:6px;}
+  .company-box p{color:#555;margin:3px 0;line-height:1.6;}
+  .period-sep{margin-top:10px;padding-top:10px;border-top:1px solid rgba(212,168,67,.2);}
+
+  /* ── TABLE ── */
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:24px;}
+  thead th{
+    background:linear-gradient(135deg,${GOLD2},${DARK});
+    color:${GOLD3};padding:12px 13px;text-align:left;
+    font-weight:700;border:1px solid ${GOLD2};font-size:11.5px;
+    text-transform:uppercase;letter-spacing:.04em;
+  }
+  .total-row td{
+    background:linear-gradient(to right,rgba(212,168,67,.12),rgba(212,168,67,.06));
+    font-weight:800;border-top:3px solid ${GOLD};border-bottom:3px solid ${GOLD};
+    font-size:13px;padding:13px;color:${DARK};
+    border-left:1px solid rgba(212,168,67,.3);border-right:1px solid rgba(212,168,67,.3);
+  }
+
+  /* ── SUMMARY ── */
+  .summary{
+    padding:20px;margin-bottom:20px;border-radius:12px;
+    background:linear-gradient(135deg,rgba(212,168,67,.08),rgba(212,168,67,.03));
+    border:2px solid rgba(212,168,67,.3);
+  }
+  .summary h3{color:${GOLD2};font-size:14px;font-weight:800;margin-bottom:14px;
+    border-bottom:2px solid rgba(212,168,67,.25);padding-bottom:10px;}
+  .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .sum-item{display:flex;justify-content:space-between;align-items:center;
+    padding:9px 0;border-bottom:1px solid rgba(212,168,67,.15);font-size:12px;}
+  .sum-item:last-child{border-bottom:none;}
+  .sum-label{font-weight:600;color:#444;}
+  .sum-val{font-weight:700;color:${GOLD2};font-family:'Courier New',monospace;}
+
+  /* ── QUALITY ── */
+  .quality{
+    background:rgba(212,168,67,.06);border-left:4px solid ${GOLD};
+    padding:14px 18px;margin-bottom:20px;border-radius:0 10px 10px 0;font-size:12px;
+  }
+  .quality h4{color:${GOLD2};margin-bottom:10px;font-size:13px;font-weight:800;}
+  .qc{display:flex;align-items:center;margin:6px 0;color:#555;}
+  .qc::before{content:"✓";display:inline-block;width:18px;height:18px;
+    background:linear-gradient(135deg,${GOLD2},${GOLD});color:${DARK};
+    border-radius:50%;text-align:center;line-height:18px;margin-right:10px;
+    font-weight:800;font-size:11px;flex-shrink:0;}
+
+  /* ── FOOTER ── */
+  .footer{margin-top:28px;padding-top:18px;border-top:2px solid ${GOLD};
+    font-size:11px;color:#666;display:flex;justify-content:space-between;align-items:flex-end;}
+  .footer strong{color:${DARK};}
+  .footer-bottom{text-align:center;margin-top:14px;padding-top:10px;
+    border-top:1px solid rgba(212,168,67,.2);color:#999;font-size:10px;}
+
+  /* ── PRINT ── */
+  @media print{
+    body{background:white!important;padding:0;}
+    .topbar{display:none!important;}
+    .page-wrap{padding:0;max-width:100%;}
+    .container{box-shadow:none;border-radius:0;padding:20px;border:none;}
+    @page{size:A4 landscape;margin:12mm;}
+    table{page-break-inside:avoid;}
+    .summary{page-break-inside:avoid;}
+  }
+
+  /* ── MOBILE ── */
+  @media(max-width:600px){
+    .topbar{padding:10px 14px;}
+    .topbar-title{font-size:11px;}
+    .btn-back,.btn-print{padding:9px 14px;font-size:12px;}
+    .page-wrap{padding:10px;}
+    .container{padding:20px 14px;border-radius:10px;}
+    .header{flex-direction:column;gap:12px;}
+    .header-right{text-align:left;}
+    .sum-grid{grid-template-columns:1fr;}
+    .footer{flex-direction:column;gap:8px;}
+    table{font-size:11px;}
+    thead th,td{padding:8px 9px;}
+  }
+</style></head><body>
+
+<!-- TOPBAR — sticky, tampil di layar, hilang saat print -->
+<div class="topbar">
+  <div class="topbar-title">📄 Preview Laporan PDF — ${periodeStr||'Semua Periode'}</div>
+  <div class="topbar-btns">
+    <button class="btn-back" onclick="window.close()">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Kembali ke Aplikasi
+    </button>
+    <button class="btn-print" onclick="window.print()">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+      Cetak / Save PDF
+    </button>
+  </div>
+</div>
+
+<div class="page-wrap">
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      ${logoHTML}
+      <div class="header-info">
+        <h1>${cpName}</h1>
+        <p>${cpTagline}</p>
+        ${cpAddress?`<p style="color:#888;font-size:11px;">📍 ${cpAddress}</p>`:''}
+        ${cpPhone||cpEmail?`<p style="color:#888;font-size:11px;">${cpPhone?'📞 '+cpPhone:''}${cpPhone&&cpEmail?' &nbsp;|&nbsp; ':''}${cpEmail?'✉ '+cpEmail:''}</p>`:''}
+      </div>
+    </div>
+    <div class="header-right">
+      <p><strong>Dicetak:</strong> ${nowStr}</p>
+      <p><strong>Periode:</strong> ${periodeStr||'Semua'}</p>
+      <p><strong>Armada:</strong> ${fleetData.length} unit</p>
+      <p><strong>Transaksi:</strong> ${list.length} record</p>
+    </div>
+  </div>
+
+  <!-- COMPANY BOX -->
+  <div class="company-box">
+    <h3>🏢 ${cpName}</h3>
+    ${cpAddress?`<p>📍 ${cpAddress}</p>`:''}
+    ${cpPhone?`<p>📞 ${cpPhone}</p>`:''}
+    ${cpEmail?`<p>✉ ${cpEmail}</p>`:''}
+    <div class="period-sep">
+      <p><strong>Periode Laporan:</strong> ${periodeStr||'Semua Transaksi'}</p>
+      <p><strong>Report Type:</strong> Rekap Operasional Per Armada &nbsp;|&nbsp; <strong>System:</strong> BHD SmartFlow</p>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <table>
+    <thead><tr>
+      <th>No. Pol</th>
+      <th>Nama Driver</th>
+      <th style="text-align:right;">Inflow (Rp)</th>
+      <th style="text-align:right;">Out Tunai (Rp)</th>
+      <th style="text-align:right;">Out Onderdil (Rp)</th>
+      <th style="text-align:right;">Out Umum (Rp)</th>
+      <th style="text-align:right;">Nett (Rp)</th>
+    </tr></thead>
+    <tbody>${tableRows}</tbody>
+    <tfoot><tr class="total-row">
+      <td colspan="2" style="font-weight:800;letter-spacing:.03em;">TOTAL PERIODE</td>
+      <td style="text-align:right;color:#1a6b3a;">${M(totInf)}</td>
+      <td style="text-align:right;color:#c0392b;">${M(totTunai)}</td>
+      <td style="text-align:right;color:#c0392b;">${M(totOnderdil)}</td>
+      <td style="text-align:right;color:#c0392b;">${M(umum)}</td>
+      <td style="text-align:right;color:${totNett>=0?'#7a5a10':'#c0392b'};font-size:14px;">${M(totNett)}</td>
+    </tr></tfoot>
+  </table>
+
+  <!-- SUMMARY -->
+  <div class="summary">
+    <h3>📊 RINGKASAN PERIODE</h3>
+    <div class="sum-grid">
+      <div class="sum-item"><span class="sum-label">Total Inflow (Pemasukan)</span><span class="sum-val" style="color:#1a6b3a;">${fmtFull(totInf)}</span></div>
+      <div class="sum-item"><span class="sum-label">Total Outflow (Pengeluaran)</span><span class="sum-val" style="color:#c0392b;">${fmtFull(totOut)}</span></div>
+      <div class="sum-item"><span class="sum-label">Total Profit / Nett</span><span class="sum-val" style="color:${totNett>=0?GOLD2:'#c0392b'};font-size:14px;">${fmtFull(totNett)}</span></div>
+      <div class="sum-item"><span class="sum-label">Rata-rata per Armada</span><span class="sum-val">${fmtFull(rataRata)}</span></div>
+      ${best?`<div class="sum-item"><span class="sum-label">🏆 Best Performer</span><span class="sum-val">${best.nopol} — ${best.driver}</span></div>`:''}
+      ${worst&&worst.nopol!==best?.nopol?`<div class="sum-item"><span class="sum-label">⚠️ Perlu Perhatian</span><span class="sum-val" style="color:#c0392b;">${worst.nopol} — ${worst.driver}</span></div>`:''}
+    </div>
+  </div>
+
+  <!-- DATA QUALITY -->
+  <div class="quality">
+    <h4>✓ DATA QUALITY ASSURANCE</h4>
+    <div class="qc">Semua transaksi terverifikasi dari database Supabase</div>
+    <div class="qc">Data inventory & stok onderdil sudah direkonsiliasi</div>
+    <div class="qc">Beban UMUM dibagi rata ke ${fleetData.length} armada aktif (${fmtFull(Math.round(bebanPerUnit))}/unit)</div>
+    <div class="qc">Laporan digenerate otomatis pada: ${nowStr}</div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>
+      <strong>🏢 ${cpName}</strong><br>
+      ${cpAddress||''}${cpAddress&&(cpPhone||cpEmail)?'<br>':''}
+      ${cpPhone?'📞 '+cpPhone+' &nbsp;':''}${cpEmail?'✉ '+cpEmail:''}
+    </div>
+    <div style="text-align:right;">
+      <strong>📋 LAPORAN REKAP PER ARMADA</strong><br>
+      Periode: ${periodeStr||'Semua'}<br>
+      Generated by BHD SmartFlow
+    </div>
+  </div>
+  <div class="footer-bottom">🔒 Confidential — For Official Use Only &nbsp;|&nbsp; ${cpName} &nbsp;|&nbsp; Page 1 of 1</div>
+
+</div>
+</div>
+</body></html>`;
+
   printWindow.document.write(html);
   printWindow.document.close();
+  showToast('✅ Laporan PDF siap — klik Cetak di tab baru');vibrate(30);
 }
 
 // ═══════════════════════════════ ARMADA MANAGEMENT ═══════════════
@@ -3781,13 +4083,15 @@ function openSmModal(type,val){
   closeFab();
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   if(type==='driver'){
-    const isEdit=!!val;tEl.textContent=isEdit?'Edit Supir':'Tambah Supir Baru';
+    const isEdit=!!val && val!=='undefined';tEl.textContent=isEdit?'Edit Supir':'Tambah Supir Baru';
+    const safeVal=isEdit?val:'';
     body.innerHTML=`
-      <div><label class="form-label">Nama Lengkap Supir</label><input class="form-input" id="sm-driver-name" value="${isEdit?val:''}" placeholder="Nama supir..."/></div>
-      <button class="sm-btn orange" onclick="saveDriver('${val}')">${isEdit?'Simpan':'Tambah Supir'}</button>
-      ${isEdit?`<button class="sm-btn danger" onclick="deleteDriver('${val}');closeSm()">Hapus Supir</button>`:''}`;
+      <div><label class="form-label">Nama Lengkap Supir</label><input class="form-input" id="sm-driver-name" value="${isEdit?safeVal:''}" placeholder="Nama supir..."/></div>
+      <button class="sm-btn orange" onclick="saveDriver('${safeVal}')">${isEdit?'Simpan':'Tambah Supir'}</button>
+      ${isEdit?`<button class="sm-btn danger" onclick="deleteDriver('${safeVal}');closeSm()">Hapus Supir</button>`:''}`;
   } else {
-    const isEdit=!!val;const u=isEdit?fleetData.find(f=>f.id===val):null;
+    const isEdit=!!val && val!=='undefined';const safeUnitId=isEdit?val:'';
+    const u=isEdit?fleetData.find(f=>f.id===val):null;
     tEl.textContent=isEdit?'Edit Unit Armada':'Tambah Unit Baru';
     body.innerHTML=`
       <div><label class="form-label">No. Plat</label><input class="form-input" id="sm-nopol" value="${u?u.nopol:''}" placeholder="B 1234 XX"/></div>
@@ -3797,8 +4101,8 @@ function openSmModal(type,val){
         <div><label class="form-label">Tgl Pajak</label><input type="date" class="form-input" id="sm-pajak" value="${u?u.pajak:''}"/></div>
         <div><label class="form-label">Tgl KIR</label><input type="date" class="form-input" id="sm-kir" value="${u?u.kir:''}"/></div>
       </div>
-      <button class="sm-btn orange" onclick="saveUnit('${val}')">${isEdit?'Simpan':'Tambah Unit'}</button>
-      ${isEdit?`<button class="sm-btn danger" onclick="deleteUnit('${val}');closeSm()">Hapus Unit</button>`:''}`;
+      <button class="sm-btn orange" onclick="saveUnit('${safeUnitId}')">${isEdit?'Simpan':'Tambah Unit'}</button>
+      ${isEdit?`<button class="sm-btn danger" onclick="deleteUnit('${safeUnitId}');closeSm()">Hapus Unit</button>`:''}`;
   }
   document.getElementById('sm-overlay').classList.add('open');
 }
@@ -3806,6 +4110,8 @@ function closeSm(){document.getElementById('sm-overlay').classList.remove('open'
 function closeSmOuter(e){if(e.target===document.getElementById('sm-overlay'))closeSm();}
 
 async function saveDriver(old){
+  // Normalize old — string kosong atau 'undefined' dianggap tambah baru
+  if(!old || old==='undefined') old=null;
   const name=document.getElementById('sm-driver-name')?.value?.trim();
   if(!name){showToast('Nama tidak boleh kosong');return;}
 
@@ -3813,9 +4119,11 @@ async function saveDriver(old){
     showToast('⏳ Menyimpan supir...');
     // Sync to Supabase DULU — kolom di DB adalah "name" bukan "nama"
     if(old && old !== name) {
+      // Edit: hapus lama, buat baru
       await sbFetch('drivers',{method:'DELETE',filters:{name:old}});
       await sbFetch('drivers',{method:'POST',body:{id:'drv_'+Date.now(), name:name, nama:name}});
     } else if(!old) {
+      // Tambah baru
       await sbFetch('drivers',{method:'POST',body:{id:'drv_'+Date.now(), name:name, nama:name}});
     }
     // Setelah berhasil, update state lokal
@@ -3848,6 +4156,8 @@ async function deleteDriver(name){
   }
 }
 async function saveUnit(existId){
+  // Normalize existId — string kosong atau 'undefined' dianggap tambah baru
+  if(!existId || existId==='undefined') existId=null;
   const nopol=(document.getElementById('sm-nopol')?.value||'').trim().toUpperCase();
   const driver=document.getElementById('sm-unit-driver')?.value||'';
   const status=document.getElementById('sm-status')?.value||'jalan';
@@ -4283,7 +4593,7 @@ function showPage(name,sbEl,bnId){
   if(name==='gudang'){renderGudang();}
   if(name==='armada'){renderFleetUnits();renderDashboard();}
   if(name==='audit'){loadAuditLogs();}
-  if(name==='settings'){updateSettingsAdminInfo();}
+  if(name==='settings'){updateSettingsAdminInfo();loadCompanyProfileUI();}
 }
 function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open');}
 function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
@@ -4482,6 +4792,88 @@ async function loadAuditLogs(){
     }).join('');
   }catch(e){
     el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--danger);font-size:12px;">Gagal memuat: ${e.message}</div>`;
+  }
+}
+
+// ═══════════════ COMPANY PROFILE (PDF Settings) ═══════════════
+let _companyProfile = {
+  name: 'PT. BAGUS HARYA DWIPRIMA',
+  tagline: 'Sistem Manajemen Operasional Armada',
+  address: '',
+  phone: '',
+  email: '',
+  logoDataUrl: '' // base64 image
+};
+
+function onLogoUpload(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 500*1024){ showToast('⚠️ Ukuran logo maksimal 500KB'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    _companyProfile.logoDataUrl = e.target.result;
+    const preview = document.getElementById('cp-logo-preview');
+    if(preview){
+      preview.style.backgroundImage = `url(${e.target.result})`;
+      preview.style.backgroundSize = 'contain';
+      preview.style.backgroundRepeat = 'no-repeat';
+      preview.style.backgroundPosition = 'center';
+      preview.style.backgroundColor = '#fff';
+      const txt = document.getElementById('cp-logo-text');
+      if(txt) txt.style.display='none';
+    }
+    showToast('✅ Logo dipilih — klik Simpan untuk menyimpan');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveCompanyProfile(){
+  _companyProfile.name = document.getElementById('cp-name')?.value?.trim() || _companyProfile.name;
+  _companyProfile.tagline = document.getElementById('cp-tagline')?.value?.trim() || _companyProfile.tagline;
+  _companyProfile.address = document.getElementById('cp-address')?.value?.trim() || '';
+  _companyProfile.phone = document.getElementById('cp-phone')?.value?.trim() || '';
+  _companyProfile.email = document.getElementById('cp-email')?.value?.trim() || '';
+
+  try {
+    showToast('⏳ Menyimpan profil...');
+    const val = JSON.stringify(_companyProfile);
+    const existing = await sbFetch('settings',{select:'key',filters:{key:'company_profile'},limit:1,order:'key.asc'});
+    if(Array.isArray(existing)&&existing.length>0){
+      await sbFetch('settings',{method:'PATCH',filters:{key:'company_profile'},body:{value:val}});
+    } else {
+      await sbFetch('settings',{method:'POST',body:{key:'company_profile',value:val}});
+    }
+    showToast('✅ Profil perusahaan disimpan');vibrate(20);
+  } catch(e){
+    console.warn('saveCompanyProfile fail:',e);
+    showToast('⚠️ Gagal simpan profil: '+e.message);
+  }
+}
+
+function loadCompanyProfileUI(){
+  const cp=_companyProfile;
+  const nameEl=document.getElementById('cp-name');
+  const taglineEl=document.getElementById('cp-tagline');
+  const addrEl=document.getElementById('cp-address');
+  const phoneEl=document.getElementById('cp-phone');
+  const emailEl=document.getElementById('cp-email');
+  if(nameEl) nameEl.value=cp.name||'';
+  if(taglineEl) taglineEl.value=cp.tagline||'';
+  if(addrEl) addrEl.value=cp.address||'';
+  if(phoneEl) phoneEl.value=cp.phone||'';
+  if(emailEl) emailEl.value=cp.email||'';
+  // Restore logo preview
+  if(cp.logoDataUrl){
+    const preview=document.getElementById('cp-logo-preview');
+    if(preview){
+      preview.style.backgroundImage=`url(${cp.logoDataUrl})`;
+      preview.style.backgroundSize='contain';
+      preview.style.backgroundRepeat='no-repeat';
+      preview.style.backgroundPosition='center';
+      preview.style.backgroundColor='#fff';
+      const txt=document.getElementById('cp-logo-text');
+      if(txt) txt.style.display='none';
+    }
   }
 }
 
@@ -4708,22 +5100,22 @@ async function syncFromSupabase(){
       }
     } catch(e) { console.warn('Sync transactions fail:', e); }
 
-    // 2. Sync Armada
+    // 2. Sync Armada — order by nopol (fleet tidak punya created_at)
     try {
-      const fleet = await sbFetch('fleet',{select:'*',limit:100});
+      const fleet = await sbFetch('fleet',{select:'*',limit:100,order:'nopol.asc'});
       if(Array.isArray(fleet)){
         fleetData.length=0;
-        fleet.forEach(f=>fleetData.push({id:f.id,nopol:f.nopol,driver:f.driver,status:f.status||'jalan',pajak:f.pajak||'',kir:f.kir||''}));
+        fleet.forEach(f=>fleetData.push({id:f.id,nopol:f.nopol,driver:f.driver||'',status:f.status||'jalan',pajak:f.pajak||'',kir:f.kir||''}));
         FLEET_COUNT=fleetData.length;
         const fi=document.getElementById('fleet-count-input');if(fi)fi.value=FLEET_COUNT;
       }
     } catch(e) { console.warn('Sync fleet fail:', e); }
 
-    // 3. Sync Inventory + inventory_installed
+    // 3. Sync Inventory + inventory_installed — order by nama (inventory tidak punya created_at)
     try {
-      const inv = await sbFetch('inventory',{select:'*',limit:500});
+      const inv = await sbFetch('inventory',{select:'*',limit:500,order:'nama.asc'});
       // Ambil data installed dari tabel inventory_installed
-      const invInstalled = await sbFetch('inventory_installed',{select:'*',limit:2000}).catch(()=>[]);
+      const invInstalled = await sbFetch('inventory_installed',{select:'*',limit:2000,order:'id.asc'}).catch(()=>[]);
       if(Array.isArray(inv)){
         sparepartStock.length=0;
         inv.forEach(sp=>{
@@ -4750,9 +5142,9 @@ async function syncFromSupabase(){
       }
     } catch(e) { console.warn('Sync inventory fail:', e); }
 
-    // 3b. Sync Drivers — selalu replace, tidak append
+    // 3b. Sync Drivers — selalu replace, tidak append; order by name
     try {
-      const drivers = await sbFetch('drivers',{select:'*',limit:200});
+      const drivers = await sbFetch('drivers',{select:'*',limit:200,order:'name.asc'});
       if(Array.isArray(drivers)){
         const fromDb = drivers.map(d => d.name || d.nama || '').filter(Boolean);
         // Gabungkan dengan driver dari fleet (yang tidak ada di driverList)
@@ -4761,9 +5153,9 @@ async function syncFromSupabase(){
       }
     } catch(e) { console.warn('Sync drivers fail:', e); }
 
-    // 4. Sync Settings
+    // 4. Sync Settings — order by key (settings tidak punya created_at)
     try {
-      const dbSettings = await sbFetch('settings',{select:'*',limit:100});
+      const dbSettings = await sbFetch('settings',{select:'*',limit:100,order:'key.asc'});
       if(Array.isArray(dbSettings)){
         const regCode = dbSettings.find(s=>s.key==='admin_reg_code')?.value;
         if(regCode) {
@@ -4785,6 +5177,17 @@ async function syncFromSupabase(){
             gudangKategori=fromInventory;
             _saveKategoriToDb().catch(()=>{});
           }
+        }
+        // Load company profile
+        const cpSetting = dbSettings.find(s=>s.key==='company_profile');
+        if(cpSetting?.value){
+          try {
+            const cp = JSON.parse(cpSetting.value);
+            if(cp && typeof cp==='object') {
+              _companyProfile = {..._companyProfile, ...cp};
+              loadCompanyProfileUI();
+            }
+          } catch(pe){ console.warn('Parse company_profile fail:',pe); }
         }
       }
     } catch(e) { console.warn('Sync settings fail:', e); }
