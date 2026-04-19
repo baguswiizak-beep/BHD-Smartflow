@@ -116,19 +116,20 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 /* ══════════════════════════════════════
    TOPBAR (mobile)
 ══════════════════════════════════════ */
-#topbar{display:none;align-items:center;gap:9px;padding:10px 14px;background:var(--card);border-bottom:1px solid var(--card-b);position:sticky;top:0;z-index:99;}
+#topbar{display:none;align-items:center;gap:7px;padding:8px 12px;background:var(--card);border-bottom:1px solid var(--card-b);position:sticky;top:0;z-index:99;overflow:hidden;min-height:48px;}
 .tb-menu{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 .tb-menu svg{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:2;}
-.tb-brand{display:flex;align-items:center;gap:7px;}
-.tb-lm{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#5FA00D,#7DCE13);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#1A3300;}
-.tb-name{font-size:12.5px;font-weight:800;color:var(--text);}
-.tb-clock{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:4px 9px;border-radius:20px;margin-left:auto;letter-spacing:.05em;}
-.tb-acts{display:flex;gap:6px;}
-.tb-btn{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;}
+.tb-brand{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.tb-lm{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#8B6914,#D4A843);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#3A1E08;flex-shrink:0;}
+.tb-name{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;}
+.tb-clock{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-bd);padding:3px 8px;border-radius:20px;margin-left:auto;letter-spacing:.03em;white-space:nowrap;flex-shrink:0;}
+.tb-acts{display:flex;gap:5px;flex-shrink:0;}
+.tb-btn{width:32px;height:32px;border-radius:9px;border:none;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0;}
 .tb-btn:hover{background:var(--bg4);}
 .tb-btn svg{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:2;}
-#notif-wrap{position:relative;}
-#notif-dot{position:absolute;top:5px;right:5px;width:6px;height:6px;background:var(--danger);border-radius:50%;border:1.5px solid var(--card);}
+#notif-wrap{position:relative;flex-shrink:0;}
+#notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--danger);border-radius:50%;border:1.5px solid var(--card);animation:pulse-notif 1.5s ease-in-out infinite;}
+@keyframes pulse-notif{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.3);opacity:.7;}}
 
 /* ══════════════════════════════════════
    PAGES
@@ -871,9 +872,9 @@ input,select,textarea{font-size:16px!important;}
     <div class="tb-brand"><div class="tb-lm">BHD</div><span class="tb-name">BHD Smart Flow</span></div>
     <div class="tb-clock" id="tb-clock">00:00:00</div>
     <!-- Indikator Sync Topbar (Mobile Friendly) -->
-    <div style="display:flex;align-items:center;gap:6px;margin:0 10px;cursor:pointer;background:var(--bg3);padding:4px 10px;border-radius:20px;border:1px solid var(--card-b);" onclick="syncFromSupabase()">
-      <span class="sync-dot" style="width:6px;height:6px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 5px var(--success);"></span>
-      <span class="sync-text" style="font-size:9.5px;font-weight:700;color:var(--text3);white-space:nowrap;">Syncing...</span>
+    <div style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg3);padding:3px 8px;border-radius:20px;border:1px solid var(--card-b);flex-shrink:0;" onclick="syncFromSupabase()">
+      <span class="sync-dot" style="width:6px;height:6px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 4px var(--success);"></span>
+      <span class="sync-text" style="font-size:9px;font-weight:700;color:var(--text3);white-space:nowrap;">Update: <span id='sync-time-label'>—</span></span>
     </div>
     <span id="api-status-badge" title="Status koneksi server" style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--text3);border:1px solid var(--card-b);letter-spacing:.03em;cursor:default;display:none;">🟡 Offline</span>
     <div class="tb-acts">
@@ -3493,14 +3494,16 @@ function exportPDF(){
     const nc=r.nett>=0?'rgba(212,168,67,.12)':'rgba(231,76,60,.1)';
     const ntc=r.nett>=0?'#7a5a10':'#c0392b';
     const rowBg=i%2===1?'rgba(212,168,67,.04)':'#fff';
+    const BD='border:1px solid rgba(212,168,67,.2);padding:10px 11px;';
+    const MONO='font-family:"Courier New",Consolas,monospace;white-space:nowrap;';
     return `<tr style="background:${rowBg};">
-      <td style="font-weight:700;padding:11px 13px;border:1px solid rgba(212,168,67,.2);color:${DARK};">${r.nopol}</td>
-      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);color:#444;">${r.driver}</td>
-      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);text-align:right;color:#1a6b3a;font-weight:600;">${M(r.inflow)}</td>
-      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);text-align:right;color:#c0392b;">${M(r.outTunai)}</td>
-      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);text-align:right;color:#c0392b;">${M(r.outOnderdil)}</td>
-      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);text-align:right;color:#c0392b;">${M(r.outUmum)}</td>
-      <td style="padding:11px 13px;border:1px solid rgba(212,168,67,.2);text-align:right;background:${nc};color:${ntc};font-weight:800;">${M(r.nett)}</td>
+      <td style="${BD}font-weight:800;color:${DARK};text-align:center;white-space:nowrap;letter-spacing:.03em;font-size:12px;">${r.nopol}</td>
+      <td style="${BD}color:#444;font-size:12px;">${r.driver}</td>
+      <td style="${BD}text-align:right;color:#1a6b3a;font-weight:700;${MONO}font-size:12px;">${M(r.inflow)}</td>
+      <td style="${BD}text-align:right;color:#c0392b;${MONO}font-size:12px;">${M(r.outTunai)}</td>
+      <td style="${BD}text-align:right;color:#c0392b;${MONO}font-size:12px;">${M(r.outOnderdil)}</td>
+      <td style="${BD}text-align:right;color:#c0392b;${MONO}font-size:12px;">${M(r.outUmum)}</td>
+      <td style="${BD}text-align:right;background:${nc};color:${ntc};font-weight:800;${MONO}font-size:13px;">${M(r.nett)}</td>
     </tr>`;
   }).join('');
 
@@ -3576,16 +3579,24 @@ function exportPDF(){
   table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:24px;}
   thead th{
     background:linear-gradient(135deg,${GOLD2},${DARK});
-    color:${GOLD3};padding:12px 13px;text-align:left;
-    font-weight:700;border:1px solid ${GOLD2};font-size:11.5px;
-    text-transform:uppercase;letter-spacing:.04em;
+    color:${GOLD3};padding:12px 13px;text-align:center;
+    font-weight:700;border:1px solid ${GOLD2};font-size:11px;
+    text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;
   }
+  thead th:first-child{text-align:center;}
+  thead th:nth-child(2){text-align:left;}
+  tbody td{vertical-align:middle;}
+  tbody td:first-child{white-space:nowrap;font-weight:700;text-align:center;min-width:60px;}
+  tbody td:nth-child(2){min-width:100px;}
+  tbody td:nth-child(n+3){text-align:right;font-family:'Courier New',Consolas,monospace;font-weight:600;white-space:nowrap;}
   .total-row td{
     background:linear-gradient(to right,rgba(212,168,67,.12),rgba(212,168,67,.06));
     font-weight:800;border-top:3px solid ${GOLD};border-bottom:3px solid ${GOLD};
     font-size:13px;padding:13px;color:${DARK};
     border-left:1px solid rgba(212,168,67,.3);border-right:1px solid rgba(212,168,67,.3);
+    font-family:'Courier New',Consolas,monospace;white-space:nowrap;
   }
+  .total-row td:first-child{font-family:'Segoe UI',sans-serif;text-align:left;}
 
   /* ── SUMMARY ── */
   .summary{
@@ -3712,13 +3723,13 @@ function exportPDF(){
   <div class="table-wrap">
   <table>
     <thead><tr>
-      <th>No. Pol</th>
-      <th>Nama Driver</th>
-      <th style="text-align:right;">Inflow (Rp)</th>
-      <th style="text-align:right;">Out Tunai (Rp)</th>
-      <th style="text-align:right;">Out Onderdil (Rp)</th>
-      <th style="text-align:right;">Out Umum (Rp)</th>
-      <th style="text-align:right;">Nett (Rp)</th>
+      <th style="text-align:center;width:80px;">No. Pol</th>
+      <th style="text-align:left;">Nama Driver</th>
+      <th style="text-align:center;">Inflow (Rp)</th>
+      <th style="text-align:center;">Out Tunai (Rp)</th>
+      <th style="text-align:center;">Out Onderdil (Rp)</th>
+      <th style="text-align:center;">Out Umum (Rp)</th>
+      <th style="text-align:center;">Nett (Rp)</th>
     </tr></thead>
     <tbody>${tableRows}</tbody>
     <tfoot><tr class="total-row">
@@ -5079,6 +5090,8 @@ function setSyncStatus(status, detail=''){
     const dStr = now.toLocaleDateString('id-ID',{day:'numeric',month:'short'});
     dots.forEach(d=>{d.style.background='var(--success)'; d.style.boxShadow='0 0 5px var(--success)'; d.style.animation='';});
     txts.forEach(t=>t.textContent='Update: '+dStr+', '+tStr);
+    const tl=document.getElementById('sync-time-label');
+    if(tl) tl.textContent=dStr+', '+tStr;
     _lastSyncTime=now;
   } else if(status==='error'){
     dots.forEach(d=>{d.style.background='var(--danger)'; d.style.boxShadow='none'; d.style.animation='';});
