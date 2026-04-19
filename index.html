@@ -778,7 +778,7 @@ input,select,textarea{font-size:16px!important;}
   <div class="login-box">
     <div class="login-logo">BHD</div>
     <div class="login-title">BHD Smart Flow</div>
-    <div class="login-sub">PT. Bagus Harya Dwiprima · v10</div>
+    <div class="login-sub">PT. Bagus Harya Dwiprima</div>
     <!-- Tab Masuk / Daftar -->
     <div style="display:flex;gap:4px;background:rgba(255,255,255,.06);border-radius:12px;padding:3px;margin-bottom:20px;">
       <button id="ltab-masuk" onclick="switchLoginTab('masuk')" style="flex:1;padding:8px;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:linear-gradient(135deg,#8B6914,#D4A843);color:#2C1810;">Masuk</button>
@@ -817,7 +817,7 @@ input,select,textarea{font-size:16px!important;}
       <button class="login-btn" onclick="doRegister()">Daftar Admin Baru</button>
     </div>
     <div class="login-err" id="login-err"></div>
-    <div class="login-ver">🚛 BHD Smart Flow v10 · Tambang Pasir Management</div>
+    
   </div>
 </div>
 
@@ -3571,7 +3571,7 @@ body{
 .lh-company h1{font-size:22px;font-weight:900;color:#F0C75E;letter-spacing:.04em;margin-bottom:3px;}
 .lh-company p{font-size:11px;color:rgba(240,199,94,.6);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;}
 .lh-company .lh-contact{font-size:11px;color:rgba(255,235,180,.55);line-height:1.7;}
-.lh-right{text-align:right;}
+.lh-right{text-align:left;}
 .lh-badge{
   display:inline-block;
   background:linear-gradient(135deg,#8B6914,#D4A843);
@@ -3632,7 +3632,7 @@ body{
 table{width:100%;border-collapse:collapse;font-size:12px;}
 thead tr{background:linear-gradient(135deg,#2C1810,#4A2C17);}
 thead th{
-  color:#F0C75E;font-size:10.5px;font-weight:700;
+  color:#F0C75E;font-size:11px;font-weight:700;
   padding:13px 12px;text-align:center;
   text-transform:uppercase;letter-spacing:.06em;
   border-right:1px solid rgba(212,168,67,.2);
@@ -3671,7 +3671,7 @@ tbody tr:hover{background:#FEF9EC;}
 .total-row td{
   padding:14px 14px;font-weight:800;
   background:linear-gradient(135deg,#2C1810,#3A2212);
-  color:#F0C75E;font-size:12px;
+  color:#F0C75E;font-size:11px;
   border-top:2px solid #D4A843;
 }
 .total-row .td-money{
@@ -3928,10 +3928,10 @@ tbody tr:hover{background:#FEF9EC;}
   <div class="doc-footer">
     <div class="footer-left">
       <strong>${cpName}</strong><br>
-      ${cpAddress?cpAddress+'<br>':''} ${cpPhone||''} ${cpEmail?'· '+cpEmail:''}
+      ${cpAddress?`<span>${cpAddress}</span><br>`:''}${cpPhone?`<span>${cpPhone}</span>`:''} ${cpEmail?'· '+cpEmail:''}
     </div>
     <div class="footer-right">
-      <div class="footer-brand">BHD SmartFlow v10</div>
+      <div class="footer-brand">BHD SmartFlow</div>
       <div>Periode: ${periodeStr}</div>
       <div>Dicetak: ${nowStr}</div>
       <div style="margin-top:4px;font-size:9px;">Page 1 of 1</div>
