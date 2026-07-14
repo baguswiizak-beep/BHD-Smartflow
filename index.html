@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
 <title>BHD SmartFlow System</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -364,6 +365,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .chip-green{color:var(--green2);background:var(--green-bg);border:1px solid var(--green-bd);}
 .chip-orange{color:var(--orange2);background:var(--orange-bg);border:1px solid var(--orange-bd);}
 .chip-danger{color:var(--danger);background:rgba(224,48,48,.09);}
+.chip-blue{color:var(--info);background:rgba(0,122,255,.09);border:1px solid rgba(0,122,255,.18);}
 .chip-gray{color:var(--text2);background:var(--bg3);}
 .fleet-rows{display:flex;flex-direction:column;gap:5px;}
 .fleet-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--bg3);cursor:pointer;transition:background .15s;}
@@ -953,15 +955,39 @@ input,select,textarea{font-size:16px!important;}
         </div>
         <div id="chart-carousel" style="overflow:hidden;touch-action:pan-y;">
           <div id="chart-slides" style="display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform;">
-            <!-- Slide 1: Donut -->
+            <!-- Slide 1: Inflow Driver -->
             <div class="chart-slide chart-wrap" style="min-width:100%;box-sizing:border-box;margin-bottom:0;">
-              <div class="cw-hdr"><span class="cw-title">Rasio Kas</span><span style="font-size:10px;color:var(--text3);">← geser →</span></div>
-              <div class="donut-wrap">
-                <div class="donut-canvas"><canvas id="donutChart" width="90" height="90"></canvas></div>
-                <div class="donut-legend">
-                  <div class="dl-item"><div class="dl-dot" style="background:var(--success)"></div><div class="dl-info"><div class="dl-label">Inflow</div><div class="dl-val" id="dl-in">—</div><div class="dl-pct" id="dl-in-pct">—%</div></div></div>
-                  <div class="dl-item"><div class="dl-dot" style="background:var(--danger)"></div><div class="dl-info"><div class="dl-label">Outflow</div><div class="dl-val" id="dl-out">—</div><div class="dl-pct" id="dl-out-pct">—%</div></div></div>
+              <div class="cw-hdr" style="flex-direction:column;align-items:flex-start;gap:7px;">
+                <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+                  <span class="cw-title">Inflow Driver</span>
+                  <span style="font-size:10px;color:var(--text3);">← geser →</span>
                 </div>
+                <div class="cw-filters" id="ddon-filter-btns" style="flex-wrap:wrap;">
+                  <button class="cf-btn" onclick="setDriverDonutPeriod('hari-ini',this)">Hari Ini</button>
+                  <button class="cf-btn active" onclick="setDriverDonutPeriod('bulan-ini',this)">Bln Ini</button>
+                  <button class="cf-btn" onclick="setDriverDonutPeriod('3bulan',this)">3 Bln</button>
+                  <button class="cf-btn" onclick="setDriverDonutPeriod('tahun-ini',this)">Thn Ini</button>
+                  <button class="cf-btn" onclick="setDriverDonutPeriod('semua',this)">Semua</button>
+                  <button class="cf-btn" id="ddon-btn-custom" onclick="toggleDriverDonutCustom()">Custom</button>
+                </div>
+                <div id="ddon-custom-range" style="display:none;gap:5px;width:100%;flex-wrap:wrap;align-items:center;">
+                  <input type="date" id="ddon-from" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
+                  <span style="font-size:10px;color:var(--text3);">s/d</span>
+                  <input type="date" id="ddon-to" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
+                  <button onclick="applyDriverDonutCustom()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--green-bd);background:var(--green-bg);color:var(--green2);font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;white-space:nowrap;">Terapkan</button>
+                </div>
+              </div>
+              <div style="margin-top:10px;">
+                <div style="display:flex;justify-content:center;margin-bottom:12px;">
+                  <div style="position:relative;width:150px;height:150px;"><canvas id="driverDonutChart" width="150" height="150"></canvas></div>
+                </div>
+                <div style="display:flex;padding:0 4px 6px;font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--card-b);margin-bottom:2px;gap:6px;">
+                  <div style="flex:1;min-width:0;">Driver</div>
+                  <div style="flex-shrink:0;width:118px;text-align:right;white-space:nowrap;">Revenue</div>
+                  <div style="flex-shrink:0;width:36px;text-align:right;white-space:nowrap;">%</div>
+                </div>
+                <div id="driver-donut-legend" style="max-height:180px;overflow-y:auto;"></div>
+                <div id="driver-donut-total" style="display:flex;padding:8px 4px 2px;font-size:11.5px;font-weight:800;color:var(--text);border-top:1px solid var(--card-b);margin-top:4px;gap:6px;"></div>
               </div>
             </div>
             <!-- Slide 2: Trend Line -->
@@ -1020,10 +1046,10 @@ input,select,textarea{font-size:16px!important;}
     <div id="armada-list">
       <div class="armada-hero">
         <div class="ah-top">
-          <div class="ah-left"><div class="ah-icon"><svg viewBox="0 0 24 24"><path d="M1 3h15v11H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/></svg></div><div><div class="ah-label">Manajemen</div><div class="ah-title">Armada &amp; Supir</div></div></div>
+          <div class="ah-left"><div class="ah-icon"><svg viewBox="0 0 24 24"><path d="M1 3h15v11H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/></svg></div><div><div class="ah-label">Manajemen</div><div class="ah-title">Armada &amp; Driver</div></div></div>
           <div class="ah-actions">
             <button class="ah-btn" onclick="openSmModal('unit','')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Unit</button>
-            <button class="ah-btn" onclick="openSmModal('driver','')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Supir</button>
+            <button class="ah-btn" onclick="openSmModal('driver','')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Driver</button>
           </div>
         </div>
         <div class="ah-stats">
@@ -1034,14 +1060,14 @@ input,select,textarea{font-size:16px!important;}
       </div>
       <div class="armada-tabs">
         <button class="at-btn active" id="at-unit" onclick="switchArmadaTab('unit',this)">🚛 Unit Kendaraan</button>
-        <button class="at-btn" id="at-driver" onclick="switchArmadaTab('driver',this)">👤 Database Supir</button>
+        <button class="at-btn" id="at-driver" onclick="switchArmadaTab('driver',this)">👤 Database Driver</button>
       </div>
       <div id="tab-unit-view">
         <div class="add-strip" onclick="openSmModal('unit','')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Tambah Unit Armada Baru</span></div>
         <div id="fleet-unit-list"></div>
       </div>
       <div id="tab-driver-view" style="display:none;">
-        <div class="add-strip" onclick="openSmModal('driver','')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Tambah Supir Baru</span></div>
+        <div class="add-strip" onclick="openSmModal('driver','')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Tambah Driver Baru</span></div>
         <div id="driver-list-view"></div>
       </div>
     </div>
@@ -1068,12 +1094,12 @@ input,select,textarea{font-size:16px!important;}
       <div class="tab-bar">
         <button class="tab-btn active" onclick="showTab('perjalanan',this)">Perjalanan</button>
         <button class="tab-btn" onclick="showTab('biaya',this)">Biaya</button>
-        <button class="tab-btn" onclick="showTab('truck',this)">🚛 Ban</button>
+        <button class="tab-btn" onclick="showTab('onderdil',this)">🔧 Onderdil</button>
         <button class="tab-btn" onclick="showTab('dokumen',this)">Dokumen</button>
       </div>
       <div id="tab-perjalanan"></div>
       <div id="tab-biaya" style="display:none;"></div>
-      <div id="tab-truck" style="display:none;"></div>
+      <div id="tab-onderdil" style="display:none;"></div>
       <div id="tab-dokumen" style="display:none;"></div>
     </div>
   </div>
@@ -1090,10 +1116,45 @@ input,select,textarea{font-size:16px!important;}
         <div class="dh-stat"><div class="dh-stat-label">Net Profit</div><div class="dh-stat-val nt" id="k-prf">—</div></div>
       </div>
     </div>
+
+    <!-- Rekap Pengeluaran per Kategori -->
+    <div class="chart-wrap" style="margin-bottom:14px;">
+      <div class="cw-hdr" style="flex-direction:column;align-items:flex-start;gap:7px;">
+        <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+          <span class="cw-title">Pengeluaran per Kategori</span>
+        </div>
+        <div class="cw-filters" id="kdon-filter-btns" style="flex-wrap:wrap;">
+          <button class="cf-btn" onclick="setKatDonutPeriod('hari-ini',this)">Hari Ini</button>
+          <button class="cf-btn" onclick="setKatDonutPeriod('bulan-ini',this)">Bln Ini</button>
+          <button class="cf-btn" onclick="setKatDonutPeriod('3bulan',this)">3 Bln</button>
+          <button class="cf-btn" onclick="setKatDonutPeriod('tahun-ini',this)">Thn Ini</button>
+          <button class="cf-btn active" onclick="setKatDonutPeriod('semua',this)">Semua</button>
+          <button class="cf-btn" id="kdon-btn-custom" onclick="toggleKatDonutCustom()">Custom</button>
+        </div>
+        <div id="kdon-custom-range" style="display:none;gap:5px;width:100%;flex-wrap:wrap;align-items:center;">
+          <input type="date" id="kdon-from" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
+          <span style="font-size:10px;color:var(--text3);">s/d</span>
+          <input type="date" id="kdon-to" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
+          <button onclick="applyKatDonutCustom()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--green-bd);background:var(--green-bg);color:var(--green2);font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;white-space:nowrap;">Terapkan</button>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <div style="display:flex;justify-content:center;margin-bottom:12px;">
+          <div style="position:relative;width:150px;height:150px;"><canvas id="katDonutChart" width="150" height="150"></canvas></div>
+        </div>
+        <div style="display:flex;padding:0 4px 6px;font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--card-b);margin-bottom:2px;gap:6px;">
+          <div style="flex:1;min-width:0;">Kategori</div>
+          <div style="flex-shrink:0;width:118px;text-align:right;white-space:nowrap;">Nominal</div>
+          <div style="flex-shrink:0;width:36px;text-align:right;white-space:nowrap;">%</div>
+        </div>
+        <div id="kat-donut-legend" style="max-height:180px;overflow-y:auto;"></div>
+        <div id="kat-donut-total" style="display:flex;padding:8px 4px 2px;font-size:11.5px;font-weight:800;color:var(--text);border-top:1px solid var(--card-b);margin-top:4px;gap:6px;"></div>
+      </div>
+    </div>
     <!-- Search & Filter -->
     <div class="search-bar">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="txn-search" type="text" placeholder="Cari transaksi, armada, supir..." oninput="applyTxnFilters()"/>
+      <input id="txn-search" type="text" placeholder="Cari transaksi, armada, driver..." oninput="applyTxnFilters()"/>
     </div>
     <div class="filter-strip">
       <div class="fs-chip active" onclick="setTxnFilter('tipe','all',this)"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Semua</div>
@@ -1158,6 +1219,7 @@ input,select,textarea{font-size:16px!important;}
     <div class="export-grid">
       <div class="export-card" onclick="exportPDF()"><div class="exp-ico pdf"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div><div class="exp-title">Export PDF</div><div class="exp-sub">Laporan siap cetak</div></div>
       <div class="export-card" onclick="exportCSV()"><div class="exp-ico xls"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg></div><div class="exp-title">Export CSV</div><div class="exp-sub">Buka di Google Sheets</div></div>
+      <div class="export-card" onclick="exportBackupXLSX()" style="grid-column:1/-1;"><div class="exp-ico xls" style="background:var(--green-bg);color:var(--green2);"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="exp-title">Backup Database (Excel)</div><div class="exp-sub">Semua data mentah — Transaksi, Armada, Gudang, Driver (multi-sheet, semua periode)</div></div>
     </div>
     <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between;">
       <span>Rekap Transaksi per Armada</span>
@@ -1175,6 +1237,9 @@ input,select,textarea{font-size:16px!important;}
               <th class="sortable-th" style="text-align:right;" data-col="outTunai" onclick="sortRekap('outTunai')">Out Tunai <span class="sort-arrow" id="sa-outTunai">⇅</span></th>
               <th class="sortable-th" style="text-align:right;" data-col="outOnderdil" onclick="sortRekap('outOnderdil')">Out Onderdil <span class="sort-arrow" id="sa-outOnderdil">⇅</span></th>
               <th class="sortable-th" style="text-align:right;" data-col="outUmum" onclick="sortRekap('outUmum')">Out Umum <span class="sort-arrow" id="sa-outUmum">⇅</span></th>
+              <th class="sortable-th" style="text-align:right;" data-col="outDokumen" onclick="sortRekap('outDokumen')">Out Dokumen <span class="sort-arrow" id="sa-outDokumen">⇅</span></th>
+              <th class="sortable-th" style="text-align:right;color:var(--orange);" data-col="ritase" onclick="sortRekap('ritase')">Ritase <span class="sort-arrow" id="sa-ritase">⇅</span></th>
+              <th class="sortable-th" style="text-align:right;" data-col="rpPerRit" onclick="sortRekap('rpPerRit')">Rp/Rit <span class="sort-arrow" id="sa-rpPerRit">⇅</span></th>
               <th class="sortable-th" style="text-align:right;color:var(--info);" data-col="nett" onclick="sortRekap('nett')">Nett <span class="sort-arrow" id="sa-nett">⇅</span></th>
             </tr>
           </thead>
@@ -1319,6 +1384,10 @@ input,select,textarea{font-size:16px!important;}
         <option value="transaksi">Transaksi</option>
         <option value="armada">Armada</option>
         <option value="gudang">Gudang</option>
+        <option value="onderdil">Onderdil</option>
+        <option value="driver">Driver</option>
+        <option value="dokumen">Dokumen</option>
+        <option value="admin">Admin</option>
         <option value="login">Login</option>
       </select>
       <select id="audit-filter-aksi" onchange="loadAuditLogs()" style="font-size:11px;padding:6px 10px;border-radius:10px;border:1px solid var(--card-b);background:var(--card);color:var(--text);font-family:'Inter',sans-serif;">
@@ -1406,10 +1475,6 @@ async function apiFetch(path, opts={}){
   return r.json();
 }
 
-// Kredensial fallback (hanya dipakai jika server offline)
-const LOGIN_USERNAME = 'admin';
-const LOGIN_PASSWORD = 'bhd2024';
-// ═══════════════════════════════════════════════════════
 
 async function doLogin(){
   const u=document.getElementById('login-user')?.value?.trim();
@@ -1418,21 +1483,20 @@ async function doLogin(){
   const btn=document.querySelector('#login-form-masuk .login-btn');
   if(!u||!p){if(errEl)errEl.textContent='Masukkan username & password';return;}
   if(btn){btn.textContent='Memeriksa...';btn.disabled=true;}
-  let ok=false, adminData=null;
+  let ok=false, adminData=null, errMsg='';
   try{
     const rows = await sbFetch('admins', {select:'id,username,password,role', filters:{username:u}, limit:1});
     if(rows.length>0&&rows[0].password===p){ok=true;adminData={id:rows[0].id,name:rows[0].username,role:rows[0].role};}
-    else if(rows.length===0) throw new Error('Username tidak ditemukan.');
-    else throw new Error('Password salah.');
+    else if(rows.length===0) errMsg='Username tidak ditemukan.';
+    else errMsg='Password salah.';
   } catch(e){
-    if(u===LOGIN_USERNAME&&p===LOGIN_PASSWORD){ok=true;adminData={id:'admin-local',name:u,role:'superadmin'};}
-    else{
-      if(btn){btn.textContent='Masuk ke Dashboard ⛏️';btn.disabled=false;}
-      if(errEl){errEl.textContent=e.message;errEl.style.color='#FCA5A5';}
-      return;
-    }
+    errMsg='Gagal terhubung ke server, coba lagi. ('+(e.message||'')+')';
   }
   if(btn){btn.textContent='Masuk ke Dashboard ⛏️';btn.disabled=false;}
+  if(!ok){
+    if(errEl){errEl.textContent=errMsg;errEl.style.color='#FCA5A5';}
+    return;
+  }
   if(ok&&adminData){
     window.activeAdmin=adminData;
     localStorage.setItem('bhd_active_admin',JSON.stringify(adminData));
@@ -1507,6 +1571,7 @@ function renderKeuanganStats(){
   if(kIn)kIn.textContent=fmt(inf);
   if(kOut)kOut.textContent=fmt(out);
   if(kPrf){kPrf.textContent=fmt(inf-out);kPrf.style.color=(inf-out)>=0?'#86EFAC':'#FCA5A5';}
+  renderKatDonut();
 }
 
 // ═══════════════════════════════ STATE ═══════════════════════════
@@ -1514,8 +1579,9 @@ let FLEET_COUNT=0,isDark=true,fabOpen=false; // selalu diupdate dari DB saat syn
 let currentPeriod='today',currentBarFilter='6m',lapFilter='bulan-ini';
 let txnFilterTipe='all',txnSearch='',txnSort='newest',txnPage=5;
 let txnFilterKategori=''; // filter kategori pengeluaran di halaman keuangan
+let txnFilterSubKategori=''; // filter sub-kategori onderdil (Ban/Oli/dst, konsisten dgn Gudang)
 let currentDetailUnit=null;
-let donutChart=null,barChart=null,miniChart=null;
+let barChart=null,miniChart=null;
 
 // fleetData & driverList selalu diisi dari DB saat sync — tidak ada default hardcode
 let fleetData=[];
@@ -1573,8 +1639,10 @@ let gudangKategori=[]; // loaded from DB settings — no hardcode defaults
 // GUDANG HELPERS
 // ════════════════════════════════════
 function spStatus(sp){
-  const pct=sp.stokSisa/sp.stokAwal;
-  return pct>0.5?'fresh':pct>0.2?'warn':'critical';
+  const min=Number(sp.stokMin||5);
+  if(sp.stokSisa<=0) return 'critical';
+  if(sp.stokSisa<=min) return 'warn';
+  return 'fresh';
 }
 function spStatusLabel(sp){
   const s=spStatus(sp);
@@ -1691,7 +1759,7 @@ function openInstalledListPopup(spId){
     <div style="display:grid;gap:8px;">
       ${sp.installed.map((i,idx)=>{
         const f=fleetData.find(x=>x.nopol===i.armada);
-        const threshold=getRitaseThreshold(sp.kategori)||200;
+        const threshold=getEffectiveThreshold(sp)||200;
         const pct=Math.min(100,Math.round((i.ritase/threshold)*100));
         const barColor=pct>=90?'var(--danger)':pct>=70?'var(--warning)':'var(--success)';
         const freeze=f&&f.status==='bengkel';
@@ -1720,7 +1788,7 @@ function openArmadaUsagePopup(spId, instIdx){
   const i=sp.installed[instIdx];
   const f=fleetData.find(x=>x.nopol===i.armada);
   const freeze=f&&f.status==='bengkel';
-  const threshold=getRitaseThreshold(sp.kategori)||200;
+  const threshold=getEffectiveThreshold(sp)||200;
   const pct=Math.min(100,Math.round((i.ritase/threshold)*100));
   const sisa=Math.max(0,threshold-i.ritase);
   const barColor=pct>=90?'var(--danger)':pct>=70?'var(--warning)':'var(--success)';
@@ -1867,10 +1935,17 @@ async function deleteKategori(nama){
 
 // (renderGudangFilterChips has been replaced by the interactive Filter & Sort popup)
 
+// Item onderdil "beli baru di luar stok" (dari outflow) tidak dianggap stok gudang beneran —
+// jadi tidak perlu muncul di halaman Gudang, hanya di-track ritase-nya di tab Onderdil armada.
+function isNonStokItem(sp){
+  return !!(sp && sp.catatan && sp.catatan.includes('luar stok gudang'));
+}
+
 function renderGudang(){
   const el=document.getElementById('sp-grid');if(!el)return;
+  const gudangItems=sparepartStock.filter(s=>!isNonStokItem(s));
   // Apply sort & filter
-  let list=gudangFilter==='all'?[...sparepartStock]:sparepartStock.filter(s=>s.kategori===gudangFilter);
+  let list=gudangFilter==='all'?[...gudangItems]:gudangItems.filter(s=>s.kategori===gudangFilter);
   if(window._gudangSearch) list=list.filter(s=>s.nama.toLowerCase().includes(_gudangSearch)||s.kategori.toLowerCase().includes(_gudangSearch));
   if(window._gudangStokFilter){
     if(_gudangStokFilter==='habis') list=list.filter(s=>s.stokSisa<=0);
@@ -1887,10 +1962,10 @@ function renderGudang(){
     if(typeof va==='string') return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
     return sortDir==='asc'?va-vb:vb-va;
   });
-  const tot=sparepartStock.length;
-  const inst=sparepartStock.filter(s=>s.installed.length>0).length;
-  const crit=sparepartStock.filter(s=>spStatus(s)==='critical').length;
-  const nilaiTotal=sparepartStock.reduce((s,sp)=>s+sp.stokSisa*sp.hargaSatuan,0);
+  const tot=gudangItems.length;
+  const inst=gudangItems.filter(s=>s.installed.length>0).length;
+  const crit=gudangItems.filter(s=>spStatus(s)==='critical').length;
+  const nilaiTotal=gudangItems.reduce((s,sp)=>s+sp.stokSisa*sp.hargaSatuan,0);
   const ids=['gh-total','gh-installed','gh-critical'];
   [tot,inst,crit].forEach((v,i)=>{const e=document.getElementById(ids[i]);if(e)e.textContent=v;});
   const nilaiEl=document.getElementById('gh-nilai');if(nilaiEl)nilaiEl.textContent=fmt(nilaiTotal);
@@ -1915,6 +1990,7 @@ function renderGudang(){
       +armadaChips
       +'<div class="sp-meta-grid">'
       +'<div class="sp-meta-item"><div class="sp-meta-label">📦 Sisa/Total</div><div class="sp-meta-val" style="color:'+(st==='fresh'?'var(--success)':st==='warn'?'var(--warning)':'var(--danger)')+';">'+sp.stokSisa+' / '+sp.stokAwal+'</div></div>'
+      +'<div class="sp-meta-item"><div class="sp-meta-label">⚠️ Stok Min</div><div class="sp-meta-val">'+(sp.stokMin||5)+' unit</div></div>'
       +'<div class="sp-meta-item"><div class="sp-meta-label">💰 Harga/unit</div><div class="sp-meta-val">'+fmt(sp.hargaSatuan)+'</div></div>'
       +'<div class="sp-meta-item"><div class="sp-meta-label">💵 Nilai Sisa</div><div class="sp-meta-val" style="color:var(--info);">'+fmt(nilaiSisa)+'</div></div>'
       +'<div class="sp-meta-item"><div class="sp-meta-label">📅 Tgl Masuk</div><div class="sp-meta-val">'+fmtDate(sp.tglMasuk)+'</div></div>'
@@ -1948,8 +2024,10 @@ function openAddStockModal(editId){
     +'<div><label class="form-label">📅 Tgl Masuk</label><input type="date" class="form-input" id="sp-tgl" value="'+(sp?sp.tglMasuk:today())+'"/></div>'
     +'<div><label class="form-label">Jumlah</label><input class="form-input" id="sp-jml" type="number" value="'+(sp?sp.stokAwal:'')+'" placeholder="Qty"/></div>'
     +'<div><label class="form-label">Harga/unit (Rp)</label><input class="form-input" id="sp-harga" value="'+(sp?new Intl.NumberFormat('id-ID').format(sp.hargaSatuan):'')+'" placeholder="0" inputmode="numeric"/></div>'
+    +'<div><label class="form-label">⚠️ Stok Minimum</label><input class="form-input" id="sp-stok-min" type="number" value="'+(sp&&sp.stokMin?sp.stokMin:'')+'" placeholder="Default 5"/></div>'
+    +'<div><label class="form-label">🔧 Batas Ritase (opsional)</label><input class="form-input" id="sp-ritase-threshold" type="number" value="'+(sp&&sp.ritaseThreshold?sp.ritaseThreshold:'')+'" placeholder="Default kategori ('+getRitaseThreshold(sp?sp.kategori:'Spare')+' rit)"/></div>'
     +'</div>'
-    +'<div style="font-size:10.5px;color:var(--text3);background:var(--bg3);border-radius:10px;padding:9px 11px;line-height:1.6;">💡 Stok masuk tanpa potong kas — sistem tempo.</div>'
+    +'<div style="font-size:10.5px;color:var(--text3);background:var(--bg3);border-radius:10px;padding:9px 11px;line-height:1.6;">💡 Stok masuk tanpa potong kas — sistem tempo.<br>⚠️ Stok Minimum = batas sisa stok sebelum dianggap "Menipis" & memicu notifikasi. Kosongkan untuk pakai default (5 unit).</div>'
     +'<button class="sm-btn orange" onclick="saveSparepart(\''+(editId||'')+'\')">'+(sp?'Simpan':'Tambah Stok')+'</button>'
     +(sp?'<button class="sm-btn danger" onclick="deleteSparepart(\''+sp.id+'\');closeSm()">Hapus Item</button>':'');
   setupCurrencyInput('sp-harga');
@@ -1966,6 +2044,10 @@ async function saveSparepart(editId){
   const jmlRaw=document.getElementById('sp-jml')?.value||'';
   const jml=parseInt(jmlRaw.toString().replace(/\D/g,''))||0;
   const harga=getRaw('sp-harga')||0;
+  const thresholdRaw=document.getElementById('sp-ritase-threshold')?.value||'';
+  const ritaseThreshold=thresholdRaw?parseInt(thresholdRaw)||0:0;
+  const stokMinRaw=document.getElementById('sp-stok-min')?.value||'';
+  const stokMin=stokMinRaw?parseInt(stokMinRaw)||0:5;
   if(!nama){showToast('Nama barang tidak boleh kosong');return;}
   if(!spek){showToast('Spek/tipe tidak boleh kosong');return;}
   if(jml<=0){showToast('Jumlah harus lebih dari 0');return;}
@@ -1975,35 +2057,46 @@ async function saveSparepart(editId){
     if(editId){
       const sp=sparepartStock.find(s=>s.id===editId);
       if(sp){
+        const oldSp={...sp};
         const dbData = {
           nama, spek, kategori: kat, toko, nota,
           tgl_masuk: tgl, stok_awal: jml,
           stok_sisa: Math.min(isNaN(sp.stokSisa)?jml:sp.stokSisa, jml),
-          harga_satuan: isNaN(harga)?0:harga, catatan: sp.catatan
+          harga_satuan: isNaN(harga)?0:harga, catatan: sp.catatan,
+          ritase_threshold: ritaseThreshold || null, stok_min: stokMin
         };
         await sbFetch('inventory',{method:'PATCH',filters:{id:editId},body:dbData});
         // Update lokal setelah berhasil
         sp.nama=nama;sp.spek=spek;sp.kategori=kat;sp.toko=toko;
         sp.nota=nota;sp.tglMasuk=tgl;sp.stokAwal=jml;
         sp.stokSisa=dbData.stok_sisa;sp.hargaSatuan=dbData.harga_satuan;
+        sp.ritaseThreshold=ritaseThreshold||0;sp.stokMin=stokMin;
+        const changes=[];
+        if(oldSp.nama!==nama)changes.push(`Nama ${oldSp.nama}→${nama}`);
+        if(oldSp.stokAwal!==jml)changes.push(`Stok ${oldSp.stokAwal}→${jml}`);
+        if(oldSp.hargaSatuan!==dbData.harga_satuan)changes.push(`Harga ${fmt(oldSp.hargaSatuan)}→${fmt(dbData.harga_satuan)}`);
+        logAudit('update','gudang',`Edit stok ${nama}${changes.length?': '+changes.join(', '):''}`);
       }
     } else {
       const spId = 'sp'+Date.now();
       const dbData = {
         id: spId, nama, spek, kategori: kat, toko, nota,
         tgl_masuk: tgl, stok_awal: jml, stok_sisa: jml,
-        harga_satuan: isNaN(harga)?0:harga, catatan: '', installed: []
+        harga_satuan: isNaN(harga)?0:harga, catatan: '', installed: [],
+        ritase_threshold: ritaseThreshold || null, stok_min: stokMin
       };
       await sbFetch('inventory',{method:'POST',body:dbData});
       sparepartStock.push({
         id:spId, nama, spek, kategori:kat, toko, nota,
         tglMasuk:tgl, stokAwal:jml, stokSisa:jml,
-        hargaSatuan:dbData.harga_satuan, installed:[], catatan:''
+        hargaSatuan:dbData.harga_satuan, installed:[], catatan:'',
+        ritaseThreshold:ritaseThreshold||0, stokMin:stokMin
       });
+      logAudit('create','gudang',`Tambah stok ${nama} (${kat}) — ${jml} unit @ ${fmt(dbData.harga_satuan)}`);
     }
     _isSyncing=false;
     await syncFromSupabase();
-    closeSm();renderGudang();
+    closeSm();renderGudang();checkDocWarnings();
     showToast(editId?'✅ Item diperbarui':'✅ Stok ditambahkan');vibrate(30);
   } catch(e){
     console.error('saveSparepart fail:',e);
@@ -2014,12 +2107,15 @@ async function saveSparepart(editId){
 }
 
 async function deleteSparepart(id){
+  const sp=sparepartStock.find(s=>s.id===id);
   try {
     await sbFetch('inventory',{method:'DELETE',filters:{id:id}});
     const i=sparepartStock.findIndex(s=>s.id===id);if(i>-1)sparepartStock.splice(i,1);
     _isSyncing=false;
     await syncFromSupabase();
-    renderGudang();showToast('✅ Item dihapus');vibrate(40);
+    renderGudang();
+    logAudit('delete','gudang',`Hapus item stok ${sp?sp.nama:id}`);
+    showToast('✅ Item dihapus');vibrate(40);
   } catch(e){
     console.error('deleteSparepart fail:',e);
     showToast('⚠️ Gagal hapus item: '+e.message);
@@ -2028,15 +2124,58 @@ async function deleteSparepart(id){
   }
 }
 
+// Hapus item onderdil "beli baru di luar stok" langsung dari tab Onderdil (tidak muncul di Gudang)
+// Ini juga menghapus transaksi Outflow terkait di Keuangan — full undo untuk salah input.
+function confirmDeleteOnderdilItem(id, nama){
+  const linkedTxn=transactions.find(t=>t.sparepartId===id);
+  const txnMsg=linkedTxn
+    ?'<br><span style="color:var(--danger);font-size:11px;">⚠️ Transaksi outflow "'+linkedTxn.label+'" ('+fmt(linkedTxn.amount)+') di Keuangan juga akan ikut terhapus.</span>'
+    :'';
+  showConfirmPopup(
+    'Hapus Onderdil?',
+    'Yakin ingin menghapus <b>'+nama+'</b>? Tracking ritase untuk item ini akan hilang.'+txnMsg,
+    async ()=>{
+      try{
+        showToast('⏳ Menghapus...');
+        // Hapus transaksi outflow terkait (jika ada) beserta jejaknya di inventory_installed
+        if(linkedTxn){
+          await sbFetch('transactions', {method:'DELETE', filters:{id:linkedTxn.id}});
+          await fetch(`${SB_URL}/rest/v1/inventory_installed?txn_id=like.${encodeURIComponent(linkedTxn.id+'%')}`, {
+            method:'DELETE',
+            headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'}
+          }).catch(e=>console.warn('inventory_installed delete fail:',e));
+          transactions=transactions.filter(t=>t.id!==linkedTxn.id);
+        }
+        // Hapus item inventory (record custom onderdil-nya sendiri)
+        await sbFetch('inventory',{method:'DELETE',filters:{id:id}});
+        const i=sparepartStock.findIndex(s=>s.id===id);if(i>-1)sparepartStock.splice(i,1);
+
+        logAudit('delete','onderdil',`Hapus onderdil luar stok "${nama}"${linkedTxn?' beserta transaksi outflow '+fmt(linkedTxn.amount):''}`);
+
+        renderGudang(); renderDashboard(); applyTxnFilters(); renderLaporanTable();
+        if(typeof renderKeuanganStats==='function') renderKeuanganStats();
+        if(currentDetailUnit){ renderOnderdilTab(currentDetailUnit); refreshDetailHero(); }
+        showToast('✅ Onderdil'+(linkedTxn?' & transaksi terkait':'')+' berhasil dihapus');
+        vibrate(40);
+        _isSyncing=false;
+        await syncFromSupabase();
+      } catch(e){
+        console.error('confirmDeleteOnderdilItem fail:',e);
+        showToast('⚠️ Gagal hapus: '+e.message);
+        _isSyncing=false;
+        await syncFromSupabase();
+      }
+    }
+  );
+}
+
 function openPasangModal(spId){
   const sp=sparepartStock.find(s=>s.id===spId);if(!sp)return;
   if(sp.stokSisa<=0){showToast('Stok habis!');return;}
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent='Konfirmasi Pemasangan';
-  const isBan = (sp.kategori==='Ban' || sp.nama.toLowerCase().includes('ban'));
   const opts=fleetData.slice().sort((a,b)=>a.nopol.localeCompare(b.nopol)).map(f=>`<option value="${f.nopol}">${f.nopol} - ${f.driver}</option>`).join('');
-  const posOpts=TIRE_POSITIONS.map(p=>`<option value="${p}">${p}</option>`).join('');
-  
+
   body.innerHTML=`
     <div style="background:linear-gradient(135deg, var(--bg3), var(--bg4)); border:1px solid var(--card-b); border-radius:16px; padding:16px; margin-bottom:16px; display:flex; align-items:center; gap:16px; transform:translateZ(0); box-shadow:var(--sh-sm);">
       <div style="width:48px; height:48px; border-radius:12px; background:var(--bg2); display:flex; align-items:center; justify-content:center; flex-shrink:0; border:1px solid var(--card-b);">${getSpCatIcon(sp.kategori||'', true)}</div>
@@ -2048,7 +2187,10 @@ function openPasangModal(spId){
     <div style="display:grid; gap:12px;">
       <div>
         <label class="form-label" style="display:flex; align-items:center; gap:6px;">🚛 Pilih Armada <span style="color:var(--danger);">*</span></label>
-        <select class="form-select" id="pasang-armada" style="height:44px; font-weight:600;">${opts}</select>
+        <select class="form-select" id="pasang-armada" style="height:44px; font-weight:600;">
+          <option value="">— Pilih Armada —</option>
+          ${opts}
+        </select>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
         <div>
@@ -2060,16 +2202,11 @@ function openPasangModal(spId){
           <input class="form-input" id="pasang-jml" type="number" value="1" min="1" max="${sp.stokSisa}" style="height:44px;"/>
         </div>
       </div>
-      ${isBan ? `
-      <div>
-        <label class="form-label" style="display:flex; align-items:center; gap:6px;">📍 Posisi Ban <span style="color:var(--danger);">*</span></label>
-        <select class="form-select" id="pasang-posisi" style="height:44px; font-weight:700; color:var(--orange);">${posOpts}</select>
-      </div>` : ''}
     </div>
     <div style="margin-top:20px; padding:12px; background:var(--orange-bg); border-radius:12px; border:1px solid var(--orange-bd); display:flex; gap:10px; align-items:flex-start;">
       <span style="font-size:16px;">💡</span>
       <div style="font-size:10.5px; color:var(--orange-dark); font-weight:600; line-height:1.4;">
-        Pemasangan akan memotong stok gudang dan mencatat pengeluaran keuangan secara otomatis.
+        Pemasangan akan memotong stok gudang, mencatat pengeluaran keuangan, dan mulai menghitung ritase pemakaian secara otomatis.
       </div>
     </div>
     <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:12px; margin-top:20px;">
@@ -2081,24 +2218,25 @@ function openPasangModal(spId){
 
 async function confirmPasang(spId){
   const sp=sparepartStock.find(s=>s.id===spId);if(!sp)return;
-  const armada=document.getElementById('pasang-armada')?.value;
+  const armada=document.getElementById('pasang-armada')?.value||'';
   const tgl=document.getElementById('pasang-tgl')?.value;
   const jml=parseInt(document.getElementById('pasang-jml')?.value||'1');
-  const posisi=document.getElementById('pasang-posisi')?.value||'';
+  const posisi='';
+  if(!armada){showToast('Pilih armada terlebih dahulu');return;}
   if(jml<1){showToast('Jumlah minimal 1');return;}
   if(jml>sp.stokSisa){showToast('Jumlah melebihi stok (sisa: '+sp.stokSisa+')');return;}
   const driver=fleetData.find(f=>f.nopol===armada)?.driver||'';
   const txnId='txn_'+Date.now();
   sp.stokSisa-=jml;
   for(let i=0;i<jml;i++){
-    sp.installed.push({armada, tglPasang:tgl, ritase:0, txnId:txnId+'_'+i, posisi: posisi||(jml>1?'Unit '+(i+1):'')});
+    sp.installed.push({armada, tglPasang:tgl, ritase:0, txnId:txnId+'_'+i, posisi: jml>1?'Unit '+(i+1):''});
   }
   const newTxn={
     id:txnId, type:'outflow',
-    label:sp.nama+' ('+sp.spek+') — '+jml+' unit'+(posisi?' ['+posisi+']':''),
+    label:sp.nama+' ('+sp.spek+') — '+jml+' unit',
     sub:'No.Nota: '+sp.nota+' · '+sp.toko+' · '+driver,
     amount:sp.hargaSatuan*jml, date:tgl,
-    armada, nota:sp.nota, toko:sp.toko, kategori:'Onderdil', driver, status:'lunas',
+    armada, nota:sp.nota, toko:sp.toko, kategori:'Onderdil', subKategori: sp.kategori||'', driver, status:'lunas',
     sparepartId:spId, jmlPasang:jml, posisi
   };
   try {
@@ -2108,8 +2246,8 @@ async function confirmPasang(spId){
       label: newTxn.label, sub: newTxn.sub,
       amount: newTxn.amount, date: newTxn.date,
       armada, nota: sp.nota, toko: sp.toko,
-      kategori: 'Onderdil', driver, status: 'lunas',
-      sparepart_id: spId, jml_pasang: jml, posisi: posisi || '',
+      kategori: 'Onderdil', sub_kategori: sp.kategori||'', driver, status: 'lunas',
+      sparepart_id: spId, jml_pasang: jml, posisi: '',
       created_at: new Date().toISOString()
     };
     await sbFetch('transactions', {method:'POST', body:dbTxn});
@@ -2121,14 +2259,14 @@ async function confirmPasang(spId){
         inventory_id: spId, armada: armada,
         tgl_pasang: tgl, ritase: 0,
         txn_id: txnId+'_'+i,
-        posisi: posisi||(jml>1?'Unit '+(i+1):'')
+        posisi: jml>1?'Unit '+(i+1):''
       };
       await sbFetch('inventory_installed', {method:'POST', body:installedRow}).catch(e=>console.warn('inventory_installed POST fail:',e));
     }
 
     // Setelah berhasil simpan ke server, update state lokal
     transactions.unshift(newTxn);
-    logAudit('create','gudang',`Pasang ${sp.nama} ${jml}u ke ${armada}${posisi?' pos:'+posisi:''}`);
+    logAudit('create','gudang',`Pasang ${sp.nama} ${jml}u ke ${armada}`);
     closeSm(); renderGudang(); renderDashboard(); applyTxnFilters(); renderLaporanTable(); refreshDetailHero();
     showToast(sp.nama+' terpasang ke '+armada);
     _isSyncing = false;
@@ -2148,23 +2286,37 @@ const RITASE_THRESHOLDS={Ban:100,Oli:50,Filter:80,Spare:60};
 function getRitaseThreshold(kategori){
   return RITASE_THRESHOLDS[kategori]||50;
 }
+// Batas ritase efektif: pakai setting per-item jika diisi saat input, kalau tidak pakai default kategori
+function getEffectiveThreshold(sp){
+  if(!sp) return 50;
+  return (sp.ritaseThreshold && sp.ritaseThreshold>0) ? sp.ritaseThreshold : getRitaseThreshold(sp.kategori);
+}
 
 // Dipanggil saat submitInflow — hitung ritase berdasarkan trip baru
 // Tidak hitung jika armada sedang bengkel (status SEBELUM update)
-function incrementRitaseForArmada(nopol, statusSebelum){
+async function incrementRitaseForArmada(nopol, statusSebelum){
   // Jika armada sedang bengkel sebelum trip ini, skip
   if(statusSebelum==='bengkel') return;
   const warnings=[];
+  const patches=[];
   sparepartStock.forEach(sp=>{
     sp.installed.forEach(i=>{
       if(i.armada!==nopol) return;
       i.ritase++;
-      const threshold=getRitaseThreshold(sp.kategori);
+      // Simpan penambahan ritase ke Supabase supaya tidak hilang saat sync berikutnya
+      if(i.txnId){
+        patches.push(
+          sbFetch('inventory_installed',{method:'PATCH',filters:{txn_id:i.txnId},body:{ritase:i.ritase}})
+            .catch(e=>console.warn('Update ritase fail:',e))
+        );
+      }
+      const threshold=getEffectiveThreshold(sp);
       if(i.ritase===threshold||(i.ritase>threshold&&(i.ritase-threshold)%10===0)){
         warnings.push(sp.nama+': '+i.ritase+'/'+threshold+' ritase ⚠️');
       }
     });
   });
+  await Promise.all(patches);
   if(warnings.length){
     setTimeout(()=>warnings.forEach(w=>showToast('🔧 '+w)),900);
   }
@@ -2183,7 +2335,7 @@ function getActivePartsForArmada(nopol){
     const f=fleetData.find(x=>x.nopol===nopol);
     const freeze=f&&f.status==='bengkel';
     const daysSince=Math.ceil((new Date()-new Date(i.tglPasang))/86400000);
-    parts.push({nama:sp.nama,spek:sp.spek,tglPasang:i.tglPasang,ritase:i.ritase,freeze,daysSince,kategori:sp.kategori});
+    parts.push({id:sp.id,nama:sp.nama,spek:sp.spek,tglPasang:i.tglPasang,ritase:i.ritase,freeze,daysSince,kategori:sp.kategori,ritaseThreshold:sp.ritaseThreshold||0,isNonStok:isNonStokItem(sp),posisi:i.posisi||''});
   }));
   return parts;
 }
@@ -2217,7 +2369,7 @@ function buildWAText(){
     let w='';if(p<=30)w+='Pajak '+f.nopol+' '+p+'h ';if(k<=30)w+='KIR '+f.nopol+' '+k+'h';
     return '  ⚠️ '+w.trim();
   }).join('\n'):'  ✅ Semua dokumen aman';
-  const kritis=sparepartStock.filter(s=>spStatus(s)==='critical');
+  const kritis=sparepartStock.filter(s=>!isNonStokItem(s)&&spStatus(s)!=='fresh');
   const kritTxt=kritis.length?kritis.map(s=>'  ⚠️ '+s.nama+' - Sisa '+s.stokSisa+' unit').join('\n'):'  ✅ Stok dalam kondisi aman';
   const tglStr=now.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const lines=[
@@ -2395,7 +2547,7 @@ function syncOutflowFromSparepart(){
 // END HELPERS
 // ════════════════════════════════════════════════════════
 // ═══════════════════════════════ UTILS ═══════════════════════════
-function fmt(n){if(!n&&n!==0)return '—';const a=Math.abs(n);if(a>=1e9)return'Rp '+(n/1e9).toFixed(1)+'M';if(a>=1e6)return'Rp '+(n/1e6).toFixed(1)+'Jt';if(a>=1e3)return'Rp '+(n/1e3).toFixed(0)+'Rb';return'Rp '+n;}
+function fmt(n){if(!n&&n!==0)return '—';return'Rp '+new Intl.NumberFormat('id-ID').format(Math.round(n));}
 function fmtFull(n){return'Rp '+new Intl.NumberFormat('id-ID').format(Math.round(n));}
 function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});}
 function daysUntil(d){if(!d)return 9999;return Math.ceil((new Date(d)-new Date())/(86400000));}
@@ -2422,11 +2574,12 @@ function daysUntil(dateStr){
 // Background checker untuk peringatan dokumen & stok
 function checkDocWarnings(){
   const hasCriticalStock = sparepartStock.some(s => {
+    if(isNonStokItem(s)) return false;
     const sisa = Number(s.stokSisa || 0);
     const min = Number(s.stokMin || 5);
     return sisa <= min;
   });
-  const hasExpiringDocs = fleetData.some(f => daysUntil(f.pajak) <= 30 || daysUntil(f.kir) <= 30);
+  const hasExpiringDocs = fleetData.some(f => daysUntil(f.pajak) <= 30 || daysUntil(f.kir) <= 30 || daysUntil(f.stnk) <= 30);
   
   const dot = document.getElementById('notif-dot');
   if(dot) dot.style.display = (hasCriticalStock || hasExpiringDocs) ? 'block' : 'none';
@@ -2478,7 +2631,7 @@ function totalInflow(list){return list.filter(t=>t.type==='inflow').reduce((s,t)
 function totalOutflow(list){return list.filter(t=>t.type==='outflow').reduce((s,t)=>s+t.amount,0);}
 
 function showImportantNotif(){
-  const kritis = sparepartStock.filter(s => spStatus(s) === 'critical');
+  const kritis = sparepartStock.filter(s => !isNonStokItem(s) && spStatus(s) !== 'fresh');
   const docs = fleetData.filter(f => daysUntil(f.pajak) <= 30 || daysUntil(f.kir) <= 30);
   
   const tEl = document.getElementById('sm-title-text'), body = document.getElementById('sm-body');
@@ -2570,12 +2723,6 @@ function renderDashboard(){
     ['h-prf','kc-prf','k-prf'].forEach(id=>{const e=document.getElementById(id);if(e)animNum(e,prf);});
     const pu=document.getElementById('kc-per-unit');if(pu)pu.textContent=fmt(perUnit);
     const km=document.getElementById('kc-margin');if(km)km.textContent=margin+'%';
-    // donut legend
-    const dIn=document.getElementById('dl-in');if(dIn)dIn.textContent=fmt(inf);
-    const dOut=document.getElementById('dl-out');if(dOut)dOut.textContent=fmt(out);
-    const total=inf+out||1;
-    const dip=document.getElementById('dl-in-pct');if(dip)dip.textContent=(inf/total*100).toFixed(0)+'%';
-    const dop=document.getElementById('dl-out-pct');if(dop)dop.textContent=(out/total*100).toFixed(0)+'%';
     // comparison badges
     const ci=document.getElementById('cmp-in');if(ci){const _u=inf>=_pi;ci.textContent=(_u?'↑':'↓')+' '+cmpIn;ci.className='cmp-badge '+(_u?'up':'dn');}
     const co=document.getElementById('cmp-out');if(co){const _u=out>_po;co.textContent=(_u?'↑':'↓')+' '+cmpOut;co.className='cmp-badge '+(_u?'dn':'up');}
@@ -2600,9 +2747,9 @@ function renderDashboard(){
   });
   renderTxnCards('txn-dash',filtered.slice(0,4),true);
   applyTxnFilters();
-  renderDonut(inf,out);
   renderMiniLine();
   renderBarChart(currentBarFilter);
+  renderDriverDonut();
   renderFleetUnits();
   renderLaporanTable();
   checkDocWarnings();
@@ -2686,7 +2833,7 @@ function openTxnActionSheet(id){
         </div>
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-size:15px;font-weight:800;color:${t.type==='inflow'?'var(--success)':'var(--danger)'};">${t.type==='inflow'?'+':'-'}${fmt(t.amount)}</div>
-          <div style="font-size:10px;color:var(--text3);">${t.kategori||''}</div>
+          <div style="font-size:10px;color:var(--text3);">${t.kategori||''}${t.subKategori?' · '+t.subKategori:''}</div>
         </div>
       </div>
       ${t.muat?`<div style="margin-top:10px;padding:8px 10px;background:var(--bg2);border-radius:9px;font-size:11px;color:var(--text2);">📍 ${t.muat} → ${t.bongkar}</div>`:''}
@@ -2713,8 +2860,12 @@ function toggleTxn(id){
 function deleteTxn(id){
   const txn=transactions.find(t=>t.id===id);
   if(!txn) return;
+  const linkedSp=txn.sparepartId?sparepartStock.find(s=>s.id===txn.sparepartId):null;
+  const isCustomItem=linkedSp&&isNonStokItem(linkedSp);
   const stockMsg=txn.type==='outflow'&&txn.sparepartId
-    ?'<br><span style="color:var(--success);font-size:11px;">✅ Stok onderdil akan otomatis kembali +'+(txn.jmlPasang||1)+' unit</span>'
+    ?(isCustomItem
+        ?'<br><span style="color:var(--danger);font-size:11px;">⚠️ Onderdil "'+linkedSp.nama+'" (beli luar stok) juga akan ikut terhapus dari tab Onderdil.</span>'
+        :'<br><span style="color:var(--success);font-size:11px;">✅ Stok onderdil akan otomatis kembali +'+(txn.jmlPasang||1)+' unit</span>')
     :'';
   showConfirmPopup('🗑️ Hapus Transaksi',
     `<b>${txn.type==='inflow'?'Pemasukan':'Pengeluaran'}</b>: ${txn.label||''}<br>
@@ -2725,40 +2876,48 @@ function deleteTxn(id){
         const adminName=window.activeAdmin?.name||'System';
         const jml=txn.jmlPasang||1;
         
-        // === STOCK REVERSAL ===
-        if(txn.type==='outflow'&&txn.sparepartId){
+        // === STOCK REVERSAL (item stok gudang biasa) ATAU HAPUS TOTAL (onderdil custom luar stok) ===
+        if(txn.type==='outflow'&&txn.sparepartId&&!isCustomItem){
           const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
           if(sp){
             sp.stokSisa=Math.min(sp.stokAwal,(sp.stokSisa||0)+jml);
             sp.installed=sp.installed.filter(i=>!String(i.txnId).startsWith(String(id)));
           }
+        } else if(isCustomItem){
+          const i=sparepartStock.findIndex(s=>s.id===txn.sparepartId);if(i>-1)sparepartStock.splice(i,1);
         }
         
         // Optimistic UI update
         transactions=transactions.filter(t=>t.id!==id);
         renderGudang(); renderDashboard(); applyTxnFilters(); renderLaporanTable();
         renderKeuanganStats?.(); refreshDetailHero(); vibrate(40);
+        if(currentDetailUnit) renderOnderdilTab(currentDetailUnit);
         showToast('Transaksi dihapus...');
 
         // Server deletion
         await sbFetch('transactions', {method:'DELETE', filters:{id:id}});
 
-        // Update inventory record in Supabase (Stock Reversal)
+        // Update inventory record di Supabase
         if(txn.type==='outflow'&&txn.sparepartId){
-          const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
-          if(sp){
-            await sbFetch('inventory', {method:'PATCH', filters:{id:txn.sparepartId}, body:{stok_sisa:sp.stokSisa, installed:sp.installed}});
-            // Hapus dari tabel inventory_installed (exact match dan prefix match untuk multi-unit)
-            // Multi-unit pasang: txn_id bisa berformat "txnId_0", "txnId_1", dst
-            await fetch(`${SB_URL}/rest/v1/inventory_installed?txn_id=like.${encodeURIComponent(id+'%')}`, {
-              method:'DELETE',
-              headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'}
-            }).catch(e=>console.warn('inventory_installed delete fail:',e));
+          if(isCustomItem){
+            // Onderdil custom luar stok: hapus total record inventory-nya
+            await sbFetch('inventory', {method:'DELETE', filters:{id:txn.sparepartId}}).catch(e=>console.warn('inventory delete fail:',e));
+          } else {
+            const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
+            if(sp){
+              await sbFetch('inventory', {method:'PATCH', filters:{id:txn.sparepartId}, body:{stok_sisa:sp.stokSisa, installed:sp.installed}});
+            }
           }
+          // Hapus dari tabel inventory_installed (exact match dan prefix match untuk multi-unit)
+          // Multi-unit pasang: txn_id bisa berformat "txnId_0", "txnId_1", dst
+          await fetch(`${SB_URL}/rest/v1/inventory_installed?txn_id=like.${encodeURIComponent(id+'%')}`, {
+            method:'DELETE',
+            headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'}
+          }).catch(e=>console.warn('inventory_installed delete fail:',e));
         }
 
         logAudit('delete','transaksi',
-          `[${waktu}] - [${adminName}] - [Hapus Transaksi] - [${txn.label}, Rp ${fmt(txn.amount)}${txn.sparepartId?', Qty '+jml+' unit dikembalikan':''}]`
+          `[${waktu}] - [${adminName}] - [Hapus Transaksi] - [${txn.label}, Rp ${fmt(txn.amount)}${txn.sparepartId?(isCustomItem?', onderdil custom ikut dihapus':', Qty '+jml+' unit dikembalikan'):''}]`
         );
 
         _isSyncing = false;
@@ -2810,7 +2969,7 @@ function editTxn(id){
         ${fleetData.map(f=>`<option value="${f.nopol}" ${txn.armada===f.nopol?'selected':''}>${f.nopol} - ${f.driver}</option>`).join('')}
       </select></div>
     ${txn.type==='inflow' ? `
-      <div><label class="form-label">Nama Supir</label>
+      <div><label class="form-label">Nama Driver</label>
         <input class="form-input" id="et-driver" value="${txn.driver||''}"/></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <div><label class="form-label">Lokasi Muat</label>
@@ -2975,6 +3134,7 @@ function setTxnFilter(key,val,btn){
   if(key==='tipe'){
     txnFilterTipe=val;
     txnFilterKategori=''; // reset kategori filter saat ganti tipe
+    txnFilterSubKategori='';
     document.querySelectorAll('.fs-chip').forEach(b=>b.classList.remove('active'));
     if(btn)btn.classList.add('active');
     // Update chip kategori
@@ -2987,20 +3147,20 @@ function setTxnFilter(key,val,btn){
 }
 
 function openKeuanganKatFilter(){
-  // Kumpulkan semua kategori unik dari transaksi
-  const allKats=[...new Set(transactions.map(t=>t.kategori).filter(Boolean))].sort();
-  const outKats=['Inflow','UMUM','Tunai','Onderdil',...gudangKategori].filter((v,i,a)=>a.indexOf(v)===i);
-  // Tambahkan kategori dari transaksi yang tidak ada di list
-  allKats.forEach(k=>{if(!outKats.includes(k))outKats.push(k);});
+  const BROAD_KATS=['Inflow','UMUM','Tunai','Onderdil','Dokumen'];
+  // Tambahkan kategori broad lain dari transaksi yang belum ada di list (jaga-jaga data lama)
+  const allBroadKats=[...new Set(transactions.map(t=>t.kategori).filter(Boolean))];
+  const broadKats=[...BROAD_KATS];
+  allBroadKats.forEach(k=>{if(!broadKats.includes(k))broadKats.push(k);});
 
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent='Filter Kategori';
 
-  const chips=outKats.map(k=>{
+  const broadChips=broadKats.map(k=>{
     const count=transactions.filter(t=>t.kategori===k).length;
     const total=transactions.filter(t=>t.kategori===k).reduce((s,t)=>s+t.amount,0);
     const isOut=k!=='Inflow';
-    const isActive=txnFilterKategori===k;
+    const isActive=!txnFilterSubKategori&&txnFilterKategori===k;
     return `<button onclick="setKeuanganKat('${k}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;border:1.5px solid ${isActive?'var(--green)':'var(--card-b)'};background:${isActive?'var(--green-bg)':'var(--card)'};cursor:pointer;font-family:'Inter',sans-serif;width:100%;gap:8px;margin-bottom:8px;">
       <div style="display:flex;align-items:center;gap:10px;">
         <span style="font-size:18px;">${getSpCatIcon(k)}</span>
@@ -3015,20 +3175,54 @@ function openKeuanganKatFilter(){
     </button>`;
   }).join('');
 
+  // Sub-kategori Onderdil — persis daftar kategori di halaman Gudang, dan sekarang beneran match datanya
+  const subChips=gudangKategori.map(k=>{
+    const matches=t=>t.kategori==='Onderdil'&&t.subKategori===k;
+    const count=transactions.filter(matches).length;
+    const total=transactions.filter(matches).reduce((s,t)=>s+t.amount,0);
+    const isActive=txnFilterSubKategori===k;
+    return `<button onclick="setKeuanganSubKat('${k}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;border:1.5px solid ${isActive?'var(--green)':'var(--card-b)'};background:${isActive?'var(--green-bg)':'var(--card)'};cursor:pointer;font-family:'Inter',sans-serif;width:100%;gap:8px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;">${getSpCatIcon(k)}</span>
+        <div style="text-align:left;">
+          <div style="font-size:13px;font-weight:700;color:${isActive?'var(--green2)':'var(--text)'};">${k}</div>
+          <div style="font-size:10px;color:var(--text3);">${count} transaksi</div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:12px;font-weight:800;color:var(--danger);">- ${fmt(total)}</div>
+      </div>
+    </button>`;
+  }).join('');
+
   body.innerHTML=`
-    <button onclick="setKeuanganKat('')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1.5px solid ${!txnFilterKategori?'var(--green)':'var(--card-b)'};background:${!txnFilterKategori?'var(--green-bg)':'var(--card)'};cursor:pointer;font-family:'Inter',sans-serif;width:100%;margin-bottom:8px;">
+    <button onclick="setKeuanganKat('')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1.5px solid ${!txnFilterKategori&&!txnFilterSubKategori?'var(--green)':'var(--card-b)'};background:${!txnFilterKategori&&!txnFilterSubKategori?'var(--green-bg)':'var(--card)'};cursor:pointer;font-family:'Inter',sans-serif;width:100%;margin-bottom:8px;">
       <span style="font-size:18px;">🔀</span>
-      <div style="font-size:13px;font-weight:700;color:${!txnFilterKategori?'var(--green2)':'var(--text)'};">Semua Kategori</div>
+      <div style="font-size:13px;font-weight:700;color:${!txnFilterKategori&&!txnFilterSubKategori?'var(--green2)':'var(--text)'};">Semua Kategori</div>
     </button>
-    ${chips}`;
+    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin:12px 4px 6px;">Kategori Umum</div>
+    ${broadChips}
+    ${gudangKategori.length?`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin:12px 4px 6px;">🔧 Onderdil — Sesuai Gudang</div>${subChips}`:''}`;
   document.getElementById('sm-overlay').classList.add('open');
 }
 
 function setKeuanganKat(kat){
   txnFilterKategori=kat;
+  txnFilterSubKategori='';
   const label=document.getElementById('chip-kat-label');
   const chip=document.getElementById('chip-kat-filter');
   if(label)label.textContent=kat||'Kategori';
+  if(chip){kat?chip.classList.add('active'):chip.classList.remove('active');}
+  txnPage=5;
+  closeSm();
+  applyTxnFilters();
+}
+function setKeuanganSubKat(kat){
+  txnFilterSubKategori=kat;
+  txnFilterKategori='';
+  const label=document.getElementById('chip-kat-label');
+  const chip=document.getElementById('chip-kat-filter');
+  if(label)label.textContent=kat?('🔧 '+kat):'Kategori';
   if(chip){kat?chip.classList.add('active'):chip.classList.remove('active');}
   txnPage=5;
   closeSm();
@@ -3043,6 +3237,7 @@ function applyTxnFilters(){
   if(typeof keuanganToDate!=='undefined'&&keuanganToDate) list=list.filter(t=>t.date<=keuanganToDate);
   if(typeof keuanganArmadaFilter!=='undefined'&&keuanganArmadaFilter) list=list.filter(t=>t.armada===keuanganArmadaFilter);
   if(txnFilterKategori) list=list.filter(t=>t.kategori===txnFilterKategori);
+  else if(txnFilterSubKategori) list=list.filter(t=>t.kategori==='Onderdil'&&t.subKategori===txnFilterSubKategori);
   if(txnSearch)list=list.filter(t=>(t.label||'').toLowerCase().includes(txnSearch)||(t.sub||'').toLowerCase().includes(txnSearch)||(t.armada||'').toLowerCase().includes(txnSearch)||(t.driver||'').toLowerCase().includes(txnSearch));
   if(txnSort==='oldest')list.sort((a,b)=>{const da=new Date(a.created_at||a.date),db=new Date(b.created_at||b.date);return da-db;});
   else if(txnSort==='biggest')list.sort((a,b)=>b.amount-a.amount);
@@ -3055,13 +3250,186 @@ function applyTxnFilters(){
 function loadMoreTxn(){txnPage+=5;applyTxnFilters();}
 
 // ═══════════════════════════════ CHARTS ══════════════════════════
-function renderDonut(inf,out){
+// ═══ DISTRIBUSI INFLOW PER SUPIR (donut, periode bisa diedit) ═══
+let driverDonutChart=null;
+let _driverDonutPeriod='bulan-ini', _driverDonutFrom='', _driverDonutTo='';
+const DRIVER_DONUT_COLORS=['#FF6700','#12A060','#2F80ED','#D4A843','#E03030','#8B5CF6','#06B6D4','#F59E0B','#EC4899','#10B981','#6366F1','#F97316'];
+
+function setDriverDonutPeriod(preset,btn){
+  _driverDonutPeriod=preset;
+  document.querySelectorAll('#ddon-filter-btns .cf-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const customRange=document.getElementById('ddon-custom-range');
+  if(customRange) customRange.style.display='none';
+  renderDriverDonut();
+}
+function toggleDriverDonutCustom(){
+  const el=document.getElementById('ddon-custom-range');
+  if(!el) return;
+  el.style.display=el.style.display==='none'?'flex':'none';
+}
+function applyDriverDonutCustom(){
+  _driverDonutFrom=document.getElementById('ddon-from')?.value||'';
+  _driverDonutTo=document.getElementById('ddon-to')?.value||'';
+  if(!_driverDonutFrom||!_driverDonutTo){showToast('Isi tanggal awal & akhir dulu');return;}
+  _driverDonutPeriod='custom';
+  document.querySelectorAll('#ddon-filter-btns .cf-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ddon-btn-custom')?.classList.add('active');
+  document.getElementById('ddon-custom-range').style.display='none';
+  renderDriverDonut();
+}
+function _driverDonutRange(){
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  if(_driverDonutPeriod==='hari-ini') return {from:today(),to:today()};
+  if(_driverDonutPeriod==='bulan-ini') return {from:`${y}-${String(m+1).padStart(2,'0')}-01`,to:today()};
+  if(_driverDonutPeriod==='3bulan'){const d=new Date(y,m-2,1);return {from:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`,to:today()};}
+  if(_driverDonutPeriod==='tahun-ini') return {from:`${y}-01-01`,to:today()};
+  if(_driverDonutPeriod==='custom') return {from:_driverDonutFrom,to:_driverDonutTo};
+  return {from:'',to:''}; // 'semua'
+}
+function renderDriverDonut(){
   if(typeof Chart==='undefined')return;
-  const ctx=document.getElementById('donutChart');if(!ctx)return;
+  const ctx=document.getElementById('driverDonutChart');if(!ctx)return;
   const dark=document.documentElement.getAttribute('data-theme')==='dark';
-  if(donutChart)donutChart.destroy();
-  donutChart=new Chart(ctx,{type:'doughnut',data:{datasets:[{data:[inf||1,out||1],backgroundColor:[dark?'rgba(10,168,96,.7)':'rgba(10,168,96,.85)',dark?'rgba(224,48,48,.65)':'rgba(224,48,48,.8)'],borderColor:[dark?'rgba(10,168,96,.4)':'rgba(10,168,96,.3)',dark?'rgba(224,48,48,.4)':'rgba(224,48,48,.3)'],borderWidth:2,hoverOffset:4}]},
-  options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtFull(c.raw)},backgroundColor:dark?'rgba(22,30,46,.95)':'rgba(255,255,255,.95)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#7DCE13':'#12A060',borderColor:'rgba(125,206,19,.2)',borderWidth:1,padding:9,cornerRadius:9}},animation:{animateRotate:true,duration:800}}});
+  const {from,to}=_driverDonutRange();
+  // Inflow kotor per driver — diambil langsung dari field driver di tiap transaksi,
+  // jadi tetap akurat walau driver tsb memakai armada berbeda dari biasanya (mis. armada asli sedang di bengkel)
+  const inflowTxns=transactions.filter(t=>t.type==='inflow'&&(!from||t.date>=from)&&(!to||t.date<=to));
+  const byDriver={};
+  inflowTxns.forEach(t=>{
+    const nm=t.driver&&t.driver.trim()?t.driver.trim():'Tanpa Nama';
+    byDriver[nm]=(byDriver[nm]||0)+t.amount;
+  });
+  // Semua driver terdaftar ikut ditampilkan (termasuk yang belum ada inflow / 0%)
+  const allDriverNames=[...new Set([...driverList,...fleetData.map(f=>f.driver)])].filter(Boolean);
+  Object.keys(byDriver).forEach(nm=>{if(!allDriverNames.includes(nm))allDriverNames.push(nm);});
+  // Warna per driver stabil (berdasarkan urutan alfabetis), tidak berubah-ubah walau urutan revenue berganti
+  const stableOrder=[...allDriverNames].sort((a,b)=>a.localeCompare(b));
+  const colorOf=nm=>DRIVER_DONUT_COLORS[stableOrder.indexOf(nm)%DRIVER_DONUT_COLORS.length];
+
+  const entries=allDriverNames.map(nm=>[nm,byDriver[nm]||0]).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  const legendEl=document.getElementById('driver-donut-legend');
+  const totalEl=document.getElementById('driver-donut-total');
+
+  if(driverDonutChart){driverDonutChart.destroy();driverDonutChart=null;}
+
+  if(!entries.length){
+    if(legendEl) legendEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:8px 0;">Belum ada data driver</div>';
+    if(totalEl) totalEl.innerHTML='';
+    driverDonutChart=new Chart(ctx,{type:'pie',data:{datasets:[{data:[1],backgroundColor:[dark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)'],borderWidth:0}]},options:{plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+    return;
+  }
+
+  const labels=entries.map(e=>e[0]);
+  const data=entries.map(e=>e[1]);
+  const colors=labels.map(nm=>colorOf(nm));
+
+  driverDonutChart=new Chart(ctx,{type:'pie',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:dark?'#12192B':'#fff',borderWidth:2,hoverOffset:6}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+fmtFull(c.raw)+' ('+(total>0?(c.raw/total*100).toFixed(1):'0.0')+'%)'},backgroundColor:dark?'rgba(22,30,46,.95)':'rgba(255,255,255,.95)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#7DCE13':'#12A060',borderColor:'rgba(125,206,19,.2)',borderWidth:1,padding:9,cornerRadius:9}},animation:{animateRotate:true,duration:800}}});
+
+  if(legendEl){
+    legendEl.innerHTML=entries.map(([nm,amt])=>{
+      const pct=total>0?(amt/total*100).toFixed(1):'0.0';
+      return `<div style="display:flex;align-items:center;padding:6px 4px;font-size:11px;border-bottom:1px solid var(--card-b);gap:6px;">
+        <div style="flex:1;display:flex;align-items:center;gap:7px;min-width:0;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${colorOf(nm)};flex-shrink:0;"></div>
+          <div style="color:var(--text2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;">${nm}</div>
+        </div>
+        <div style="flex-shrink:0;width:118px;text-align:right;white-space:nowrap;color:var(--text);font-weight:700;">${fmt(amt)}</div>
+        <div style="flex-shrink:0;width:36px;text-align:right;white-space:nowrap;color:var(--text3);font-weight:600;">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+  if(totalEl){
+    totalEl.innerHTML=`<div style="flex:1;min-width:0;">TOTAL</div><div style="flex-shrink:0;width:118px;text-align:right;white-space:nowrap;">${fmt(total)}</div><div style="flex-shrink:0;width:36px;text-align:right;white-space:nowrap;">100%</div>`;
+  }
+}
+
+// ═══ REKAP PENGELUARAN PER KATEGORI (Keuangan) ═══
+let katDonutChart=null;
+let _katDonutPeriod='semua', _katDonutFrom='', _katDonutTo='';
+
+function setKatDonutPeriod(preset,btn){
+  _katDonutPeriod=preset;
+  document.querySelectorAll('#kdon-filter-btns .cf-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const customRange=document.getElementById('kdon-custom-range');
+  if(customRange) customRange.style.display='none';
+  renderKatDonut();
+}
+function toggleKatDonutCustom(){
+  const el=document.getElementById('kdon-custom-range');
+  if(!el) return;
+  el.style.display=el.style.display==='none'?'flex':'none';
+}
+function applyKatDonutCustom(){
+  _katDonutFrom=document.getElementById('kdon-from')?.value||'';
+  _katDonutTo=document.getElementById('kdon-to')?.value||'';
+  if(!_katDonutFrom||!_katDonutTo){showToast('Isi tanggal awal & akhir dulu');return;}
+  _katDonutPeriod='custom';
+  document.querySelectorAll('#kdon-filter-btns .cf-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('kdon-btn-custom')?.classList.add('active');
+  document.getElementById('kdon-custom-range').style.display='none';
+  renderKatDonut();
+}
+function _katDonutRange(){
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  if(_katDonutPeriod==='hari-ini') return {from:today(),to:today()};
+  if(_katDonutPeriod==='bulan-ini') return {from:`${y}-${String(m+1).padStart(2,'0')}-01`,to:today()};
+  if(_katDonutPeriod==='3bulan'){const d=new Date(y,m-2,1);return {from:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`,to:today()};}
+  if(_katDonutPeriod==='tahun-ini') return {from:`${y}-01-01`,to:today()};
+  if(_katDonutPeriod==='custom') return {from:_katDonutFrom,to:_katDonutTo};
+  return {from:'',to:''}; // 'semua'
+}
+function renderKatDonut(){
+  if(typeof Chart==='undefined')return;
+  const ctx=document.getElementById('katDonutChart');if(!ctx)return;
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const {from,to}=_katDonutRange();
+  const outflowTxns=transactions.filter(t=>t.type==='outflow'&&(!from||t.date>=from)&&(!to||t.date<=to));
+  const byKat={};
+  outflowTxns.forEach(t=>{
+    const k=t.kategori&&t.kategori.trim()?t.kategori.trim():'Lainnya';
+    byKat[k]=(byKat[k]||0)+t.amount;
+  });
+  const entries=Object.entries(byKat).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  const legendEl=document.getElementById('kat-donut-legend');
+  const totalEl=document.getElementById('kat-donut-total');
+
+  if(katDonutChart){katDonutChart.destroy();katDonutChart=null;}
+
+  if(!entries.length){
+    if(legendEl) legendEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:8px 0;">Belum ada pengeluaran di periode ini</div>';
+    if(totalEl) totalEl.innerHTML='';
+    katDonutChart=new Chart(ctx,{type:'pie',data:{datasets:[{data:[1],backgroundColor:[dark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)'],borderWidth:0}]},options:{plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+    return;
+  }
+
+  const labels=entries.map(e=>e[0]);
+  const data=entries.map(e=>e[1]);
+  const colors=labels.map((_,i)=>DRIVER_DONUT_COLORS[i%DRIVER_DONUT_COLORS.length]);
+
+  katDonutChart=new Chart(ctx,{type:'pie',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:dark?'#12192B':'#fff',borderWidth:2,hoverOffset:6}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+fmtFull(c.raw)+' ('+(c.raw/total*100).toFixed(1)+'%)'},backgroundColor:dark?'rgba(22,30,46,.95)':'rgba(255,255,255,.95)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#7DCE13':'#12A060',borderColor:'rgba(125,206,19,.2)',borderWidth:1,padding:9,cornerRadius:9}},animation:{animateRotate:true,duration:800}}});
+
+  if(legendEl){
+    legendEl.innerHTML=entries.map(([k,amt],i)=>{
+      const pct=(amt/total*100).toFixed(1);
+      return `<div style="display:flex;align-items:center;padding:6px 4px;font-size:11px;border-bottom:1px solid var(--card-b);gap:6px;">
+        <div style="flex:1;display:flex;align-items:center;gap:7px;min-width:0;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]};flex-shrink:0;"></div>
+          <div style="color:var(--text2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;">${k}</div>
+        </div>
+        <div style="flex-shrink:0;width:118px;text-align:right;white-space:nowrap;color:var(--text);font-weight:700;">${fmt(amt)}</div>
+        <div style="flex-shrink:0;width:36px;text-align:right;white-space:nowrap;color:var(--text3);font-weight:600;">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+  if(totalEl){
+    totalEl.innerHTML=`<div style="flex:1;min-width:0;">TOTAL</div><div style="flex-shrink:0;width:118px;text-align:right;white-space:nowrap;">${fmt(total)}</div><div style="flex-shrink:0;width:36px;text-align:right;white-space:nowrap;">100%</div>`;
+  }
 }
 
 function setBarFilter(f,btn){
@@ -3102,8 +3470,8 @@ function renderBarChart(f){
   barChart=new Chart(ctx,{type:'bar',data:{labels:d.labels,datasets:[
     {label:'Inflow',data:d.inflow,backgroundColor:dark?'rgba(10,168,96,.55)':'rgba(10,168,96,.72)',borderRadius:5,borderSkipped:false},
     {label:'Outflow',data:d.outflow,backgroundColor:dark?'rgba(224,48,48,.5)':'rgba(224,48,48,.65)',borderRadius:5,borderSkipped:false}
-  ]},options:{responsive:true,plugins:{legend:{display:true,labels:{font:{family:'DM Sans',size:10},color:tc,boxWidth:10,boxHeight:10}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtFull(c.raw)},backgroundColor:dark?'rgba(16,22,36,.97)':'rgba(255,255,255,.97)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#7DCE13':'#12A060',borderColor:'rgba(125,206,19,.2)',borderWidth:1,padding:9,cornerRadius:9}},
-  scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:10},color:tc}},y:{grid:{color:gc,drawBorder:false},ticks:{font:{family:'DM Sans',size:10},color:tc,callback:v=>{const abs=Math.abs(v);if(abs>=1e9)return(v/1e9).toFixed(1)+'M';if(abs>=1e6)return(v/1e6).toFixed(1)+'Jt';if(abs>=1e3)return(v/1e3).toFixed(0)+'Rb';return v;}}}},barPercentage:0.65,categoryPercentage:0.7}});
+  ]},options:{responsive:true,plugins:{legend:{display:true,labels:{font:{family:'Inter',size:10},color:tc,boxWidth:10,boxHeight:10}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtFull(c.raw)},backgroundColor:dark?'rgba(16,22,36,.97)':'rgba(255,255,255,.97)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#7DCE13':'#12A060',borderColor:'rgba(125,206,19,.2)',borderWidth:1,padding:9,cornerRadius:9}},
+  scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:10},color:tc}},y:{grid:{color:gc,drawBorder:false},ticks:{font:{family:'Inter',size:10},color:tc,callback:v=>{const abs=Math.abs(v);if(abs>=1e9)return(v/1e9).toFixed(1)+'M';if(abs>=1e6)return(v/1e6).toFixed(1)+'Jt';if(abs>=1e3)return(v/1e3).toFixed(0)+'Rb';return v;}}}},barPercentage:0.65,categoryPercentage:0.7}});
 }
 
 // ═══════════════════════════════ CASH FLOW TREND ═════════════════
@@ -3233,7 +3601,7 @@ function _buildMiniLineChart(ctx,dark,gc,tc,labels,profits,inflowArr,outflowArr)
       plugins:{
         legend:{
           display:true,
-          labels:{font:{family:'DM Sans',size:9},color:tc,boxWidth:8,boxHeight:8,padding:8}
+          labels:{font:{family:'Inter',size:9},color:tc,boxWidth:8,boxHeight:8,padding:8}
         },
         tooltip:{
           callbacks:{
@@ -3245,18 +3613,18 @@ function _buildMiniLineChart(ctx,dark,gc,tc,labels,profits,inflowArr,outflowArr)
           bodyColor:dark?'#A8F040':'#12A060',
           borderColor:'rgba(125,206,19,.25)',
           borderWidth:1,padding:9,cornerRadius:9,
-          titleFont:{family:'DM Sans',size:10,weight:'700'},
-          bodyFont:{family:'DM Mono',size:10}
+          titleFont:{family:'Inter',size:10,weight:'700'},
+          bodyFont:{family:'JetBrains Mono',size:10}
         }
       },
       scales:{
         x:{
           grid:{display:false},
-          ticks:{font:{family:'DM Sans',size:9},color:tc,maxRotation:0,maxTicksLimit:maxTicks,autoSkip:true}
+          ticks:{font:{family:'Inter',size:9},color:tc,maxRotation:0,maxTicksLimit:maxTicks,autoSkip:true}
         },
         y:{
           grid:{color:gc,drawBorder:false},
-          ticks:{font:{family:'DM Mono',size:9},color:tc,
+          ticks:{font:{family:'JetBrains Mono',size:9},color:tc,
             callback:v=>{
               const abs=Math.abs(v);
               if(abs>=1e9)return(v/1e9).toFixed(1)+'M';
@@ -3297,13 +3665,13 @@ function renderArmadaPerfChart(txns){
   armadaPerfChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[
     {label:'Net Income',data:netData,backgroundColor:netData.map(v=>v>=0?'rgba(10,168,96,.72)':'rgba(224,48,48,.65)'),borderRadius:6,yAxisID:'yNet'},
     {label:'Ritase',data:ritaseData,backgroundColor:'rgba(255,103,0,.55)',borderRadius:6,type:'bar',yAxisID:'yRit'}
-  ]},options:{responsive:true,plugins:{legend:{display:true,labels:{font:{family:'DM Sans',size:10},color:tc,boxWidth:10,boxHeight:10}},
+  ]},options:{responsive:true,plugins:{legend:{display:true,labels:{font:{family:'Inter',size:10},color:tc,boxWidth:10,boxHeight:10}},
     tooltip:{callbacks:{label:c=>{if(c.dataset.label==='Ritase')return 'Ritase: '+c.raw+' trip';return c.dataset.label+': '+fmtFull(c.raw);}},
     backgroundColor:dark?'rgba(16,22,36,.97)':'rgba(255,255,255,.97)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#A8F040':'#12A060',borderColor:'rgba(125,206,19,.2)',borderWidth:1,padding:9,cornerRadius:9}},
   scales:{
-    x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:10},color:tc}},
-    yNet:{position:'left',grid:{color:gc,drawBorder:false},ticks:{font:{family:'DM Sans',size:9},color:tc,callback:v=>{const abs=Math.abs(v);if(abs>=1e6)return(v/1e6).toFixed(1)+'Jt';if(abs>=1e3)return(v/1e3).toFixed(0)+'Rb';return v;}}},
-    yRit:{position:'right',grid:{display:false},ticks:{font:{family:'DM Sans',size:9},color:'rgba(255,103,0,.7)'},title:{display:true,text:'Ritase',color:'rgba(255,103,0,.7)',font:{size:9}}}
+    x:{grid:{display:false},ticks:{font:{family:'Inter',size:10},color:tc}},
+    yNet:{position:'left',grid:{color:gc,drawBorder:false},ticks:{font:{family:'Inter',size:9},color:tc,callback:v=>{const abs=Math.abs(v);if(abs>=1e6)return(v/1e6).toFixed(1)+'Jt';if(abs>=1e3)return(v/1e3).toFixed(0)+'Rb';return v;}}},
+    yRit:{position:'right',grid:{display:false},ticks:{font:{family:'Inter',size:9},color:'rgba(255,103,0,.7)'},title:{display:true,text:'Ritase',color:'rgba(255,103,0,.7)',font:{size:9}}}
   },barPercentage:0.65,categoryPercentage:0.7}});
 }
 
@@ -3371,9 +3739,12 @@ function renderLaporanTable(){
     const inflow=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
     const outTunai=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
     const outOnderdil=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+    const outDokumen=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Dokumen').reduce((s,t)=>s+t.amount,0);
     const outUmum=bebanPerUnit;
-    const nett=inflow-(outTunai+outOnderdil+outUmum);
-    return{nopol:f.nopol,driver:f.driver,status:f.status,inflow,outTunai,outOnderdil,outUmum,nett};
+    const nett=inflow-(outTunai+outOnderdil+outUmum+outDokumen);
+    const ritase=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).length;
+    const rpPerRit=ritase>0?Math.round(inflow/ritase):0;
+    return{nopol:f.nopol,driver:f.driver,status:f.status,inflow,outTunai,outOnderdil,outUmum,outDokumen,nett,ritase,rpPerRit};
   });
   // Sort
   rows.sort((a,b)=>{
@@ -3382,7 +3753,7 @@ function renderLaporanTable(){
     return(va-vb)*rekapSortDir;
   });
   // Update sort arrows
-  ['nopol','driver','inflow','outTunai','outOnderdil','outUmum','nett'].forEach(col=>{
+  ['nopol','driver','inflow','outTunai','outOnderdil','outUmum','outDokumen','ritase','rpPerRit','nett'].forEach(col=>{
     const th=document.querySelector('#rekap-table th[data-col="'+col+'"]');
     const ar=document.getElementById('sa-'+col);
     if(th){th.classList.remove('sort-asc','sort-desc');if(col===rekapSortCol)th.classList.add(rekapSortDir===1?'sort-asc':'sort-desc');}
@@ -3398,25 +3769,136 @@ function renderLaporanTable(){
     <td class="ar-num ${r.outTunai>0?'neg':'zero'}">${r.outTunai>0?'-'+fmt(r.outTunai):'—'}</td>
     <td class="ar-num ${r.outOnderdil>0?'neg':'zero'}">${r.outOnderdil>0?'-'+fmt(r.outOnderdil):'—'}</td>
     <td class="ar-num ${r.outUmum>0?'neg':'zero'}">${r.outUmum>0?'-'+fmt(r.outUmum):'—'}</td>
+    <td class="ar-num ${r.outDokumen>0?'neg':'zero'}">${r.outDokumen>0?'-'+fmt(r.outDokumen):'—'}</td>
+    <td class="ar-num" style="color:var(--orange);font-weight:700;">${r.ritase} rit</td>
+    <td class="ar-num zero">${r.rpPerRit>0?fmt(r.rpPerRit):'—'}</td>
     <td class="ar-num ${r.nett>=0?'net-pos':'net-neg'}" style="font-weight:800;">${fmt(r.nett)}</td>
   </tr>`).join('');
   // Footer totals
   const totInf=rows.reduce((s,r)=>s+r.inflow,0);
   const totTunai=rows.reduce((s,r)=>s+r.outTunai,0);
   const totOnderdil=rows.reduce((s,r)=>s+r.outOnderdil,0);
+  const totDokumen=rows.reduce((s,r)=>s+r.outDokumen,0);
   const totNett=rows.reduce((s,r)=>s+r.nett,0);
+  const totRitase=rows.reduce((s,r)=>s+r.ritase,0);
+  const avgRpPerRit=totRitase>0?Math.round(totInf/totRitase):0;
   if(tfoot)tfoot.innerHTML=`<tr>
     <td colspan="2" style="font-weight:800;color:var(--text);">TOTAL PERIODE</td>
     <td style="text-align:right;color:var(--success);font-weight:800;">${fmt(totInf)}</td>
     <td style="text-align:right;color:var(--danger);font-weight:800;">-${fmt(totTunai)}</td>
     <td style="text-align:right;color:var(--danger);font-weight:800;">-${fmt(totOnderdil)}</td>
     <td style="text-align:right;color:var(--danger);font-weight:800;">-${fmt(umum)}</td>
+    <td style="text-align:right;color:var(--danger);font-weight:800;">-${fmt(totDokumen)}</td>
+    <td style="text-align:right;color:var(--orange);font-weight:800;">${totRitase} rit</td>
+    <td style="text-align:right;font-weight:800;">${avgRpPerRit>0?fmt(avgRpPerRit):'—'}</td>
     <td style="text-align:right;color:var(--info);font-weight:800;">${fmt(totNett)}</td>
   </tr>`;
   const s=document.getElementById('lap-sum');if(s)s.innerHTML=`<span class="rs-lbl">Net Profit Periode</span><span class="rs-val">${fmt(totNett)}</span>`;
   // Also refresh the Armada Performance Chart
   renderArmadaPerfChart(list);
 }
+// ═══ BACKUP DATABASE — Export semua data mentah ke Excel (.xlsx) multi-sheet ═══
+function exportBackupXLSX(){
+  if(typeof XLSX==='undefined'){showToast('⚠️ Library Excel belum siap, coba lagi sebentar');return;}
+  showToast('⏳ Menyiapkan backup Excel...');
+
+  const wb = XLSX.utils.book_new();
+
+  // 1) SHEET TRANSAKSI — semua data transaksi mentah, semua periode
+  const txnRows = transactions.map(t=>({
+    'ID': t.id,
+    'Tipe': t.type==='inflow'?'Inflow':'Outflow',
+    'Tanggal': t.date||'',
+    'Label': t.label||'',
+    'Keterangan': t.sub||'',
+    'Nominal': t.amount||0,
+    'Armada': t.armada||'',
+    'Driver': t.driver||'',
+    'Kategori': t.kategori||'',
+    'Sub Kategori': t.subKategori||'',
+    'Titik Muat': t.muat||'',
+    'Titik Bongkar': t.bongkar||'',
+    'No. Nota': t.nota||'',
+    'Toko/Vendor': t.toko||'',
+    'Status': t.status||'',
+    'Sparepart ID': t.sparepartId||'',
+    'Jumlah Unit': t.jmlPasang||1,
+    'Posisi': t.posisi||'',
+    'Dibuat': t.created_at||''
+  }));
+  const wsTxn = XLSX.utils.json_to_sheet(txnRows);
+  XLSX.utils.book_append_sheet(wb, wsTxn, 'Transaksi');
+
+  // 2) SHEET ARMADA — data unit fleet
+  const armadaRows = fleetData.map(f=>({
+    'ID': f.id,
+    'No. Polisi': f.nopol||'',
+    'Driver': f.driver||'',
+    'Status': f.status||'',
+    'Jatuh Tempo Pajak': f.pajak||'',
+    'Jatuh Tempo KIR': f.kir||'',
+    'Jatuh Tempo STNK': f.stnk||''
+  }));
+  const wsArmada = XLSX.utils.json_to_sheet(armadaRows);
+  XLSX.utils.book_append_sheet(wb, wsArmada, 'Armada');
+
+  // 3) SHEET GUDANG — data stok onderdil (tanpa detail unit terpasang, itu di sheet terpisah)
+  const gudangRows = sparepartStock.map(sp=>({
+    'ID': sp.id,
+    'Nama': sp.nama||'',
+    'Spek/Tipe': sp.spek||'',
+    'Kategori': sp.kategori||'',
+    'Toko': sp.toko||'',
+    'No. Nota': sp.nota||'',
+    'Tgl Masuk': sp.tglMasuk||'',
+    'Stok Awal': sp.stokAwal||0,
+    'Stok Sisa': sp.stokSisa||0,
+    'Stok Minimum': sp.stokMin||5,
+    'Harga Satuan': sp.hargaSatuan||0,
+    'Batas Ritase': sp.ritaseThreshold||'',
+    'Catatan': sp.catatan||'',
+    'Beli Luar Stok': isNonStokItem(sp)?'Ya':'Tidak'
+  }));
+  const wsGudang = XLSX.utils.json_to_sheet(gudangRows);
+  XLSX.utils.book_append_sheet(wb, wsGudang, 'Gudang');
+
+  // 4) SHEET ONDERDIL TERPASANG — flatten semua unit installed per sparepart
+  const installedRows = [];
+  sparepartStock.forEach(sp=>{
+    (sp.installed||[]).forEach(i=>{
+      installedRows.push({
+        'Nama Onderdil': sp.nama||'',
+        'Kategori': sp.kategori||'',
+        'Armada': i.armada||'',
+        'Tgl Pasang': i.tglPasang||'',
+        'Ritase Terpakai': i.ritase||0,
+        'Batas Ritase': sp.ritaseThreshold||getRitaseThreshold(sp.kategori),
+        'Posisi': i.posisi||'',
+        'Txn ID': i.txnId||''
+      });
+    });
+  });
+  const wsInstalled = XLSX.utils.json_to_sheet(installedRows);
+  XLSX.utils.book_append_sheet(wb, wsInstalled, 'Onderdil Terpasang');
+
+  // 5) SHEET DRIVER
+  const allDriverNames=[...new Set([...driverList,...fleetData.map(f=>f.driver)])].filter(Boolean).sort();
+  const driverRows = allDriverNames.map(nm=>{
+    const f=fleetData.find(x=>x.driver===nm);
+    return {
+      'Nama Driver': nm,
+      'Armada Saat Ini': f?f.nopol:'—'
+    };
+  });
+  const wsDriver = XLSX.utils.json_to_sheet(driverRows);
+  XLSX.utils.book_append_sheet(wb, wsDriver, 'Driver');
+
+  const tglBackup = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `BHD_Backup_Database_${tglBackup}.xlsx`);
+  showToast('✅ Backup Excel berhasil diunduh');
+  vibrate(30);
+}
+
 function exportCSV(){
   const list=getLapTxns();
   const umum=list.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount,0);
@@ -3425,11 +3907,15 @@ function exportCSV(){
     const inflow=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
     const outTunai=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
     const outOnderdil=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+    const outDokumen=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Dokumen').reduce((s,t)=>s+t.amount,0);
     const outUmum=bebanPerUnit;
-    const nett=inflow-(outTunai+outOnderdil+outUmum);
-    return`"${f.nopol}","${f.driver}",${inflow},${outTunai},${outOnderdil},${Math.round(outUmum)},${Math.round(nett)}`;
+    const nett=inflow-(outTunai+outOnderdil+outUmum+outDokumen);
+    const ritase=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).length;
+    const rpPerRit=ritase>0?Math.round(inflow/ritase):0;
+    const biayaPerRit=ritase>0?Math.round(outOnderdil/ritase):0;
+    return`"${f.nopol}","${f.driver}",${inflow},${outTunai},${outOnderdil},${Math.round(outUmum)},${outDokumen},${ritase},${rpPerRit},${biayaPerRit},${Math.round(nett)}`;
   });
-  const header='No. Pol,Nama Driver,Inflow,Out Tunai,Out Onderdil,Out Umum,Nett';
+  const header='No. Pol,Nama Driver,Inflow,Out Tunai,Out Onderdil,Out Umum,Out Dokumen,Ritase,Rp per Rit,Biaya Onderdil per Rit,Nett';
   const blob=new Blob([header+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='BHD_Rekap_Armada.csv';a.click();
   showToast('File CSV berhasil diunduh');vibrate(30);
@@ -3459,16 +3945,20 @@ function exportPDF(){
     const inflow=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
     const outTunai=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
     const outOnderdil=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+    const outDokumen=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Dokumen').reduce((s,t)=>s+t.amount,0);
     const outUmum=Math.round(bebanPerUnit);
-    const nett=inflow-(outTunai+outOnderdil+outUmum);
-    return{nopol:f.nopol,driver:f.driver||'—',inflow,outTunai,outOnderdil,outUmum,nett};
+    const nett=inflow-(outTunai+outOnderdil+outUmum+outDokumen);
+    const ritase=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).length;
+    const rpPerRit=ritase>0?Math.round(inflow/ritase):0;
+    return{nopol:f.nopol,driver:f.driver||'—',inflow,outTunai,outOnderdil,outDokumen,outUmum,nett,ritase,rpPerRit};
   });
 
   const totInf=dataRows.reduce((s,r)=>s+r.inflow,0);
   const totTunai=dataRows.reduce((s,r)=>s+r.outTunai,0);
   const totOnderdil=dataRows.reduce((s,r)=>s+r.outOnderdil,0);
+  const totDokumen=dataRows.reduce((s,r)=>s+r.outDokumen,0);
   const totNett=dataRows.reduce((s,r)=>s+r.nett,0);
-  const totOut=totTunai+totOnderdil+umum;
+  const totOut=totTunai+totOnderdil+totDokumen+umum;
   const sorted=[...dataRows].sort((a,b)=>b.nett-a.nett);
   const best=sorted[0];const worst=sorted[sorted.length-1];
   const rataRata=dataRows.length?Math.round(totNett/dataRows.length):0;
@@ -3481,13 +3971,6 @@ function exportPDF(){
   else{const fr=document.getElementById('lap-from')?.value||'';const to=document.getElementById('lap-to')?.value||'';periodeStr=fr&&to?fr+' s/d '+to:'Semua Periode';}
 
   const fmt=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n);
-  const fmtShort=n=>{
-    const abs=Math.abs(n);
-    if(abs>=1000000000) return (n<0?'-':'')+'Rp '+(abs/1000000000).toFixed(1)+'M';
-    if(abs>=1000000) return (n<0?'-':'')+'Rp '+(abs/1000000).toFixed(1)+'Jt';
-    if(abs>=1000) return (n<0?'-':'')+'Rp '+(abs/1000).toFixed(0)+'rb';
-    return fmt(n);
-  };
 
   const tableRows=dataRows.map((r,i)=>{
     const isPositive=r.nett>=0;
@@ -3499,6 +3982,9 @@ function exportPDF(){
       <td class="td-money td-red">${fmt(r.outTunai)}</td>
       <td class="td-money td-red">${fmt(r.outOnderdil)}</td>
       <td class="td-money td-red">${fmt(r.outUmum)}</td>
+      <td class="td-money td-red">${fmt(r.outDokumen)}</td>
+      <td class="td-money">${r.ritase} rit</td>
+      <td class="td-money">${r.rpPerRit>0?fmt(r.rpPerRit):'—'}</td>
       <td class="td-money td-nett ${isPositive?'td-profit':'td-loss'}">${fmt(r.nett)}</td>
     </tr>`;
   }).join('');
@@ -3508,13 +3994,14 @@ function exportPDF(){
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Laporan Rekap Armada — ${cpName}</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
 /* ══════════════════ RESET ══════════════════ */
 *{margin:0;padding:0;box-sizing:border-box;}
 html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 
 /* ══════════════════ BODY ══════════════════ */
 body{
-  font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+  font-family:'Inter',Arial,Helvetica,sans-serif;
   background:#F0EDE6;
   color:#222;
   font-size:13px;
@@ -3612,7 +4099,7 @@ body{
   border-top:3px solid #D4A843;
 }
 .stat-label{font-size:10px;font-weight:700;color:#999;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
-.stat-value{font-size:18px;font-weight:800;color:#1C1407;line-height:1.2;}
+.stat-value{font-size:15px;font-weight:800;color:#1C1407;line-height:1.25;letter-spacing:-.01em;}
 .stat-value.green{color:#1a7a3c;}
 .stat-value.red{color:#c0392b;}
 .stat-value.gold{color:#8B6914;}
@@ -3702,7 +4189,7 @@ tbody tr:hover{background:#FEF9EC;}
 .perf-label{font-size:10px;font-weight:700;color:#999;letter-spacing:.06em;text-transform:uppercase;}
 .perf-nopol{font-size:14px;font-weight:900;color:#1C1407;letter-spacing:.04em;}
 .perf-driver{font-size:11.5px;color:#666;}
-.perf-val{font-size:11px;font-weight:700;font-family:'Courier New',monospace;margin-top:2px;}
+.perf-val{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:2px;}
 .perf-best .perf-val{color:#1a7a3c;}
 .perf-worst .perf-val{color:#c0392b;}
 
@@ -3733,7 +4220,7 @@ tbody tr:hover{background:#FEF9EC;}
   .td-nopol,.td-driver,.td-money{font-size:9.5pt;padding:9pt 10pt;}
   .total-row td{padding:10pt 10pt;}
   .stats-strip{grid-template-columns:repeat(4,1fr);}
-  .stat-value{font-size:14pt;}
+  .stat-value{font-size:12pt;}
   .tbl-wrap{overflow:visible;}
   .summary-grid{grid-template-columns:1fr 1fr;}
 }
@@ -3821,23 +4308,19 @@ tbody tr:hover{background:#FEF9EC;}
     <div class="stats-strip">
       <div class="stat-card">
         <div class="stat-label">Total Inflow</div>
-        <div class="stat-value green">${fmtShort(totInf)}</div>
-        <div class="stat-sub">${fmt(totInf)}</div>
+        <div class="stat-value green">${fmt(totInf)}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Total Outflow</div>
-        <div class="stat-value red">${fmtShort(totOut)}</div>
-        <div class="stat-sub">${fmt(totOut)}</div>
+        <div class="stat-value red">${fmt(totOut)}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Profit / Nett</div>
-        <div class="stat-value ${totNett>=0?'green':'red'}">${fmtShort(totNett)}</div>
-        <div class="stat-sub">${fmt(totNett)}</div>
+        <div class="stat-value ${totNett>=0?'green':'red'}">${fmt(totNett)}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Rata-rata / Armada</div>
-        <div class="stat-value gold">${fmtShort(rataRata)}</div>
-        <div class="stat-sub">${fmt(rataRata)}</div>
+        <div class="stat-value gold">${fmt(rataRata)}</div>
       </div>
     </div>
 
@@ -3846,13 +4329,16 @@ tbody tr:hover{background:#FEF9EC;}
     <div class="tbl-wrap">
     <table>
       <thead><tr>
-        <th style="width:10%;">No. Polisi</th>
-        <th class="th-left" style="width:18%;">Nama Driver</th>
-        <th style="width:14.4%;">Inflow</th>
-        <th style="width:14.4%;">Out Tunai</th>
-        <th style="width:14.4%;">Out Onderdil</th>
-        <th style="width:14.4%;">Out Umum</th>
-        <th style="width:14.4%;">Nett</th>
+        <th style="width:9%;">No. Polisi</th>
+        <th class="th-left" style="width:12%;">Nama Driver</th>
+        <th style="width:11%;">Inflow</th>
+        <th style="width:11%;">Out Tunai</th>
+        <th style="width:11%;">Out Onderdil</th>
+        <th style="width:10%;">Out Umum</th>
+        <th style="width:9%;">Out Dokumen</th>
+        <th style="width:7%;">Ritase</th>
+        <th style="width:9%;">Rp/Rit</th>
+        <th style="width:11%;">Nett</th>
       </tr></thead>
       <tbody>${tableRows}</tbody>
       <tfoot>
@@ -3862,6 +4348,9 @@ tbody tr:hover{background:#FEF9EC;}
           <td class="td-money">${fmt(totTunai)}</td>
           <td class="td-money">${fmt(totOnderdil)}</td>
           <td class="td-money">${fmt(umum)}</td>
+          <td class="td-money">${fmt(totDokumen)}</td>
+          <td class="td-money">${dataRows.reduce((s,r)=>s+r.ritase,0)} rit</td>
+          <td class="td-money">${(()=>{const tr=dataRows.reduce((s,r)=>s+r.ritase,0);return tr>0?fmt(Math.round(totInf/tr)):'—';})()}</td>
           <td class="td-money td-nett">${fmt(totNett)}</td>
         </tr>
       </tfoot>
@@ -3876,6 +4365,7 @@ tbody tr:hover{background:#FEF9EC;}
         <div class="sum-row"><span class="sum-label">Total Out Tunai</span><span class="sum-val red">${fmt(totTunai)}</span></div>
         <div class="sum-row"><span class="sum-label">Total Out Onderdil</span><span class="sum-val red">${fmt(totOnderdil)}</span></div>
         <div class="sum-row"><span class="sum-label">Total Out Umum</span><span class="sum-val red">${fmt(umum)}</span></div>
+        <div class="sum-row"><span class="sum-label">Total Out Dokumen</span><span class="sum-val red">${fmt(totDokumen)}</span></div>
         <div class="sum-row"><span class="sum-label">Total Outflow</span><span class="sum-val red">${fmt(totOut)}</span></div>
         <div class="sum-row"><span class="sum-label" style="font-weight:700;">Total Profit / Nett</span><span class="sum-val ${totNett>=0?'green gold':'red'}">${fmt(totNett)}</span></div>
       </div>
@@ -3884,6 +4374,7 @@ tbody tr:hover{background:#FEF9EC;}
         <div style="margin-bottom:16px;">
           <div class="sum-row"><span class="sum-label">Rata-rata per Armada</span><span class="sum-val gold">${fmt(rataRata)}</span></div>
           <div class="sum-row"><span class="sum-label">Jumlah Armada Aktif</span><span class="sum-val">${dataRows.length} Unit</span></div>
+          <div class="sum-row"><span class="sum-label">Total Ritase Periode</span><span class="sum-val">${dataRows.reduce((s,r)=>s+r.ritase,0)} Rit</span></div>
           <div class="sum-row"><span class="sum-label">Total Transaksi</span><span class="sum-val">${list.length} Record</span></div>
         </div>
         <div class="performer-grid">
@@ -4058,10 +4549,13 @@ function refreshDetailHero(){
   const uIn=allTxns.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
   const uOutTunai=allTxns.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
   const uOutOnderdil=allTxns.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
+  const uOutDokumen=allTxns.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Dokumen').reduce((s,t)=>s+t.amount,0);
   const beban=allTxns.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount/FLEET_COUNT,0);
-  const net=uIn-(uOutTunai+uOutOnderdil+beban);
+  const net=uIn-(uOutTunai+uOutOnderdil+uOutDokumen+beban);
   const pD=daysUntil(f.pajak),kD=daysUntil(f.kir);
   const activeParts=sparepartStock.filter(sp=>sp.installed.some(i=>i.armada===f.nopol));
+  const ritasePeriode=allTxns.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).length;
+  const rpPerRit=ritasePeriode>0?Math.round(uIn/ritasePeriode):0;
   const periodLabel=_detailFromDate||_detailToDate?`<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:4px;">📅 ${_detailFromDate||'awal'} s/d ${_detailToDate||'sekarang'}</div>`:'';
   const heroEl=document.getElementById('dp-hero');if(!heroEl)return;
   heroEl.innerHTML=`
@@ -4074,8 +4568,11 @@ function refreshDetailHero(){
       <div class="dp-stat"><div class="dp-stat-l">Total Inflow</div><div class="dp-stat-v gr">${fmt(uIn)}</div></div>
       <div class="dp-stat"><div class="dp-stat-l">Out Tunai</div><div class="dp-stat-v rd">${fmt(uOutTunai)}</div></div>
       <div class="dp-stat"><div class="dp-stat-l">Out Onderdil</div><div class="dp-stat-v rd">${fmt(uOutOnderdil)}</div></div>
+      <div class="dp-stat"><div class="dp-stat-l">Out Dokumen</div><div class="dp-stat-v rd">${fmt(uOutDokumen)}</div></div>
       <div class="dp-stat"><div class="dp-stat-l">Beban Umum</div><div class="dp-stat-v rd">${fmt(beban)}</div></div>
       <div class="dp-stat"><div class="dp-stat-l">Laba Bersih</div><div class="dp-stat-v nt" style="font-size:14px;">${fmt(net)}</div></div>
+      <div class="dp-stat"><div class="dp-stat-l">Total Rit Periode</div><div class="dp-stat-v" style="color:#FFA060;">${ritasePeriode} rit</div></div>
+      <div class="dp-stat"><div class="dp-stat-l">Rp / Rit</div><div class="dp-stat-v" style="color:#BAE6FD;">${fmt(rpPerRit)}</div></div>
       <div class="dp-stat"><div class="dp-stat-l">Onderdil Aktif</div><div class="dp-stat-v" style="color:var(--warning);">${activeParts.length} item</div></div>
     </div>
     <div class="dp-docs" style="position:relative;z-index:1;">
@@ -4106,33 +4603,24 @@ function backToArmadaList(){
 function showTab(name,btnEl){
   if(btnEl){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btnEl.classList.add('active');}
   else document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
-  ['perjalanan','biaya','dokumen','truck'].forEach(t=>{const e=document.getElementById('tab-'+t);if(e)e.style.display=t===name?'block':'none';});
+  ['perjalanan','biaya','dokumen','onderdil'].forEach(t=>{const e=document.getElementById('tab-'+t);if(e)e.style.display=t===name?'block':'none';});
   if(!currentDetailUnit)return;const f=currentDetailUnit;
   if(name==='perjalanan'){
-    const trips=transactions.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).sort((a,b)=>b.date.localeCompare(a.date));
-    const parts=getActivePartsForArmada(f.nopol);
+    const trips=getDetailTxns(f.nopol).filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).sort((a,b)=>b.date.localeCompare(a.date));
+    const ritaseCountHTML=`<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--bg3);border-radius:12px;margin-bottom:10px;border:1px solid var(--card-b);">
+        <span style="font-size:11.5px;font-weight:700;color:var(--text2);">📍 Total Rit ${_detailFromDate||_detailToDate?'Periode Ini':'(Semua)'}</span>
+        <span style="font-size:16px;font-weight:800;color:var(--green2);">${trips.length} rit</span>
+      </div>`;
     const tripsHTML=trips.length
       ?trips.map(t=>`<div class="hist-item"><div class="hist-dot trip"></div><div class="txn-body"><div class="hist-main">${t.muat} → ${t.bongkar}</div><div class="hist-sub">${fmtDate(t.date)} · ${t.driver}</div></div><div class="hist-amt in">+${fmt(t.amount)}</div></div>`).join('')
-      :'<div style="text-align:center;padding:24px;color:var(--text3);">Belum ada perjalanan tercatat</div>';
-    const partsHTML=parts.length
-      ?'<div class="sec-title" style="margin-top:14px;margin-bottom:8px;">🔧 Onderdil Aktif ('+parts.length+' item)</div>'
-        +parts.map(p=>`<div class="ritase-row">
-          <div style="font-size:18px;">${getSpCatIcon(p.kategori)||'🔧'}</div>
-          <div class="ritase-info">
-            <div class="ritase-label">${p.nama}</div>
-            <div class="ritase-meta">${p.spek} · Dipasang: ${fmtDate(p.tglPasang)} (${p.daysSince} hari)</div>
-            ${p.freeze?'<div class="ritase-freeze">❄ FREEZE — Armada di Bengkel</div>':''}
-          </div>
-          <div style="text-align:right;"><div class="ritase-count">${p.ritase}</div><div style="font-size:9px;color:var(--text3);">ritase</div></div>
-        </div>`).join('')
-      :'<div style="text-align:center;padding:14px;color:var(--text3);font-size:12px;">Tidak ada onderdil terpasang</div>';
-    document.getElementById('tab-perjalanan').innerHTML=tripsHTML+partsHTML;
+      :'<div style="text-align:center;padding:24px;color:var(--text3);">Belum ada perjalanan tercatat pada periode ini</div>';
+    document.getElementById('tab-perjalanan').innerHTML=ritaseCountHTML+tripsHTML;
   }
   if(name==='biaya'){
     const allTxns=getDetailTxns(f.nopol);
     const unitCosts=allTxns.filter(t=>t.type==='outflow'&&t.armada===f.nopol).sort((a,b)=>b.date.localeCompare(a.date));
     const umumCosts=allTxns.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').sort((a,b)=>b.date.localeCompare(a.date));
-    const chipColor={Tunai:'chip-green',Onderdil:'chip-orange',UMUM:'chip-gray'};
+    const chipColor={Tunai:'chip-green',Onderdil:'chip-orange',UMUM:'chip-gray',Dokumen:'chip-blue'};
     const renderItem=t=>`<div class="hist-item">
       <div class="hist-dot out"></div>
       <div class="txn-body">
@@ -4147,29 +4635,34 @@ function showTab(name,btnEl){
     if(!html)html='<div style="text-align:center;padding:30px;color:var(--text3);font-size:12.5px;">Belum ada biaya tercatat</div>';
     document.getElementById('tab-biaya').innerHTML=html;
   }
-  if(name==='truck'){ renderTruckTab(f); }
+  if(name==='onderdil'){ renderOnderdilTab(f); }
   if(name==='dokumen'){
-    const pD=daysUntil(f.pajak),kD=daysUntil(f.kir);
+    const pD=daysUntil(f.pajak),kD=daysUntil(f.kir),sD=daysUntil(f.stnk);
+    const docRow=(label,val,days,docType)=>`
+      <div style="padding:10px;background:var(--bg3);border-radius:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:600;color:var(--text);">${label}</span>
+          <span class="chip ${!val?'chip-gray':days<=7?'chip-danger':days<=30?'chip-orange':'chip-green'}">${val?fmtDate(val):'Belum diisi'} ${val?'('+days+'h)':''}</span>
+        </div>
+        <button onclick="openAccDocModal('${f.id}','${docType}')" style="width:100%;padding:8px;border-radius:9px;border:none;background:var(--green-bg);color:var(--green2);font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">✅ ACC Bayar & Perbarui</button>
+      </div>`;
     document.getElementById('tab-dokumen').innerHTML=`
       <div class="card" style="margin-bottom:10px;">
-        <div class="card-hdr" style="margin-bottom:8px;"><span class="card-title">Edit Dokumen</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${docRow('Pajak Kendaraan (Tahunan)',f.pajak,pD,'pajak')}
+          ${docRow('KIR',f.kir,kD,'kir')}
+          ${docRow('STNK (5 Tahunan)',f.stnk,sD,'stnk')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="margin-bottom:8px;"><span class="card-title">Edit Manual Tanggal</span></div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Tgl Pajak</label><input type="date" class="form-input" id="edit-pajak" value="${f.pajak||''}"/></div>
           <div class="form-group"><label class="form-label">Tgl KIR</label><input type="date" class="form-input" id="edit-kir" value="${f.kir||''}"/></div>
         </div>
-        <button onclick="saveDocs('${f.id}')" class="form-btn inflow">Simpan Dokumen</button>
-      </div>
-      <div class="card">
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg3);border-radius:10px;">
-            <span style="font-size:12px;font-weight:600;color:var(--text);">Pajak Kendaraan</span>
-            <span class="chip ${pD<=7?'chip-danger':pD<=30?'chip-orange':'chip-green'}">${fmtDate(f.pajak)} (${pD}h)</span>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg3);border-radius:10px;">
-            <span style="font-size:12px;font-weight:600;color:var(--text);">KIR</span>
-            <span class="chip ${kD<=7?'chip-danger':kD<=30?'chip-orange':'chip-green'}">${fmtDate(f.kir)} (${kD}h)</span>
-          </div>
-        </div>
+        <div class="form-group" style="margin-top:8px;"><label class="form-label">Tgl Habis STNK</label><input type="date" class="form-input" id="edit-stnk" value="${f.stnk||''}"/></div>
+        <button onclick="saveDocs('${f.id}')" class="form-btn inflow" style="margin-top:10px;">Simpan Perubahan Tanggal</button>
+        <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.5;">💡 Gunakan ini untuk koreksi tanggal saja (tidak mencatat pengeluaran). Untuk pembayaran resmi, gunakan tombol "ACC Bayar" di atas — otomatis tercatat ke Keuangan.</div>
       </div>`;
   }
 }
@@ -4178,8 +4671,9 @@ async function saveDocs(id){
   const f=fleetData.find(x=>x.id===id);if(!f)return;
   f.pajak=document.getElementById('edit-pajak')?.value||f.pajak;
   f.kir=document.getElementById('edit-kir')?.value||f.kir;
+  f.stnk=document.getElementById('edit-stnk')?.value||f.stnk;
   try {
-    await sbFetch('fleet', {method:'PATCH', filters:{id:id}, body:{pajak:f.pajak, kir:f.kir}});
+    await sbFetch('fleet', {method:'PATCH', filters:{id:id}, body:{pajak:f.pajak, kir:f.kir, stnk:f.stnk}});
     showToast('✅ Dokumen berhasil disimpan');
     _isSyncing=false;
     await syncFromSupabase();
@@ -4192,71 +4686,142 @@ async function saveDocs(id){
   }
 }
 
-// ─── TRUCK VISUALIZATION (#4) ───
-function renderTruckTab(f){
-  const el=document.getElementById('tab-truck');if(!el)return;
-  const banItems=sparepartStock.filter(sp=>(sp.kategori==='Ban'||sp.nama.toLowerCase().includes('ban'))&&sp.installed.some(i=>i.armada===f.nopol));
-  const threshold=getRitaseThreshold('Ban')||200;
-  const installedBans=banItems.flatMap(sp=>sp.installed.filter(i=>i.armada===f.nopol).map(i=>({...i,spId:sp.id,nama:sp.nama,spek:sp.spek})));
+// ─── ACC ADMIN — Konfirmasi Pembayaran Dokumen (Pajak/KIR/STNK) ───
+function openAccDocModal(unitId, docType){
+  const f=fleetData.find(x=>x.id===unitId);if(!f)return;
+  const labels={pajak:'Pajak Kendaraan (Tahunan)',kir:'KIR',stnk:'STNK (5 Tahunan)'};
+  const curDate=f[docType]||'';
+  let suggestedNext='';
+  if(curDate){
+    const d=new Date(curDate+'T00:00:00');
+    if(docType==='pajak') d.setFullYear(d.getFullYear()+1);
+    else if(docType==='stnk') d.setFullYear(d.getFullYear()+5);
+    else d.setMonth(d.getMonth()+6); // KIR: default saran 6 bulan, admin bebas ubah manual
+    suggestedNext=_ds(d);
+  }
+  const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
+  tEl.textContent='ACC Bayar — '+labels[docType];
+  body.innerHTML=`
+    <div style="padding:10px 12px;background:var(--bg3);border-radius:10px;margin-bottom:12px;font-size:11.5px;color:var(--text2);">
+      <div style="font-weight:700;color:var(--text);margin-bottom:2px;">${f.nopol} · ${f.driver||'—'}</div>
+      Jatuh tempo saat ini: <b>${curDate?fmtDate(curDate):'Belum diisi'}</b>
+    </div>
+    <div><label class="form-label">Nominal Pembayaran</label><input class="form-input" id="acc-amount" placeholder="0" inputmode="numeric"/></div>
+    <div><label class="form-label">Tgl Jatuh Tempo Berikutnya</label><input type="date" class="form-input" id="acc-next-date" value="${suggestedNext}"/></div>
+    <div><label class="form-label">Catatan (opsional)</label><input class="form-input" id="acc-note" placeholder="No. bukti bayar, dll"/></div>
+    <button class="sm-btn orange" onclick="submitAccDoc('${unitId}','${docType}')">✅ ACC & Catat ke Keuangan</button>`;
+  document.getElementById('sm-overlay').classList.add('open');
+  setupCurrencyInput('acc-amount');
+}
+
+async function submitAccDoc(unitId, docType){
+  const f=fleetData.find(x=>x.id===unitId);if(!f)return;
+  const labels={pajak:'Pajak Kendaraan',kir:'KIR',stnk:'STNK'};
+  const amount=getRaw('acc-amount');
+  const nextDate=document.getElementById('acc-next-date')?.value||'';
+  const note=document.getElementById('acc-note')?.value||'';
+  if(!amount||amount<=0){showToast('Masukkan nominal yang valid');return;}
+  if(!nextDate){showToast('Isi tanggal jatuh tempo berikutnya');return;}
+
+  const outId='txn_'+Date.now();
+  const subText=`${note?note+' · ':''}Jatuh tempo baru: ${fmtDate(nextDate)}`;
+  const dbOut={
+    id:outId, type:'outflow', label:labels[docType]+' — '+f.nopol, sub:subText,
+    amount:amount, date:today(), armada:f.nopol, nota:note||'—', toko:'—',
+    kategori:'Tunai', driver:f.driver||'', status:'lunas',
+    sparepart_id:null, jml_pasang:1, posisi:'', created_at:new Date().toISOString()
+  };
+  const newOut={id:outId,type:'outflow',label:dbOut.label,sub:subText,amount,date:today(),armada:f.nopol,nota:note||'—',toko:'—',kategori:'Tunai',driver:f.driver||'',status:'lunas',sparepartId:null,jmlPasang:1,posisi:''};
+
+  try{
+    showToast('⏳ Menyimpan ACC...');
+    await sbFetch('transactions',{method:'POST', body:dbOut});
+    await sbFetch('fleet',{method:'PATCH', filters:{id:unitId}, body:{[docType]:nextDate}});
+    f[docType]=nextDate;
+    transactions.unshift(newOut);
+    logAudit('create','dokumen',`ACC ${labels[docType]} ${f.nopol} - ${fmt(amount)} - jatuh tempo baru ${fmtDate(nextDate)}`);
+    closeSm();
+    renderDashboard();applyTxnFilters();renderLaporanTable();checkDocWarnings();
+    if(typeof renderKeuanganStats==='function') renderKeuanganStats();
+    showToast('✅ '+labels[docType]+' berhasil di-ACC');
+    vibrate(30);
+    _isSyncing=false;
+    await syncFromSupabase();
+    openUnitDetail(unitId);
+    const tabBtns=document.querySelectorAll('.tab-btn');
+    if(tabBtns[3]) showTab('dokumen',tabBtns[3]);
+  }catch(e){
+    console.error('ACC doc fail:',e);
+    showToast('⚠️ Gagal ACC dokumen: '+e.message);
+    _isSyncing=false;
+    await syncFromSupabase();
+  }
+}
+
+// ─── ONDERDIL AKTIF — semua kategori sparepart terpasang di unit ini (#4) ───
+function renderOnderdilTab(f){
+  const el=document.getElementById('tab-onderdil');if(!el)return;
+  const parts=getActivePartsForArmada(f.nopol);
+  // Urutkan dari yang paling mendekati/lewat threshold (paling butuh perhatian) di atas
+  const withPct=parts.map(p=>{
+    const threshold=getEffectiveThreshold(p)||50;
+    const pct=Math.min(999,Math.round((p.ritase/threshold)*100));
+    return {...p,threshold,pct};
+  }).sort((a,b)=>b.pct-a.pct);
 
   let listHTML='';
-  TIRE_POSITIONS.forEach(pos=>{
-    const ban=installedBans.find(b=>(b.posisi||'').toLowerCase()===pos.toLowerCase());
-    if(!ban){
-      listHTML+=`<div style="display:flex;align-items:center;padding:12px;background:var(--bg3);border:1px dashed var(--card-b);border-radius:12px;margin-bottom:8px;opacity:0.6;">
-        <div style="width:32px;height:32px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3);">${getSpCatIcon('Ban', true)}</div>
-        <div style="margin-left:12px;">
-          <div style="font-size:11px;font-weight:700;color:var(--text2);">${pos}</div>
-          <div style="font-size:10px;color:var(--text3);">Belum ada data pemasangan</div>
-        </div>
-      </div>`;
-    } else {
-      const pct=Math.min(100,Math.round((ban.ritase/threshold)*100));
-      const sisa=Math.max(0,threshold-ban.ritase);
-      const color=pct>=90?'var(--danger)':pct>=70?'var(--warning)':'var(--success)';
-      listHTML+=`<div style="padding:14px;background:var(--card);border:1px solid var(--card-b);border-radius:14px;margin-bottom:8px;box-shadow:var(--sh-sm);">
+  if(!withPct.length){
+    listHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:12.5px;">Tidak ada onderdil terpasang di unit ini</div>';
+  } else {
+    listHTML=withPct.map(p=>{
+      const pct=Math.min(100,p.pct);
+      const sisa=Math.max(0,p.threshold-p.ritase);
+      const color=p.pct>=90?'var(--danger)':p.pct>=70?'var(--warning)':'var(--success)';
+      const posisiTag=p.posisi?`<span style="font-size:9px;color:var(--text3);background:var(--bg3);padding:1px 7px;border-radius:20px;margin-left:6px;">${p.posisi}</span>`:'';
+      return `<div style="padding:14px;background:var(--card);border:1px solid var(--card-b);border-radius:14px;margin-bottom:8px;box-shadow:var(--sh-sm);">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;border:1px solid ${color};">${getSpCatIcon('Ban', true)}</div>
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;border:1px solid ${color};">${getSpCatIcon(p.kategori,true)}</div>
             <div>
-              <div style="font-size:11px;font-weight:800;color:var(--text);">${pos}</div>
-              <div style="font-size:12px;font-weight:600;color:var(--text2);">${ban.nama} <span style="font-size:10px;font-weight:400;color:var(--text3);">(${ban.spek})</span></div>
+              <div style="font-size:12px;font-weight:800;color:var(--text);">${p.nama}${posisiTag}</div>
+              <div style="font-size:10.5px;font-weight:500;color:var(--text3);">${p.spek||p.kategori} · Dipasang ${fmtDate(p.tglPasang)} (${p.daysSince} hari)</div>
+              ${p.freeze?'<div class="ritase-freeze" style="margin-top:4px;">❄ FREEZE — Armada di Bengkel</div>':''}
             </div>
           </div>
-          <div style="text-align:right;">
+          <div style="text-align:right;flex-shrink:0;">
             <div style="font-size:14px;font-weight:800;color:${color};">${sisa}</div>
             <div style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:700;letter-spacing:.05em;">Sisa Ritase</div>
           </div>
         </div>
         <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--card-b);">
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:10px;font-weight:700;">
-            <span style="color:var(--text3);text-transform:uppercase;">Estimasi Umur Ban</span>
-            <span style="color:${color};">${pct}% Terpakai</span>
+            <span style="color:var(--text3);text-transform:uppercase;">Estimasi Umur Pakai</span>
+            <span style="color:${color};">${p.pct}% Terpakai</span>
           </div>
           <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;">
             <div style="height:100%;background:${color};width:${pct}%;border-radius:3px;transition:width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
           </div>
           <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--text3);font-weight:600;">
-            <span>Terpasang: ${fmtDate(ban.tglPasang)}</span>
-            <span>Total: ${ban.ritase} / ${threshold} Rit</span>
+            <span>Terpasang: ${fmtDate(p.tglPasang)}</span>
+            <span>Total: ${p.ritase} / ${p.threshold} Rit</span>
           </div>
         </div>
+        ${p.isNonStok?`<div style="display:flex;gap:6px;margin-top:8px;">
+          <div class="sp-act edit" style="flex:1;text-align:center;" onclick="openAddStockModal('${p.id}')">✏️ Edit</div>
+          <div class="sp-act del" style="flex:1;text-align:center;" onclick="confirmDeleteOnderdilItem('${p.id}','${p.nama.replace(/'/g,"\\'")}')">🗑️ Hapus</div>
+        </div>
+        <div style="font-size:9px;color:var(--text3);margin-top:6px;">📌 Onderdil beli langsung di luar stok gudang</div>`:''}
       </div>`;
-    }
-  });
+    }).join('');
+  }
 
   el.innerHTML=`
     <div style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:0 4px;">
-        <div style="font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px;">📦 List Pemakaian Ban <span style="background:var(--bg3);color:var(--text2);font-size:10px;padding:2px 8px;border-radius:20px;">${installedBans.length} unit</span></div>
-        <div style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;">Threshold: ${threshold} Rit</div>
+        <div style="font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px;">🔧 Onderdil Aktif <span style="background:var(--bg3);color:var(--text2);font-size:10px;padding:2px 8px;border-radius:20px;">${withPct.length} item</span></div>
       </div>
       ${listHTML}
     </div>`;
-}
-
-function showTireDetail(nopol, posLabel){
-  // Legacy function replaced by inline list tracking
 }
 
 // ═══════════════════════════════ SM MODAL (CRUD) ══════════════════
@@ -4264,24 +4829,25 @@ function openSmModal(type,val){
   closeFab();
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   if(type==='driver'){
-    const isEdit=!!val && val!=='undefined';tEl.textContent=isEdit?'Edit Supir':'Tambah Supir Baru';
+    const isEdit=!!val && val!=='undefined';tEl.textContent=isEdit?'Edit Driver':'Tambah Driver Baru';
     const safeVal=isEdit?val:'';
     body.innerHTML=`
-      <div><label class="form-label">Nama Lengkap Supir</label><input class="form-input" id="sm-driver-name" value="${isEdit?safeVal:''}" placeholder="Nama supir..."/></div>
-      <button class="sm-btn orange" onclick="saveDriver('${safeVal}')">${isEdit?'Simpan':'Tambah Supir'}</button>
-      ${isEdit?`<button class="sm-btn danger" onclick="deleteDriver('${safeVal}');closeSm()">Hapus Supir</button>`:''}`;
+      <div><label class="form-label">Nama Lengkap Driver</label><input class="form-input" id="sm-driver-name" value="${isEdit?safeVal:''}" placeholder="Nama driver..."/></div>
+      <button class="sm-btn orange" onclick="saveDriver('${safeVal}')">${isEdit?'Simpan':'Tambah Driver'}</button>
+      ${isEdit?`<button class="sm-btn danger" onclick="deleteDriver('${safeVal}');closeSm()">Hapus Driver</button>`:''}`;
   } else {
     const isEdit=!!val && val!=='undefined';const safeUnitId=isEdit?val:'';
     const u=isEdit?fleetData.find(f=>f.id===val):null;
     tEl.textContent=isEdit?'Edit Unit Armada':'Tambah Unit Baru';
     body.innerHTML=`
       <div><label class="form-label">No. Plat</label><input class="form-input" id="sm-nopol" value="${u?u.nopol:''}" placeholder="B 1234 XX"/></div>
-      <div><label class="form-label">Supir Tetap</label><select class="form-select" id="sm-unit-driver">${getDriverOpts(u?u.driver:'')}</select></div>
+      <div><label class="form-label">Driver Tetap</label><select class="form-select" id="sm-unit-driver">${getDriverOpts(u?u.driver:'')}</select></div>
       <div><label class="form-label">Status</label><select class="form-select" id="sm-status"><option value="jalan"${u?.status==='jalan'?' selected':''}>🟢 Jalan</option><option value="antre"${u?.status==='antre'?' selected':''}>🟡 Antre</option><option value="bengkel"${u?.status==='bengkel'?' selected':''}>🔴 Bengkel</option></select></div>
       <div class="form-row">
-        <div><label class="form-label">Tgl Pajak</label><input type="date" class="form-input" id="sm-pajak" value="${u?u.pajak:''}"/></div>
+        <div><label class="form-label">Tgl Pajak (Tahunan)</label><input type="date" class="form-input" id="sm-pajak" value="${u?u.pajak:''}"/></div>
         <div><label class="form-label">Tgl KIR</label><input type="date" class="form-input" id="sm-kir" value="${u?u.kir:''}"/></div>
       </div>
+      <div><label class="form-label">Tgl Habis STNK (5 Tahunan)</label><input type="date" class="form-input" id="sm-stnk" value="${u?u.stnk||'':''}"/></div>
       <button class="sm-btn orange" onclick="saveUnit('${safeUnitId}')">${isEdit?'Simpan':'Tambah Unit'}</button>
       ${isEdit?`<button class="sm-btn danger" onclick="deleteUnit('${safeUnitId}');closeSm()">Hapus Unit</button>`:''}`;
   }
@@ -4297,7 +4863,7 @@ async function saveDriver(old){
   if(!name){showToast('Nama tidak boleh kosong');return;}
 
   try {
-    showToast('⏳ Menyimpan supir...');
+    showToast('⏳ Menyimpan driver...');
     // Sync to Supabase DULU — kolom di DB adalah "name" bukan "nama"
     if(old && old !== name) {
       // Edit: hapus lama, buat baru
@@ -4313,25 +4879,28 @@ async function saveDriver(old){
     _isSyncing=false;
     await syncFromSupabase();
     closeSm();renderDriverList();renderDashboard();
-    showToast(old?'✅ Supir diperbarui':'✅ Supir ditambahkan');vibrate(30);
+    logAudit(old?'update':'create','driver',old?`Edit driver ${old}→${name}`:`Tambah driver ${name}`);
+    showToast(old?'✅ Driver diperbarui':'✅ Driver ditambahkan');vibrate(30);
   } catch(e) {
     console.error('saveDriver fail:',e);
-    showToast('⚠️ Gagal menyimpan supir: '+e.message);
+    showToast('⚠️ Gagal menyimpan driver: '+e.message);
     _isSyncing=false;
     await syncFromSupabase();
   }
 }
 async function deleteDriver(name){
-  if(fleetData.some(f=>f.driver===name)){showToast('Supir sedang bertugas');return;}
+  if(fleetData.some(f=>f.driver===name)){showToast('Driver sedang bertugas');return;}
   try {
     await sbFetch('drivers',{method:'DELETE',filters:{name:name}});
     driverList=driverList.filter(d=>d!==name);
     _isSyncing=false;
     await syncFromSupabase();
-    renderDriverList();showToast('✅ Supir dihapus');vibrate(40);
+    renderDriverList();renderDriverDonut();
+    logAudit('delete','driver',`Hapus driver ${name}`);
+    showToast('✅ Driver dihapus');vibrate(40);
   } catch(e) {
     console.error('deleteDriver fail:',e);
-    showToast('⚠️ Gagal hapus supir: '+e.message);
+    showToast('⚠️ Gagal hapus driver: '+e.message);
     _isSyncing=false;
     await syncFromSupabase();
   }
@@ -4344,23 +4913,36 @@ async function saveUnit(existId){
   const status=document.getElementById('sm-status')?.value||'jalan';
   const pajak=document.getElementById('sm-pajak')?.value||'';
   const kir=document.getElementById('sm-kir')?.value||'';
+  const stnk=document.getElementById('sm-stnk')?.value||'';
   if(!nopol){showToast('No. plat tidak boleh kosong');return;}
   const dupCheck=fleetData.find(f=>f.nopol===nopol&&f.id!==existId);
   if(dupCheck){showToast('No. plat sudah terdaftar');return;}
 
-  const unitData = {nopol,driver,status,pajak,kir};
+  const unitData = {nopol,driver,status,pajak,kir,stnk};
+  const oldUnit = existId ? {...fleetData.find(f=>f.id===existId)} : null;
 
   try {
     showToast('⏳ Menyimpan unit...');
     if(existId){
       await sbFetch('fleet',{method:'PATCH',filters:{id:existId},body:unitData});
       const u=fleetData.find(f=>f.id===existId);
-      if(u){u.nopol=nopol;u.driver=driver;u.status=status;u.pajak=pajak;u.kir=kir;}
+      if(u){u.nopol=nopol;u.driver=driver;u.status=status;u.pajak=pajak;u.kir=kir;u.stnk=stnk;}
+      const changes=[];
+      if(oldUnit){
+        if(oldUnit.nopol!==nopol)changes.push(`No.Pol ${oldUnit.nopol}→${nopol}`);
+        if(oldUnit.driver!==driver)changes.push(`Driver ${oldUnit.driver||'—'}→${driver||'—'}`);
+        if(oldUnit.status!==status)changes.push(`Status ${oldUnit.status}→${status}`);
+        if(oldUnit.pajak!==pajak)changes.push(`Pajak ${oldUnit.pajak||'—'}→${pajak||'—'}`);
+        if(oldUnit.kir!==kir)changes.push(`KIR ${oldUnit.kir||'—'}→${kir||'—'}`);
+        if(oldUnit.stnk!==stnk)changes.push(`STNK ${oldUnit.stnk||'—'}→${stnk||'—'}`);
+      }
+      logAudit('update','armada',`Edit unit ${nopol}${changes.length?': '+changes.join(', '):''}`);
     } else {
       const newId='f'+Date.now();
       const newUnit = {id:newId, ...unitData};
       await sbFetch('fleet',{method:'POST',body:newUnit});
       fleetData.push(newUnit);
+      logAudit('create','armada',`Tambah unit armada ${nopol}, driver: ${driver||'—'}`);
     }
     _isSyncing=false;
     await syncFromSupabase();
@@ -4386,6 +4968,7 @@ async function deleteUnit(id){
     FLEET_COUNT=fleetData.length;
     const fi=document.getElementById('fleet-count-input');if(fi)fi.value=FLEET_COUNT;
     renderFleetUnits();renderDashboard();renderLaporanTable();checkDocWarnings();
+    logAudit('delete','armada',`Hapus unit armada ${u?u.nopol:id}${u&&u.driver?' (driver: '+u.driver+')':''}`);
     showToast(u?'✅ Unit '+u.nopol+' dihapus':'✅ Unit dihapus');vibrate(40);
   } catch(e) {
     console.error('deleteUnit fail:',e);
@@ -4423,7 +5006,7 @@ function openModal(type){
     title.textContent='+ Input Inflow';
     body.innerHTML=`
       <div class="form-group"><label class="form-label">No. Plat Armada</label><select class="form-select" id="inf-armada" onchange="syncDriverFromArmada()">${getArmadaOpts()}</select></div>
-      <div class="form-group"><label class="form-label">Nama Supir</label><select class="form-select" id="inf-driver">${getDriverOpts()}</select></div>
+      <div class="form-group"><label class="form-label">Nama Driver</label><select class="form-select" id="inf-driver">${getDriverOpts()}</select></div>
       <div class="form-group"><label class="form-label">Titik Muat</label><input class="form-input" id="inf-muat" placeholder="Pelabuhan / Gudang Asal"/></div>
       <div class="form-group"><label class="form-label">Titik Bongkar</label><input class="form-input" id="inf-bongkar" placeholder="Gudang / Kota Tujuan"/></div>
       <div class="form-group"><label class="form-label">Jumlah Setoran Netto (Rp)</label><input class="form-input" id="inf-amount" placeholder="0" inputmode="numeric"/></div>
@@ -4440,24 +5023,54 @@ function openModal(type){
           <option value="UMUM">🏢 UMUM — Beban Operasional</option>
           <option value="Onderdil">🔧 Onderdil — Suku Cadang</option>
           <option value="Tunai">💵 Tunai — Pengeluaran Tunai</option>
+          <option value="Dokumen">📄 Dokumen — Pajak/KIR/STNK</option>
         </select>
       </div>
       <div id="out-onderdil-wrap" style="display:none;">
         <div class="form-group">
-          <label class="form-label">📦 Pilih dari Stok Gudang</label>
-          <select class="form-select" id="out-sp-select" onchange="onGudangItemSelect()">
-            ${buildGudangOpts()}
-          </select>
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <button type="button" id="out-mode-stok-btn" onclick="setOutOnderdilMode('stok')" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid var(--green);background:var(--green-bg);color:var(--green2);font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;">📦 Dari Stok Gudang</button>
+            <button type="button" id="out-mode-baru-btn" onclick="setOutOnderdilMode('baru')" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid var(--card-b);background:transparent;color:var(--text3);font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;">🆕 Beli Baru (Luar Stok)</button>
+          </div>
         </div>
-        <div id="out-sp-info" style="display:none;background:var(--bg3);border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:11px;color:var(--text2);"></div>
-        <div id="out-ban-posisi-wrap" style="display:none;">
+        <div id="out-onderdil-stok-block">
           <div class="form-group">
-            <label class="form-label">🛞 Posisi Ban</label>
-            <select class="form-select" id="out-ban-posisi-select">
-              <option value="">— Pilih Posisi Ban —</option>
-              ${TIRE_POSITIONS.map(p=>`<option value="${p}">${p}</option>`).join('')}
+            <label class="form-label">📦 Pilih dari Stok Gudang</label>
+            <select class="form-select" id="out-sp-select" onchange="onGudangItemSelect()">
+              ${buildGudangOpts()}
             </select>
           </div>
+          <div id="out-sp-info" style="display:none;background:var(--bg3);border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:11px;color:var(--text2);"></div>
+          <div class="form-group">
+            <label class="form-label">🔢 Jumlah (Unit)</label>
+            <input class="form-input" id="out-sp-jml" type="number" value="1" min="1"/>
+          </div>
+        </div>
+        <div id="out-onderdil-baru-block" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">🆕 Nama Onderdil</label>
+            <input class="form-input" id="out-custom-nama" placeholder="Mis. Kampas Rem, Filter Solar..."/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kategori</label>
+            <input class="form-input" id="out-custom-kategori" list="out-custom-kategori-list" placeholder="Ketik kategori (bisa baru atau pilih yang sudah ada)" value="${gudangKategori[0]||'Spare'}"/>
+            <datalist id="out-custom-kategori-list">
+              ${gudangKategori.map(k=>`<option value="${k}">`).join('')}
+            </datalist>
+            <div style="font-size:10px;color:var(--text3);margin-top:4px;">💡 Boleh ketik kategori baru di luar daftar stok gudang.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">🔧 Batas Ritase (opsional)</label>
+            <input class="form-input" id="out-custom-threshold" type="number" placeholder="Kosongkan = default kategori"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">🔢 Jumlah (Unit)</label>
+            <input class="form-input" id="out-custom-jml" type="number" value="1" min="1"/>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:11.5px;color:var(--text2);cursor:pointer;">
+            <input type="checkbox" id="out-custom-track" checked style="width:16px;height:16px;flex-shrink:0;"/>
+            🔗 Ikut track ritase onderdil ini (muncul di tab Onderdil &amp; ikut terhitung tiap rit)
+          </label>
         </div>
       </div>
       <div class="form-group"><label class="form-label">Keterangan</label>
@@ -4473,7 +5086,7 @@ function openModal(type){
         <div class="form-group"><label class="form-label">No. Plat Armada</label>
           <select class="form-select" id="out-armada" onchange="syncOutDriver()">${getArmadaOpts()}</select>
         </div>
-        <div class="form-group"><label class="form-label">Nama Supir</label>
+        <div class="form-group"><label class="form-label">Nama Driver</label>
           <select class="form-select" id="out-driver">${getDriverOpts()}</select>
         </div>
       </div>
@@ -4485,6 +5098,7 @@ function openModal(type){
       </div>
       <button class="form-btn outflow" onclick="submitOutflow()">Simpan Outflow</button>`;
     setupCurrencyInput('out-amount');
+    outOnderdilMode='stok';
   }
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -4494,9 +5108,38 @@ function onOutCatChange(){
   const onderdilWrap=document.getElementById('out-onderdil-wrap');
   const armadaWrap=document.getElementById('out-armada-wrap');
   if(onderdilWrap) onderdilWrap.style.display=cat==='Onderdil'?'block':'none';
-  if(armadaWrap) armadaWrap.style.display=(cat==='Onderdil'||cat==='Tunai')?'block':'none';
+  if(armadaWrap) armadaWrap.style.display=(cat==='Onderdil'||cat==='Tunai'||cat==='Dokumen')?'block':'none';
   // Reset gudang selection when switching away
   if(cat!=='Onderdil'){
+    const sel=document.getElementById('out-sp-select');
+    if(sel) sel.value='';
+    const info=document.getElementById('out-sp-info');
+    if(info) info.style.display='none';
+    setOutOnderdilMode('stok');
+  }
+}
+
+// Toggle antara "pilih dari stok gudang" vs "beli baru di luar stok" untuk outflow Onderdil
+let outOnderdilMode='stok';
+function setOutOnderdilMode(mode){
+  outOnderdilMode=mode;
+  const stokBlock=document.getElementById('out-onderdil-stok-block');
+  const baruBlock=document.getElementById('out-onderdil-baru-block');
+  const stokBtn=document.getElementById('out-mode-stok-btn');
+  const baruBtn=document.getElementById('out-mode-baru-btn');
+  if(stokBlock) stokBlock.style.display=mode==='stok'?'block':'none';
+  if(baruBlock) baruBlock.style.display=mode==='baru'?'block':'none';
+  if(stokBtn){
+    stokBtn.style.borderColor=mode==='stok'?'var(--green)':'var(--card-b)';
+    stokBtn.style.background=mode==='stok'?'var(--green-bg)':'transparent';
+    stokBtn.style.color=mode==='stok'?'var(--green2)':'var(--text3)';
+  }
+  if(baruBtn){
+    baruBtn.style.borderColor=mode==='baru'?'var(--green)':'var(--card-b)';
+    baruBtn.style.background=mode==='baru'?'var(--green-bg)':'transparent';
+    baruBtn.style.color=mode==='baru'?'var(--green2)':'var(--text3)';
+  }
+  if(mode==='stok'){
     const sel=document.getElementById('out-sp-select');
     if(sel) sel.value='';
     const info=document.getElementById('out-sp-info');
@@ -4508,16 +5151,13 @@ function onGudangItemSelect(){
   const sel=document.getElementById('out-sp-select');
   const spId=sel?.value;
   const info=document.getElementById('out-sp-info');
-  const banWrap=document.getElementById('out-ban-posisi-wrap');
   if(!spId){
     if(info) info.style.display='none';
-    if(banWrap) banWrap.style.display='none';
     return;
   }
   const sp=sparepartStock.find(s=>s.id===spId);
   if(!sp){
     if(info) info.style.display='none';
-    if(banWrap) banWrap.style.display='none';
     return;
   }
   // Auto-fill fields
@@ -4531,22 +5171,20 @@ function onGudangItemSelect(){
   if(amtEl){
     amtEl.value=new Intl.NumberFormat('id-ID').format(sp.hargaSatuan);
   }
-  // Show posisi ban selector only for Ban category
-  if(banWrap){
-    const isBan = sp.kategori==='Ban';
-    banWrap.style.display = isBan ? 'block' : 'none';
-    if(!isBan){
-      const posEl=document.getElementById('out-ban-posisi-select');
-      if(posEl) posEl.value='';
-    }
-  }
   // Show info badge
   if(info){
-    const threshold=getRitaseThreshold(sp.kategori);
+    const threshold=getEffectiveThreshold(sp);
     info.style.display='block';
     info.innerHTML='<b>'+sp.nama+'</b> · Sisa stok: <b style="color:var(--'+(sp.stokSisa>0?'success':'danger')+')">'+sp.stokSisa+' unit</b>'
       +' · Harga: '+fmt(sp.hargaSatuan)
       +'<br>🔄 Ritase akan mulai dihitung dari 0 setelah dipasang ke armada (threshold: '+threshold+' trip)';
+  }
+  // Batasi jumlah sesuai sisa stok
+  const jmlEl=document.getElementById('out-sp-jml');
+  if(jmlEl){
+    jmlEl.max=sp.stokSisa>0?sp.stokSisa:1;
+    if(!jmlEl.value||parseInt(jmlEl.value)<1) jmlEl.value=1;
+    if(parseInt(jmlEl.value)>sp.stokSisa) jmlEl.value=Math.max(1,sp.stokSisa);
   }
 }
 
@@ -4616,7 +5254,10 @@ async function submitInflow(){
     // Setelah berhasil, update state lokal
     transactions.unshift(newTxn);
     if(fUnit){fUnit.status=antre;fUnit.driver=driver;}
-    incrementRitaseForArmada(armada, statusSebelum);
+    // Ritase hanya bertambah untuk setoran/trip beneran (nominal > 0), bukan sekadar update status
+    if(amount>0){
+      await incrementRitaseForArmada(armada, statusSebelum);
+    }
 
     logAudit('create','transaksi',`Inflow ${fmt(amount)} - ${armada}`);
     closeModal();
@@ -4654,31 +5295,45 @@ async function submitOutflow(){
   let spId=null;
   let spOldSisa=0, spOldInstalled=[];
 
-  if(cat==='Onderdil'){
+  // Onderdil beli baru di luar stok gudang (mode 'baru')
+  const isCustomOnderdil = cat==='Onderdil' && outOnderdilMode==='baru';
+  let customNama='', customKategori='', trackRitase=false, customThreshold=0;
+  let jmlOnderdil=1;
+
+  if(cat==='Onderdil' && !isCustomOnderdil){
     const spSel=document.getElementById('out-sp-select');
     spId=spSel?.value||null;
+    jmlOnderdil=parseInt(document.getElementById('out-sp-jml')?.value||'1')||1;
+    if(jmlOnderdil<1) jmlOnderdil=1;
     if(spId){
       const sp=sparepartStock.find(s=>s.id===spId);
       if(sp){
         if(sp.stokSisa<=0){showToast('Stok '+sp.nama+' sudah habis!');return;}
-        // Validasi posisi ban wajib diisi
-        if(sp.kategori==='Ban'){
-          const posisi=document.getElementById('out-ban-posisi-select')?.value;
-          if(!posisi){showToast('Pilih posisi ban terlebih dahulu');return;}
-        }
+        if(jmlOnderdil>sp.stokSisa){showToast('Jumlah melebihi stok (sisa: '+sp.stokSisa+')');return;}
         spOldSisa = sp.stokSisa;
         spOldInstalled = [...sp.installed];
       }
     }
+  } else if(isCustomOnderdil){
+    customNama=document.getElementById('out-custom-nama')?.value?.trim()||'';
+    customKategori=document.getElementById('out-custom-kategori')?.value?.trim()||(gudangKategori[0]||'Spare');
+    trackRitase=!!document.getElementById('out-custom-track')?.checked;
+    const customThresholdRaw=document.getElementById('out-custom-threshold')?.value||'';
+    customThreshold=customThresholdRaw?parseInt(customThresholdRaw)||0:0;
+    jmlOnderdil=parseInt(document.getElementById('out-custom-jml')?.value||'1')||1;
+    if(jmlOnderdil<1) jmlOnderdil=1;
+    if(!customNama){showToast('Masukkan nama onderdil');return;}
   }
 
-  const txnLabel=label||(spId?sparepartStock.find(s=>s.id===spId)?.nama||'Onderdil':'Pengeluaran');
+  const txnLabel=(label||(isCustomOnderdil?customNama:(spId?sparepartStock.find(s=>s.id===spId)?.nama||'Onderdil':'Pengeluaran')))+((cat==='Onderdil'&&jmlOnderdil>1)?' — '+jmlOnderdil+' unit':'');
   const outId='txn_'+Date.now();
+  // Sub-kategori onderdil spesifik (Ban/Oli/dst) — dipakai supaya filter kategori di Keuangan konsisten dengan Gudang
+  const subKategori = cat==='Onderdil'
+    ? (isCustomOnderdil ? customKategori : (spId ? (sparepartStock.find(s=>s.id===spId)?.kategori||'') : ''))
+    : '';
 
   // Object yang dikirim ke Supabase — kolom sesuai schema DB
-  // Untuk onderdil Ban, ambil posisi dari selector khusus ban
-  const outPosisi = document.getElementById('out-ban-posisi-select')?.value
-    || document.getElementById('out-pos-select')?.value || '';
+  const outPosisi = '';
   const dbOut = {
     id: outId,
     type: 'outflow',
@@ -4690,10 +5345,11 @@ async function submitOutflow(){
     nota: nota,
     toko: toko,
     kategori: cat,
+    sub_kategori: subKategori,
     driver: driver,
     status: 'lunas',
-    sparepart_id: spId || null,
-    jml_pasang: 1,
+    sparepart_id: (isCustomOnderdil && trackRitase) ? null : (spId || null),
+    jml_pasang: jmlOnderdil,
     posisi: outPosisi,
     created_at: new Date().toISOString()
   };
@@ -4702,29 +5358,66 @@ async function submitOutflow(){
   const newOut = {
     id: outId, type: 'outflow', label: txnLabel,
     sub: `No.Nota: ${nota} · ${toko}${driver?' · '+driver:''}`,
-    amount, date, armada, nota, toko, kategori: cat, driver,
-    status: 'lunas', sparepartId: spId || null, jmlPasang: 1,
+    amount, date, armada, nota, toko, kategori: cat, subKategori, driver,
+    status: 'lunas', sparepartId: (isCustomOnderdil && trackRitase) ? null : (spId || null), jmlPasang: jmlOnderdil,
     posisi: outPosisi
   };
+  const customSpId = isCustomOnderdil ? 'spc'+Date.now() : null;
+  if(isCustomOnderdil && trackRitase && customSpId){ dbOut.sparepart_id=customSpId; newOut.sparepartId=customSpId; }
 
   try {
     showToast('⏳ Menyimpan...');
 
-    // Simpan ke Supabase DULU
+    // Onderdil beli baru di luar stok gudang — buat dulu record inventory-nya (jika di-track)
+    // SEBELUM transaksi disimpan, supaya sparepart_id yang direferensikan sudah ada
+    if(isCustomOnderdil && trackRitase && customSpId){
+      const installedRow=[];
+      for(let i=0;i<jmlOnderdil;i++){
+        installedRow.push({armada:armada||'UMUM', tglPasang:date, ritase:0, txnId:outId+'_'+i, posisi:outPosisi||(jmlOnderdil>1?'Unit '+(i+1):'')});
+      }
+      const dbSp={
+        id: customSpId, nama: customNama, spek: 'Beli langsung (luar stok)', kategori: customKategori,
+        toko, nota, tgl_masuk: date, stok_awal: jmlOnderdil, stok_sisa: 0,
+        harga_satuan: amount, catatan: 'Dibeli langsung di luar stok gudang',
+        ritase_threshold: customThreshold || null, installed: installedRow
+      };
+      await sbFetch('inventory', {method:'POST', body:dbSp});
+      for(const row of installedRow){
+        await sbFetch('inventory_installed', {method:'POST', body:{
+          inventory_id: customSpId, armada: row.armada,
+          tgl_pasang: date, ritase: 0, txn_id: row.txnId, posisi: row.posisi
+        }}).catch(e=>console.warn('inventory_installed POST (custom onderdil) fail:',e));
+      }
+      sparepartStock.push({
+        id: customSpId, nama: customNama, spek: 'Beli langsung (luar stok)', kategori: customKategori,
+        toko, nota, tglMasuk: date, stokAwal: jmlOnderdil, stokSisa: 0,
+        hargaSatuan: amount, catatan: 'Dibeli langsung di luar stok gudang',
+        ritaseThreshold: customThreshold || 0, installed: installedRow
+      });
+    }
+
+    // Simpan transaksi ke Supabase
     await sbFetch('transactions', {method:'POST', body:dbOut});
 
-    // Update inventory jika terkait onderdil
+    // Update inventory jika terkait onderdil (dari stok gudang)
     if(cat==='Onderdil' && spId){
       const sp=sparepartStock.find(s=>s.id===spId);
       if(sp){
-        sp.stokSisa--;
-        sp.installed.push({armada:armada||'UMUM', tglPasang:date, ritase:0, txnId:outId, posisi:outPosisi||''});
+        sp.stokSisa-=jmlOnderdil;
+        const newInstalledRows=[];
+        for(let i=0;i<jmlOnderdil;i++){
+          const row={armada:armada||'UMUM', tglPasang:date, ritase:0, txnId:outId+'_'+i, posisi:outPosisi||(jmlOnderdil>1?'Unit '+(i+1):'')};
+          sp.installed.push(row);
+          newInstalledRows.push(row);
+        }
         await sbFetch('inventory', {method:'PATCH', filters:{id:spId}, body:{stok_sisa:sp.stokSisa, installed:sp.installed}});
         // Simpan ke tabel inventory_installed
-        await sbFetch('inventory_installed', {method:'POST', body:{
-          inventory_id: spId, armada: armada||'UMUM',
-          tgl_pasang: date, ritase: 0, txn_id: outId, posisi: outPosisi||''
-        }}).catch(e=>console.warn('inventory_installed POST fail:',e));
+        for(const row of newInstalledRows){
+          await sbFetch('inventory_installed', {method:'POST', body:{
+            inventory_id: spId, armada: row.armada,
+            tgl_pasang: date, ritase: 0, txn_id: row.txnId, posisi: row.posisi
+          }}).catch(e=>console.warn('inventory_installed POST fail:',e));
+        }
       }
     }
 
@@ -4792,7 +5485,7 @@ function setTheme(t){
   const bl=document.getElementById('btn-light'),bd=document.getElementById('btn-dark');
   if(bl){bl.style.borderColor=isDark?'var(--card-b)':'var(--green)';bl.style.background=isDark?'var(--bg3)':'var(--green-bg)';bl.style.color=isDark?'var(--text2)':'var(--green2)';}
   if(bd){bd.style.borderColor=isDark?'var(--green)':'var(--card-b)';bd.style.background=isDark?'var(--green-bg)':'var(--bg3)';bd.style.color=isDark?'var(--green2)':'var(--text2)';}
-  setTimeout(()=>{renderDonut(totalInflow(transactions),totalOutflow(transactions));renderMiniLine();renderBarChart(currentBarFilter);},50);
+  setTimeout(()=>{renderMiniLine();renderBarChart(currentBarFilter);renderDriverDonut();},50);
 }
 function toggleTheme(){setTheme(isDark?'light':'dark');}
 
@@ -4923,15 +5616,16 @@ async function sbFetch(table, opts={}){
 async function logAudit(action, modul, detail=''){
   try{
     const adminName = (window.activeAdmin?.name) || 'System';
+    const adminId = window.activeAdmin?.id || null;
     await fetch(`${SB_URL}/rest/v1/audit_logs`, {
       method:'POST',
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
       body: JSON.stringify({
-        admin_name: adminName,
+        user_id: adminId,
+        user_name: adminName,
         action,
-        modul,
-        detail: typeof detail==='object' ? JSON.stringify(detail) : String(detail),
-        created_at: new Date().toISOString()
+        module: modul,
+        metadata: { detail: typeof detail==='object' ? detail : String(detail) }
       })
     });
   } catch(e){ console.warn('logAudit failed:',e); }
@@ -4946,7 +5640,7 @@ async function loadAuditLogs(){
     const modul = document.getElementById('audit-filter-modul')?.value||'';
     const aksi  = document.getElementById('audit-filter-aksi')?.value||'';
     const filters={};
-    if(modul) filters.modul=modul;
+    if(modul) filters.module=modul;
     if(aksi) filters.action=aksi;
     const logs = await sbFetch('audit_logs',{select:'*',filters,limit:100,order:'created_at.desc'});
     if(!Array.isArray(logs)||logs.length===0){
@@ -4959,16 +5653,17 @@ async function loadAuditLogs(){
       const tgl = new Date(l.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
       const warna = aksiColor[l.action]||'var(--text3)';
       const label = aksiLabel[l.action]||l.action;
+      const detailText = l.metadata?.detail || '';
       return `<div style="background:var(--card);border:1px solid var(--card-b);border-radius:12px;padding:11px 13px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
           <div style="display:flex;align-items:center;gap:7px;">
             <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${warna}22;color:${warna};">${label}</span>
-            <span style="font-size:11px;font-weight:700;color:var(--text);">${l.modul||'—'}</span>
+            <span style="font-size:11px;font-weight:700;color:var(--text);">${l.module||'—'}</span>
           </div>
           <span style="font-size:10px;color:var(--text3);">${tgl}</span>
         </div>
-        <div style="font-size:11px;color:var(--text2);">${l.detail||''}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px;">👤 ${l.admin_name||'—'}</div>
+        <div style="font-size:11px;color:var(--text2);">${detailText}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px;">👤 ${l.user_name||'—'}</div>
       </div>`;
     }).join('');
   }catch(e){
@@ -5299,7 +5994,7 @@ async function syncFromSupabase(){
           sub:t.sub||'', date:t.date||t.created_at?.split('T')[0]||'',
           armada:t.armada||'', muat:t.muat||'', bongkar:t.bongkar||'',
           driver:t.driver||'', nota:t.nota||'', toko:t.toko||'',
-          kategori:t.kategori||'', status:t.status||'lunas',
+          kategori:t.kategori||'', subKategori:t.sub_kategori||'', status:t.status||'lunas',
           sparepartId:t.sparepart_id||null, posisi:t.posisi||'', jmlPasang:t.jml_pasang||1, created_at:t.created_at
         }));
         txnSuccess = true;
@@ -5311,7 +6006,7 @@ async function syncFromSupabase(){
       const fleet = await sbFetch('fleet',{select:'*',limit:100,order:'nopol.asc'});
       if(Array.isArray(fleet)){
         fleetData.length=0;
-        fleet.forEach(f=>fleetData.push({id:f.id,nopol:f.nopol,driver:f.driver||'',status:f.status||'jalan',pajak:f.pajak||'',kir:f.kir||''}));
+        fleet.forEach(f=>fleetData.push({id:f.id,nopol:f.nopol,driver:f.driver||'',status:f.status||'jalan',pajak:f.pajak||'',kir:f.kir||'',stnk:f.stnk||''}));
         FLEET_COUNT=fleetData.length;
         const fi=document.getElementById('fleet-count-input');if(fi)fi.value=FLEET_COUNT;
       }
@@ -5342,6 +6037,7 @@ async function syncFromSupabase(){
             id: sp.id, nama: sp.nama||'', spek: sp.spek||'', kategori: sp.kategori||'', toko: sp.toko||'', nota: sp.nota||'',
             tglMasuk: sp.tgl_masuk || '', stokAwal: Number(sp.stok_awal || 0), stokSisa: Number(sp.stok_sisa || 0),
             stokMin: Number(sp.stok_min || 5), hargaSatuan: Number(sp.harga_satuan || 0), catatan: sp.catatan || '',
+            ritaseThreshold: Number(sp.ritase_threshold || 0),
             installed: installedRows
           });
         });
@@ -5432,7 +6128,7 @@ function goToChart(idx){
     d.style.borderRadius='3px';
   });
   // Re-render chart on slide change (canvas resize fix)
-  if(idx===0) setTimeout(()=>{renderDonut(totalInflow(transactions),totalOutflow(transactions));},50);
+  if(idx===0) setTimeout(()=>{renderDriverDonut();},50);
   if(idx===1) setTimeout(()=>{renderMiniLine();},50);
   if(idx===2) setTimeout(()=>{renderBarChart(currentBarFilter);},50);
 }
@@ -5507,6 +6203,4 @@ async function _appInit(){
 </body>
 </html> 
 
-/ /   B u i l d   t r i g g e r :   0 4 / 1 5 / 2 0 2 6   1 9 : 4 8 : 1 1  
- 
- 
+/
