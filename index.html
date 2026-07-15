@@ -2228,6 +2228,7 @@ function confirmDeleteOnderdilItem(id, nama){
             headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'}
           }).catch(e=>console.warn('inventory_installed delete fail:',e));
           transactions=transactions.filter(t=>t.id!==linkedTxn.id);
+          extraHistoryTxns=extraHistoryTxns.filter(t=>t.id!==linkedTxn.id);
         }
         // Hapus item inventory (record custom onderdil-nya sendiri)
         await sbFetch('inventory',{method:'DELETE',filters:{id:id}});
@@ -3000,6 +3001,7 @@ function deleteTxn(id){
         
         // Optimistic UI update
         transactions=transactions.filter(t=>t.id!==id);
+        extraHistoryTxns=extraHistoryTxns.filter(t=>t.id!==id);
         renderGudang(); renderDashboard(); applyTxnFilters(); renderLaporanTable();
         renderKeuanganStats?.(); refreshDetailHero(); vibrate(40);
         if(currentDetailUnit) renderOnderdilTab(currentDetailUnit);
@@ -6531,12 +6533,24 @@ async function loadDataArsip(){
     const existingIds=new Set(transactions.map(t=>t.id));
     mapped.forEach(t=>{ if(!existingIds.has(t.id)) transactions.push(t); });
 
+    // Otomatis pindahkan "Filter Periode" di atas ke Custom dengan rentang yang sama,
+    // supaya Tabel Rekap & Grafik Performance langsung menampilkan data yang baru dimuat
+    // tanpa perlu Kakak set ulang manual.
+    lapFilter='custom';
+    document.querySelectorAll('#laporan-filters .filter-chip').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('#laporan-filters .filter-chip')[2]?.classList.add('active'); // tombol "Custom"
+    const lapFromEl=document.getElementById('lap-from'), lapToEl=document.getElementById('lap-to');
+    if(lapFromEl) lapFromEl.value=from;
+    if(lapToEl) lapToEl.value=to;
+    const crEl=document.getElementById('lap-custom-range');
+    if(crEl) crEl.style.display='flex';
+
     renderLaporanTable(); applyTxnFilters(); renderDashboard();
     if(typeof renderKeuanganStats==='function') renderKeuanganStats();
-    if(statusEl) statusEl.innerHTML=`✅ ${mapped.length} transaksi periode ${fmtDate(from)}–${fmtDate(to)} dimuat`;
+    if(statusEl) statusEl.innerHTML=`✅ ${mapped.length} transaksi periode ${fmtDate(from)}–${fmtDate(to)} dimuat & langsung ditampilkan`;
     const loadedWrap=document.getElementById('arsip-loaded-wrap');
     if(loadedWrap && extraHistoryTxns.length) loadedWrap.style.display='block';
-    showToast('✅ Data lama berhasil dimuat');
+    showToast('✅ Data lama berhasil dimuat & ditampilkan');
   }catch(e){
     console.error('loadDataArsip fail:',e);
     if(statusEl) statusEl.innerHTML=`<span style="color:var(--danger);">⚠️ Gagal memuat: ${e.message}</span>`;
@@ -6553,6 +6567,12 @@ async function resetDataArsip(){
   const statusEl=document.getElementById('arsip-status');
   if(loadedWrap) loadedWrap.style.display='none';
   if(statusEl) statusEl.textContent='';
+  // Balikin juga Filter Periode ke default "Bulan Ini"
+  lapFilter='bulan-ini';
+  document.querySelectorAll('#laporan-filters .filter-chip').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#laporan-filters .filter-chip')[0]?.classList.add('active');
+  const crEl=document.getElementById('lap-custom-range');
+  if(crEl) crEl.style.display='none';
   showToast('⏳ Memuat ulang 3 bulan terakhir...');
   _isSyncing=false;
   await syncFromSupabase();
