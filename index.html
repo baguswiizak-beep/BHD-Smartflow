@@ -1254,8 +1254,7 @@ input,select,textarea{font-size:16px!important;}
     <div class="sec-title">Export</div>
     <div class="export-grid">
       <div class="export-card" onclick="exportPDF()"><div class="exp-ico pdf"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div><div class="exp-title">Export PDF</div><div class="exp-sub">Laporan siap cetak</div></div>
-      <div class="export-card" onclick="exportCSV()"><div class="exp-ico xls"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg></div><div class="exp-title">Export CSV</div><div class="exp-sub">Buka di Google Sheets</div></div>
-      <div class="export-card" onclick="exportBackupXLSX()" style="grid-column:1/-1;"><div class="exp-ico xls" style="background:var(--green-bg);color:var(--green2);"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="exp-title">Backup Database (Excel)</div><div class="exp-sub">Semua data mentah — Transaksi, Armada, Gudang, Driver (multi-sheet, semua periode)</div></div>
+      <div class="export-card" onclick="exportBackupXLSX()"><div class="exp-ico xls" style="background:var(--green-bg);color:var(--green2);"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="exp-title">Backup Database (Excel)</div><div class="exp-sub">Semua data mentah, multi-sheet</div></div>
     </div>
     <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between;">
       <span>Rekap Transaksi per Armada</span>
@@ -3851,7 +3850,7 @@ function renderArmadaPerfChart(txns){
     const outTunai=txns.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
     const outOnderdil=txns.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
     const nett=inflow-(outTunai+outOnderdil+bebanPerUnit);
-    const ritase=txns.filter(t=>t.type==='inflow'&&t.armada===f.nopol).length;
+    const ritase=txns.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.amount>0).length;
     labels.push(f.nopol);netData.push(nett);ritaseData.push(ritase);
   });
   if(armadaPerfChart)armadaPerfChart.destroy();
@@ -3935,7 +3934,7 @@ function renderLaporanTable(){
     const outDokumen=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Dokumen').reduce((s,t)=>s+t.amount,0);
     const outUmum=bebanPerUnit;
     const nett=inflow-(outTunai+outOnderdil+outUmum+outDokumen);
-    const ritase=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).length;
+    const ritase=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.amount>0).length;
     const rpPerRit=ritase>0?Math.round(inflow/ritase):0;
     return{nopol:f.nopol,driver:f.driver,status:f.status,inflow,outTunai,outOnderdil,outUmum,outDokumen,nett,ritase,rpPerRit};
   });
@@ -4092,27 +4091,6 @@ function exportBackupXLSX(){
   vibrate(30);
 }
 
-function exportCSV(){
-  const list=getLapTxns();
-  const umum=list.filter(t=>t.type==='outflow'&&t.kategori==='UMUM').reduce((s,t)=>s+t.amount,0);
-  const bebanPerUnit=FLEET_COUNT>0?umum/FLEET_COUNT:0;
-  const rows=fleetData.map(f=>{
-    const inflow=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol).reduce((s,t)=>s+t.amount,0);
-    const outTunai=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Tunai').reduce((s,t)=>s+t.amount,0);
-    const outOnderdil=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Onderdil').reduce((s,t)=>s+t.amount,0);
-    const outDokumen=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Dokumen').reduce((s,t)=>s+t.amount,0);
-    const outUmum=bebanPerUnit;
-    const nett=inflow-(outTunai+outOnderdil+outUmum+outDokumen);
-    const ritase=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).length;
-    const rpPerRit=ritase>0?Math.round(inflow/ritase):0;
-    const biayaPerRit=ritase>0?Math.round(outOnderdil/ritase):0;
-    return`"${f.nopol}","${f.driver}",${inflow},${outTunai},${outOnderdil},${Math.round(outUmum)},${outDokumen},${ritase},${rpPerRit},${biayaPerRit},${Math.round(nett)}`;
-  });
-  const header='No. Pol,Nama Driver,Inflow,Out Tunai,Out Onderdil,Out Umum,Out Dokumen,Ritase,Rp per Rit,Biaya Onderdil per Rit,Nett';
-  const blob=new Blob([header+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='BHD_Rekap_Armada.csv';a.click();
-  showToast('File CSV berhasil diunduh');vibrate(30);
-}
 function exportPDF(){
   const list=getLapTxns();
   const printWindow=window.open('','_blank');
@@ -4141,7 +4119,7 @@ function exportPDF(){
     const outDokumen=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Dokumen').reduce((s,t)=>s+t.amount,0);
     const outUmum=Math.round(bebanPerUnit);
     const nett=inflow-(outTunai+outOnderdil+outUmum+outDokumen);
-    const ritase=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).length;
+    const ritase=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.amount>0).length;
     const rpPerRit=ritase>0?Math.round(inflow/ritase):0;
     return{nopol:f.nopol,driver:f.driver||'—',inflow,outTunai,outOnderdil,outDokumen,outUmum,nett,ritase,rpPerRit};
   });
@@ -4177,7 +4155,6 @@ function exportPDF(){
       <td class="td-money td-red">${fmt(r.outUmum)}</td>
       <td class="td-money td-red">${fmt(r.outDokumen)}</td>
       <td class="td-money">${r.ritase} rit</td>
-      <td class="td-money">${r.rpPerRit>0?fmt(r.rpPerRit):'—'}</td>
       <td class="td-money td-nett ${isPositive?'td-profit':'td-loss'}">${fmt(r.nett)}</td>
     </tr>`;
   }).join('');
@@ -4522,16 +4499,15 @@ tbody tr:hover{background:#FEF9EC;}
     <div class="tbl-wrap">
     <table>
       <thead><tr>
-        <th style="width:9%;">No. Polisi</th>
-        <th class="th-left" style="width:12%;">Nama Driver</th>
-        <th style="width:11%;">Inflow</th>
-        <th style="width:11%;">Out Tunai</th>
-        <th style="width:11%;">Out Onderdil</th>
-        <th style="width:10%;">Out Umum</th>
-        <th style="width:9%;">Out Dokumen</th>
-        <th style="width:7%;">Ritase</th>
-        <th style="width:9%;">Rp/Rit</th>
-        <th style="width:11%;">Nett</th>
+        <th style="width:10%;">No. Polisi</th>
+        <th class="th-left" style="width:13%;">Nama Driver</th>
+        <th style="width:12%;">Inflow</th>
+        <th style="width:12%;">Out Tunai</th>
+        <th style="width:12%;">Out Onderdil</th>
+        <th style="width:11%;">Out Umum</th>
+        <th style="width:10%;">Out Dokumen</th>
+        <th style="width:8%;">Ritase</th>
+        <th style="width:12%;">Nett</th>
       </tr></thead>
       <tbody>${tableRows}</tbody>
       <tfoot>
@@ -4543,7 +4519,6 @@ tbody tr:hover{background:#FEF9EC;}
           <td class="td-money">${fmt(umum)}</td>
           <td class="td-money">${fmt(totDokumen)}</td>
           <td class="td-money">${dataRows.reduce((s,r)=>s+r.ritase,0)} rit</td>
-          <td class="td-money">${(()=>{const tr=dataRows.reduce((s,r)=>s+r.ritase,0);return tr>0?fmt(Math.round(totInf/tr)):'—';})()}</td>
           <td class="td-money td-nett">${fmt(totNett)}</td>
         </tr>
       </tfoot>
@@ -4747,7 +4722,7 @@ function refreshDetailHero(){
   const net=uIn-(uOutTunai+uOutOnderdil+uOutDokumen+beban);
   const pD=daysUntil(f.pajak),kD=daysUntil(f.kir);
   const activeParts=sparepartStock.filter(sp=>sp.installed.some(i=>i.armada===f.nopol));
-  const ritasePeriode=allTxns.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).length;
+  const ritasePeriode=allTxns.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.amount>0).length;
   const rpPerRit=ritasePeriode>0?Math.round(uIn/ritasePeriode):0;
   const periodLabel=_detailFromDate||_detailToDate?`<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:4px;">📅 ${_detailFromDate||'awal'} s/d ${_detailToDate||'sekarang'}</div>`:'';
   const heroEl=document.getElementById('dp-hero');if(!heroEl)return;
@@ -4799,7 +4774,7 @@ function showTab(name,btnEl){
   ['perjalanan','biaya','dokumen','onderdil'].forEach(t=>{const e=document.getElementById('tab-'+t);if(e)e.style.display=t===name?'block':'none';});
   if(!currentDetailUnit)return;const f=currentDetailUnit;
   if(name==='perjalanan'){
-    const trips=getDetailTxns(f.nopol).filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.muat).sort((a,b)=>b.date.localeCompare(a.date));
+    const trips=getDetailTxns(f.nopol).filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.amount>0).sort((a,b)=>b.date.localeCompare(a.date));
     const ritaseCountHTML=`<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--bg3);border-radius:12px;margin-bottom:10px;border:1px solid var(--card-b);">
         <span style="font-size:11.5px;font-weight:700;color:var(--text2);">📍 Total Rit ${_detailFromDate||_detailToDate?'Periode Ini':'(Semua)'}</span>
         <span style="font-size:16px;font-weight:800;color:var(--green2);">${trips.length} rit</span>
@@ -5205,8 +5180,8 @@ function openModal(type){
       <div class="form-group"><label class="form-label">Titik Bongkar</label><input class="form-input" id="inf-bongkar" placeholder="Gudang / Kota Tujuan"/></div>
       <div class="form-group"><label class="form-label">Jumlah Setoran Netto (Rp)</label><input class="form-input" id="inf-amount" placeholder="0" inputmode="numeric"/></div>
       <div class="form-group"><label class="form-label">Tanggal</label><input type="date" class="form-input" id="inf-date" value="${today()}"/></div>
-      <div class="form-group"><label class="form-label">Update Status Armada</label><select class="form-select" id="inf-antre" onchange="document.getElementById('inf-antre-hint').style.display=this.value==='antre'?'block':'none'"><option value="jalan">🟢 Jalan — Aktif beroperasi</option><option value="antre">🟡 Antre — Menunggu bongkar</option><option value="bengkel">🔴 Bengkel — Dalam perbaikan</option></select></div>
-      <div id="inf-antre-hint" style="display:none;font-size:10.5px;color:var(--text3);background:var(--bg3);padding:8px 10px;border-radius:10px;margin-bottom:8px;">💡 Status Antre bisa disimpan tanpa isi nominal uang.</div>
+      <div class="form-group"><label class="form-label">Update Status Armada</label><select class="form-select" id="inf-antre" onchange="document.getElementById('inf-antre-hint').style.display=this.value!=='jalan'?'block':'none'"><option value="jalan">🟢 Jalan — Aktif beroperasi</option><option value="antre">🟡 Antre — Menunggu bongkar</option><option value="bengkel">🔴 Bengkel — Dalam perbaikan</option></select></div>
+      <div id="inf-antre-hint" style="display:none;font-size:10.5px;color:var(--text3);background:var(--bg3);padding:8px 10px;border-radius:10px;margin-bottom:8px;">💡 Status Antre/Bengkel bisa disimpan tanpa isi nominal uang.</div>
       <button class="form-btn inflow" onclick="submitInflow()">Simpan Inflow</button>`;
     setupCurrencyInput('inf-amount');syncDriverFromArmada();
   } else {
@@ -5437,16 +5412,16 @@ async function submitInflow(){
   const bongkar=document.getElementById('inf-bongkar')?.value||'—';
   const date=document.getElementById('inf-date')?.value;
   const antre=document.getElementById('inf-antre')?.value;
-  if(antre!=='antre' && (!amount||amount<=0)){showToast('Masukkan jumlah yang valid');return;}
+  if(antre==='jalan' && (!amount||amount<=0)){showToast('Masukkan jumlah yang valid');return;}
   if(!date){showToast('Masukkan tanggal');return;}
 
   const fUnit=fleetData.find(x=>x.nopol===armada);
   const statusSebelum=fUnit?fUnit.status:'jalan';
   const txnId = 'txn_'+Date.now();
-  const txnLabel = (amount > 0) ? 'Setoran ' + armada : 'Antrean ' + armada;
+  const statusLabel = {jalan:'Jalan', antre:'Antre', bengkel:'Bengkel'}[antre] || antre;
+  const txnLabel = (amount > 0) ? 'Setoran ' + armada : statusLabel + ' ' + armada;
   // Apakah trip ini beneran dihitung sebagai +1 ritase? (dipakai utk membatalkannya lagi kalau nanti di-edit/dihapus)
   const willCountRitase = (amount>0 && antre==='jalan');
-  const statusLabel = {jalan:'Jalan', antre:'Antre', bengkel:'Bengkel'}[antre] || antre;
 
   // Object yang dikirim ke Supabase — kolom harus sesuai schema DB
   const dbTxn = {
