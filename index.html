@@ -1227,6 +1227,23 @@ input,select,textarea{font-size:16px!important;}
       <input type="date" id="lap-to" class="form-input" style="flex:1;min-width:130px;padding:8px 11px;font-size:12px;"/>
       <button onclick="renderLaporanTable()" class="filter-chip active">Terapkan</button>
     </div>
+    <div class="settings-card" style="margin-bottom:14px;">
+      <div class="settings-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>🗄️ Muat Data Lama</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin:6px 0 10px;line-height:1.5;">
+        Supaya app tetap ringan & hemat kuota, hanya <b>3 bulan terakhir</b> yang otomatis dimuat. Data lebih lama tetap aman tersimpan di database — pilih rentang tanggal di bawah kalau butuh lihat, persis seperti cetak mutasi rekening.
+      </div>
+      <div style="display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap;">
+        <input type="date" id="arsip-from" class="form-input" style="flex:1;min-width:130px;padding:8px 11px;font-size:12px;"/>
+        <input type="date" id="arsip-to" class="form-input" style="flex:1;min-width:130px;padding:8px 11px;font-size:12px;"/>
+      </div>
+      <button onclick="loadDataArsip()" id="arsip-btn" style="width:100%;padding:10px;border-radius:11px;border:1.5px solid var(--green);background:var(--green-bg);color:var(--green2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;">📂 Muat Data Periode Ini</button>
+      <div id="arsip-loaded-wrap" style="display:none;margin-top:8px;">
+        <button onclick="resetDataArsip()" id="arsip-reset-btn" style="width:100%;padding:9px;border-radius:11px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;">🔄 Kembali ke Tampilan 3 Bulan Terakhir</button>
+      </div>
+      <div id="arsip-status" style="font-size:10px;color:var(--text3);margin-top:8px;"></div>
+    </div>
     <div class="wa-panel">
       <div class="wa-panel-header">
         <div class="wa-panel-title">
@@ -1650,6 +1667,10 @@ let fleetData=[];
 let driverList=[];
 
 let transactions=[];
+// Sync rutin cuma narik N bulan terakhir (hemat kuota Supabase) — seperti mutasi rekening.
+// Data lebih lama dimuat manual lewat "Muat Data Lama" & disimpan terpisah di sini, tidak ikut ketimpa sync otomatis.
+const SYNC_MONTHS_BACK = 3;
+let extraHistoryTxns = [];
 
 // Monthly data computed from real transactions (see renderBarChart)
 
@@ -3990,14 +4011,36 @@ function renderLaporanTable(){
   renderArmadaPerfChart(list);
 }
 // ═══ BACKUP DATABASE — Export semua data mentah ke Excel (.xlsx) multi-sheet ═══
-function exportBackupXLSX(){
+async function exportBackupXLSX(){
   if(typeof XLSX==='undefined'){showToast('⚠️ Library Excel belum siap, coba lagi sebentar');return;}
+  showToast('⏳ Mengambil semua data transaksi (bisa beberapa detik)...');
+
+  // Backup Excel HARUS lengkap semua periode — jadi ambil langsung dari server,
+  // bukan dari transactions[] lokal yang sekarang cuma nyimpan 3 bulan terakhir.
+  let allTxnRaw = [];
+  try{
+    allTxnRaw = await sbFetch('transactions',{select:'*',limit:20000,order:'created_at.desc'});
+    if(!Array.isArray(allTxnRaw)) allTxnRaw = transactions.map(_toDbTxnShape);
+  }catch(e){
+    console.warn('Gagal ambil semua transaksi utk backup, pakai data lokal (3 bulan terakhir) saja:', e);
+    showToast('⚠️ Gagal ambil semua data dari server, backup cuma berisi 3 bulan terakhir');
+    allTxnRaw = transactions.map(_toDbTxnShape);
+  }
+  const allTxn = allTxnRaw.map(t=>({
+    id:t.id, type:t.type, amount:Number(t.amount||0),
+    label:t.label||'', sub:t.sub||'', date:t.date||'',
+    armada:t.armada||'', muat:t.muat||'', bongkar:t.bongkar||'',
+    driver:t.driver||'', nota:t.nota||'', toko:t.toko||'',
+    kategori:t.kategori||'', subKategori:t.sub_kategori||t.subKategori||'', status:t.status||'',
+    sparepartId:t.sparepart_id||t.sparepartId||'', jmlPasang:t.jml_pasang||t.jmlPasang||1, posisi:t.posisi||'',
+    created_at:t.created_at||''
+  }));
   showToast('⏳ Menyiapkan backup Excel...');
 
   const wb = XLSX.utils.book_new();
 
   // 1) SHEET TRANSAKSI — semua data transaksi mentah, semua periode
-  const txnRows = transactions.map(t=>({
+  const txnRows = allTxn.map(t=>({
     'ID': t.id,
     'Tipe': t.type==='inflow'?'Inflow':'Outflow',
     'Tanggal': t.date||'',
@@ -6047,7 +6090,14 @@ async function sbFetch(table, opts={}){
 
   // Append filters for ALL methods (GET, PATCH, DELETE)
   Object.entries(filters).forEach(([k,v])=>{
-    params.push(`${k}=eq.${encodeURIComponent(v)}`);
+    // Kalau value sudah diformat dengan operator (mis. 'gte.2026-04-01'), pakai apa adanya.
+    // Kalau tidak, default ke exact match (eq.)
+    const opPattern = /^(eq|neq|gt|gte|lt|lte|like|ilike|is|in)\./;
+    if(typeof v==='string' && opPattern.test(v)){
+      params.push(`${k}=${v}`);
+    } else {
+      params.push(`${k}=eq.${encodeURIComponent(v)}`);
+    }
   });
 
   // Special case: DELETE without filters — append select=id to avoid 400
@@ -6447,6 +6497,69 @@ function setSyncStatus(status, detail=''){
 
 // Auto-sync data dari Supabase setiap 60 detik
 let _isSyncing = false;
+// Muat data lama di luar jendela 3 bulan otomatis — sekali ambil, disimpan di extraHistoryTxns
+// supaya tidak hilang lagi ketika sync rutin jalan tiap 20 detik. Mirip cetak mutasi rekening periode custom.
+async function loadDataArsip(){
+  const from=document.getElementById('arsip-from')?.value;
+  const to=document.getElementById('arsip-to')?.value;
+  const btn=document.getElementById('arsip-btn');
+  const statusEl=document.getElementById('arsip-status');
+  if(!from||!to){showToast('Isi tanggal awal & akhir dulu');return;}
+  if(from>to){showToast('Tanggal awal harus sebelum tanggal akhir');return;}
+  if(btn){btn.disabled=true;btn.textContent='⏳ Memuat...';}
+  if(statusEl) statusEl.textContent='';
+  try{
+    const url=`${SB_URL}/rest/v1/transactions?select=*&limit=5000&order=created_at.desc&date=gte.${from}&date=lte.${to}`;
+    const res=await fetch(url,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}});
+    if(!res.ok) throw new Error('Server error '+res.status);
+    const txns=await res.json();
+    const mapped=(Array.isArray(txns)?txns:[]).map(t=>({
+      id:t.id, type:t.type, amount:Number(t.amount||0),
+      label:t.label||(t.type==='inflow'?'Pemasukan':'Pengeluaran'),
+      sub:t.sub||'', date:t.date||t.created_at?.split('T')[0]||'',
+      armada:t.armada||'', muat:t.muat||'', bongkar:t.bongkar||'',
+      driver:t.driver||'', nota:t.nota||'', toko:t.toko||'',
+      kategori:t.kategori||'', subKategori:t.sub_kategori||'', status:t.status||'lunas',
+      sparepartId:t.sparepart_id||null, posisi:t.posisi||'', jmlPasang:t.jml_pasang||1,
+      hargaSatuan:Number(t.harga_satuan||0), satuan:t.satuan||'',
+      ritaseCounted:!!t.ritase_counted, ritaseArmada:t.ritase_armada||null, statusArmada:t.status_armada||'', created_at:t.created_at
+    }));
+    // Simpan ke extraHistoryTxns supaya ikut digabung lagi tiap kali sync rutin jalan
+    const existingArsipIds=new Set(extraHistoryTxns.map(t=>t.id));
+    mapped.forEach(t=>{ if(!existingArsipIds.has(t.id)) extraHistoryTxns.push(t); });
+    // Gabungkan langsung ke transactions yang lagi aktif di layar
+    const existingIds=new Set(transactions.map(t=>t.id));
+    mapped.forEach(t=>{ if(!existingIds.has(t.id)) transactions.push(t); });
+
+    renderLaporanTable(); applyTxnFilters(); renderDashboard();
+    if(typeof renderKeuanganStats==='function') renderKeuanganStats();
+    if(statusEl) statusEl.innerHTML=`✅ ${mapped.length} transaksi periode ${fmtDate(from)}–${fmtDate(to)} dimuat`;
+    const loadedWrap=document.getElementById('arsip-loaded-wrap');
+    if(loadedWrap && extraHistoryTxns.length) loadedWrap.style.display='block';
+    showToast('✅ Data lama berhasil dimuat');
+  }catch(e){
+    console.error('loadDataArsip fail:',e);
+    if(statusEl) statusEl.innerHTML=`<span style="color:var(--danger);">⚠️ Gagal memuat: ${e.message}</span>`;
+    showToast('⚠️ Gagal memuat data lama');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='📂 Muat Data Periode Ini';}
+  }
+}
+// Buang data arsip yang sudah dimuat manual, balik ke tampilan rutin 3 bulan terakhir saja.
+// Data-nya tidak terhapus dari database — cuma tidak lagi ikut ditampilkan/ditarik di sesi ini.
+async function resetDataArsip(){
+  extraHistoryTxns = [];
+  const loadedWrap=document.getElementById('arsip-loaded-wrap');
+  const statusEl=document.getElementById('arsip-status');
+  if(loadedWrap) loadedWrap.style.display='none';
+  if(statusEl) statusEl.textContent='';
+  showToast('⏳ Memuat ulang 3 bulan terakhir...');
+  _isSyncing=false;
+  await syncFromSupabase();
+  renderLaporanTable(); applyTxnFilters(); renderDashboard();
+  if(typeof renderKeuanganStats==='function') renderKeuanganStats();
+  showToast('✅ Kembali ke tampilan 3 bulan terakhir');
+}
 async function syncFromSupabase(){
   if(_isSyncing) return;
   _isSyncing = true;
@@ -6456,7 +6569,12 @@ async function syncFromSupabase(){
   try{
     // 1. Sync Transaksi (KRUSIAL)
     try {
-      const txns = await sbFetch('transactions',{select:'*',limit:500,order:'created_at.desc'});
+      // Sync rutin cuma narik 3 bulan terakhir (kayak mutasi rekening) — hemat kuota transfer data.
+      // Data lebih lama TETAP AMAN tersimpan di database, cuma tidak ikut ditarik tiap sync otomatis.
+      // Untuk lihat data lebih lama, pakai "Muat Data Lama" di halaman Laporan.
+      const cutoff=new Date(); cutoff.setMonth(cutoff.getMonth()-SYNC_MONTHS_BACK);
+      const cutoffStr=cutoff.toISOString().split('T')[0];
+      const txns = await sbFetch('transactions',{select:'*',limit:3000,order:'created_at.desc',filters:{date:'gte.'+cutoffStr}});
       if(Array.isArray(txns)){
         transactions = txns.map(t=>({
           id:t.id, type:t.type, amount:Number(t.amount||0),
@@ -6469,6 +6587,11 @@ async function syncFromSupabase(){
           hargaSatuan:Number(t.harga_satuan||0), satuan:t.satuan||'',
           ritaseCounted:!!t.ritase_counted, ritaseArmada:t.ritase_armada||null, statusArmada:t.status_armada||'', created_at:t.created_at
         }));
+        // Gabungkan lagi data arsip yang sempat dimuat manual (supaya tidak hilang tiap sync 20 detik)
+        if(extraHistoryTxns.length){
+          const existingIds=new Set(transactions.map(t=>t.id));
+          extraHistoryTxns.forEach(t=>{ if(!existingIds.has(t.id)) transactions.push(t); });
+        }
         txnSuccess = true;
       }
     } catch(e) { console.warn('Sync transactions fail:', e); }
