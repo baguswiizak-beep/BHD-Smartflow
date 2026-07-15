@@ -2006,7 +2006,7 @@ function isNonStokItem(sp){
 
 function renderGudang(){
   const el=document.getElementById('sp-grid');if(!el)return;
-  const gudangItems=sparepartStock.filter(s=>!isNonStokItem(s));
+  const gudangItems=sparepartStock.filter(s=>!isNonStokItem(s)||s.stokSisa>0);
   // Apply sort & filter
   let list=gudangFilter==='all'?[...gudangItems]:gudangItems.filter(s=>s.kategori===gudangFilter);
   if(window._gudangSearch) list=list.filter(s=>s.nama.toLowerCase().includes(_gudangSearch)||s.kategori.toLowerCase().includes(_gudangSearch));
@@ -2434,7 +2434,7 @@ function buildWAText(){
     let w='';if(p<=30)w+='Pajak '+f.nopol+' '+p+'h ';if(k<=30)w+='KIR '+f.nopol+' '+k+'h';
     return '  ⚠️ '+w.trim();
   }).join('\n'):'  ✅ Semua dokumen aman';
-  const kritis=sparepartStock.filter(s=>!isNonStokItem(s)&&spStatus(s)!=='fresh');
+  const kritis=sparepartStock.filter(s=>(!isNonStokItem(s)||s.stokSisa>0)&&spStatus(s)!=='fresh');
   const kritTxt=kritis.length?kritis.map(s=>'  ⚠️ '+s.nama+' - Sisa '+s.stokSisa+' unit').join('\n'):'  ✅ Stok dalam kondisi aman';
   const tglStr=now.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const lines=[
@@ -2639,7 +2639,7 @@ function daysUntil(dateStr){
 // Background checker untuk peringatan dokumen & stok
 function checkDocWarnings(){
   const hasCriticalStock = sparepartStock.some(s => {
-    if(isNonStokItem(s)) return false;
+    if(isNonStokItem(s) && s.stokSisa<=0) return false;
     const sisa = Number(s.stokSisa || 0);
     const min = Number(s.stokMin || 5);
     return sisa <= min;
@@ -2696,7 +2696,7 @@ function totalInflow(list){return list.filter(t=>t.type==='inflow').reduce((s,t)
 function totalOutflow(list){return list.filter(t=>t.type==='outflow').reduce((s,t)=>s+t.amount,0);}
 
 function showImportantNotif(){
-  const kritis = sparepartStock.filter(s => !isNonStokItem(s) && spStatus(s) !== 'fresh');
+  const kritis = sparepartStock.filter(s => (!isNonStokItem(s)||s.stokSisa>0) && spStatus(s) !== 'fresh');
   const docs = fleetData.filter(f => daysUntil(f.pajak) <= 30 || daysUntil(f.kir) <= 30);
   
   const tEl = document.getElementById('sm-title-text'), body = document.getElementById('sm-body');
