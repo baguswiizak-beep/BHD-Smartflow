@@ -1385,7 +1385,7 @@ input,select,textarea{font-size:16px!important;}
         <span id="gs-status-badge" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--bg3);color:var(--text3);white-space:nowrap;">Belum terhubung</span>
       </div>
       <div style="font-size:11px;color:var(--text3);margin:6px 0 10px;line-height:1.5;">
-        Setiap transaksi baru otomatis masuk ke salah satu dari 4 sheet berikut sesuai jenisnya — kolom No/Saldo/Total tidak disentuh:
+        Setiap transaksi baru otomatis masuk ke salah satu dari 4 sheet berikut sesuai jenisnya — kolom No/Saldo/Total tidak disentuh. Edit &amp; hapus transaksi di app juga ikut ter-update/terhapus di sheet (pakai 1 kolom ID tersembunyi di ujung kanan tiap sheet, boleh di-hide, jangan dihapus/diedit manual):
         <div style="margin-top:6px;display:flex;flex-direction:column;gap:2px;color:var(--text2);font-weight:600;">
           <span>📥 Inflow → <i>DATABASE Inflow</i></span>
           <span>💵 Outflow Tunai &amp; Dokumen → <i>DATABASE Outflow Tunai</i></span>
@@ -2214,6 +2214,7 @@ function confirmDeleteOnderdilItem(id, nama){
         const i=sparepartStock.findIndex(s=>s.id===id);if(i>-1)sparepartStock.splice(i,1);
 
         logAudit('delete','onderdil',`Hapus onderdil luar stok "${nama}"${linkedTxn?' beserta transaksi outflow '+fmt(linkedTxn.amount):''}`);
+        if(linkedTxn) syncTxnDeleteFromGSheet(linkedTxn);
 
         renderGudang(); renderDashboard(); applyTxnFilters(); renderLaporanTable();
         if(typeof renderKeuanganStats==='function') renderKeuanganStats();
@@ -2983,6 +2984,7 @@ function deleteTxn(id){
         logAudit('delete','transaksi',
           `[${waktu}] - [${adminName}] - [Hapus Transaksi] - [${txn.label}, Rp ${fmt(txn.amount)}${txn.sparepartId?(isCustomItem?', onderdil custom ikut dihapus':', Qty '+jml+' unit dikembalikan'):''}]`
         );
+        syncTxnDeleteFromGSheet(txn);
 
         _isSyncing = false;
         await syncFromSupabase(); // Final sync to be safe
@@ -3108,6 +3110,9 @@ function confirmSaveEditTxn(id){
       }
       txn.label=newLabel; txn.date=newDate; txn.armada=newArmada;
       txn.driver=newDriver; txn.muat=newMuat; txn.bongkar=newBongkar;
+      // Selaraskan harga satuan dengan Total & Jumlah terbaru (form edit ini tidak punya field harga satuan sendiri)
+      const jmlUntukHarga = txn.jmlPasang||1;
+      txn.hargaSatuan = jmlUntukHarga>0 ? Math.round(txn.amount/jmlUntukHarga) : txn.amount;
 
       // Audit log format: [Waktu] - [Admin] - [Aksi] - [Detail]
       const waktu=new Date().toLocaleString('id-ID');
@@ -3127,7 +3132,8 @@ function confirmSaveEditTxn(id){
         bongkar: newBongkar,
         posisi: txn.posisi || '',
         sparepart_id: txn.sparepartId || null,
-        jml_pasang: txn.jmlPasang || 1
+        jml_pasang: txn.jmlPasang || 1,
+        harga_satuan: txn.hargaSatuan || null
       };
       
       // Execute as async block
@@ -3139,6 +3145,7 @@ function confirmSaveEditTxn(id){
             const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
             if(sp) await sbFetch('inventory', {method:'PATCH', filters:{id:txn.sparepartId}, body:{stok_sisa:sp.stokSisa, installed:sp.installed}});
           }
+          syncTxnUpdateToGSheet(txn);
           _isSyncing = false;
           await syncFromSupabase();
           showToast('✅ Transaksi diperbarui'+(txn.sparepartId&&newJml!==oldJml?' · Stok disesuaikan':''));
@@ -5749,64 +5756,159 @@ const GS_TAB_INFLOW = 'DATABASE Inflow';
 const GS_TAB_OUT_TUNAI = 'DATABASE Outflow Tunai';
 const GS_TAB_OUT_ONDERDIL = 'DATABASE Outflow Onderdil';
 const GS_TAB_OUT_UMUM = 'DATABASE Outflow Umum';
+let gsSheetIdCache = {}; // cache tabName -> numeric grid sheetId (utk hapus baris)
 
-async function _gsAppendRow(tabName, range, row){
-  const fullRange = `'${tabName}'!${range}`;
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(fullRange)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+// Tentukan sheet tujuan + rentang kolom data + kolom ID tersembunyi (persis 1 kolom setelah kolom terakhir data)
+function _gsConfigFor(txn){
+  if(txn.type==='inflow') return {tab:GS_TAB_INFLOW, colRange:'B:H', idCol:'I'};
+  if(txn.kategori==='Onderdil') return {tab:GS_TAB_OUT_ONDERDIL, colRange:'B:J', idCol:'K'};
+  if(txn.kategori==='UMUM') return {tab:GS_TAB_OUT_UMUM, colRange:'B:G', idCol:'H'};
+  return {tab:GS_TAB_OUT_TUNAI, colRange:'B:H', idCol:'I'}; // Tunai & Dokumen digabung
+}
+// Susun nilai baris sesuai kolom masing-masing sheet
+function _gsBuildRow(txn){
+  const keterangan = txn.label||'';
+  if(txn.type==='inflow'){
+    // B TANGGAL, C NO POLISI, D NAMA SOPIR, E TITIK MUAT, F TITIK BONGKAR, G SETORAN, H TOTAL
+    return [txn.date||'', txn.armada||'', txn.driver||'', txn.muat||'', txn.bongkar||'', txn.amount||'', txn.amount||''];
+  }
+  if(txn.kategori==='Onderdil'){
+    // B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, H TOTAL, I NO.NOTA, J NAMA TOKO
+    return [txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||'', txn.nota||'', txn.toko||''];
+  }
+  if(txn.kategori==='UMUM'){
+    // B TANGGAL, C KETERANGAN, D JUMLAH, E SATUAN, F HARGA, G TOTAL
+    return [txn.date||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||''];
+  }
+  // Tunai & Dokumen — B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, H TOTAL
+  return [txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||''];
+}
+function _gsSyncErr(tabName, msg){
+  const lsEl=document.getElementById('gs-last-sync');
+  if(lsEl) lsEl.innerHTML = `<span style="color:var(--danger);">⚠️ "${tabName}": ${msg}</span>`;
+}
+function _gsSyncOk(){
+  const lsEl=document.getElementById('gs-last-sync');
+  if(lsEl) lsEl.innerHTML = `✅ Sync terakhir: ${new Date().toLocaleString('id-ID')}`;
+}
+// Cari nomor baris (1-indexed) yang kolom ID-nya cocok dengan txnId. null kalau tidak ketemu.
+async function _gsFindRowByTxnId(tabName, idCol, txnId){
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(`'${tabName}'!${idCol}:${idCol}`)}`;
+  const res = await fetch(url, {headers:{'Authorization':'Bearer '+gsAccessToken}});
+  if(!res.ok) return null;
+  const data = await res.json();
+  const values = data.values||[];
+  for(let i=0;i<values.length;i++){
+    if(values[i][0]===txnId) return i+1; // 1-indexed row number
+  }
+  return null;
+}
+// Ambil numeric grid sheetId (beda dari nama tab) — dibutuhkan utk hapus baris beneran
+async function _gsGetGridId(tabName){
+  if(gsSheetIdCache[tabName]!==undefined) return gsSheetIdCache[tabName];
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}?fields=sheets.properties`;
+  const res = await fetch(url, {headers:{'Authorization':'Bearer '+gsAccessToken}});
+  if(!res.ok) return null;
+  const data = await res.json();
+  (data.sheets||[]).forEach(s=>{ gsSheetIdCache[s.properties.title] = s.properties.sheetId; });
+  return gsSheetIdCache[tabName]!==undefined ? gsSheetIdCache[tabName] : null;
+}
+
+// Tulis baris baru — dipakai saat transaksi pertama kali dibuat. Kolom ID tersembunyi ikut ditulis.
+async function _gsAppendRow(tabName, colRange, idCol, row, txnId){
+  try{
+    const [startCol, endCol] = colRange.split(':');
+    // 1) Cari baris kosong berikutnya — baca kolom TANGGAL (selalu terisi tiap ada data)
+    //    supaya tidak bergantung ke fitur auto-detect "append" bawaan Google yang ternyata suka salah kolom.
+    const checkUrl = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(`'${tabName}'!${startCol}:${startCol}`)}`;
+    const checkRes = await fetch(checkUrl, {headers:{'Authorization':'Bearer '+gsAccessToken}});
+    if(!checkRes.ok){
+      const errBody = await checkRes.json().catch(()=>({}));
+      console.warn('Google Sheets read fail ('+tabName+'):', checkRes.status, errBody);
+      _gsSyncErr(tabName, 'baca gagal ('+checkRes.status+')');
+      return false;
+    }
+    const checkData = await checkRes.json();
+    const usedRows = (checkData.values||[]).length;
+    const nextRow = Math.max(usedRows+1, 4); // baris data minimal mulai row 4 (header di row 3)
+
+    // 2) Tulis PERSIS ke baris & kolom itu — tidak ada tebak-tebakan lagi
+    const targetRange = `'${tabName}'!${startCol}${nextRow}:${endCol}${nextRow}`;
+    const ok1 = await _gsWriteRange(targetRange, row);
+    if(!ok1){ _gsSyncErr(tabName, 'tulis data gagal'); return false; }
+
+    // 3) Tulis ID tersembunyi di baris yang sama, kolom idCol
+    if(idCol && txnId){
+      await _gsWriteRange(`'${tabName}'!${idCol}${nextRow}`, [txnId]);
+    }
+    return true;
+  }catch(e){
+    console.warn('_gsAppendRow error ('+tabName+'):', e);
+    return false;
+  }
+}
+async function _gsWriteRange(range, row){
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
   const res = await fetch(url, {
-    method:'POST',
+    method:'PUT',
     headers:{'Authorization':'Bearer '+gsAccessToken, 'Content-Type':'application/json'},
     body: JSON.stringify({values:[row]})
   });
-  if(!res.ok){
-    const errBody = await res.json().catch(()=>({}));
-    console.warn('Google Sheets sync fail ('+tabName+'):', res.status, errBody);
-    const lsEl=document.getElementById('gs-last-sync');
-    if(lsEl) lsEl.innerHTML = `<span style="color:var(--danger);">⚠️ Sync ke "${tabName}" gagal (${res.status})</span>`;
-    return false;
-  }
-  return true;
+  return res.ok;
 }
 
-// Kirim 1 baris transaksi ke salah satu dari 4 sheet, sesuai tipe & kategorinya.
+// Kirim 1 baris transaksi BARU ke salah satu dari 4 sheet, sesuai tipe & kategorinya.
 // Kolom "No" (selalu di kolom A) tidak pernah disentuh — biar nomor otomatis Kakak tetap jalan.
 async function syncTxnToGSheet(txn){
   try{
     if(!gsSpreadsheetId) return; // belum dikonfigurasi, skip diam-diam
     const ok = await ensureGSheetToken();
     if(!ok){ console.warn('Google Sheets: token tidak tersedia, sync dilewati'); return; }
-
-    const keterangan = txn.label||'';
-    let success=false;
-
-    if(txn.type==='inflow'){
-      // DATABASE Inflow: B TANGGAL, C NO POLISI, D NAMA SOPIR, E TITIK MUAT, F TITIK BONGKAR, G SETORAN, H TOTAL
-      const row = [txn.date||'', txn.armada||'', txn.driver||'', txn.muat||'', txn.bongkar||'', txn.amount||'', txn.amount||''];
-      success = await _gsAppendRow(GS_TAB_INFLOW, 'B:H', row);
-
-    } else if(txn.kategori==='Onderdil'){
-      // DATABASE Outflow Onderdil: B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, H TOTAL, I NO.NOTA, J NAMA TOKO
-      const row = [txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||'', txn.nota||'', txn.toko||''];
-      success = await _gsAppendRow(GS_TAB_OUT_ONDERDIL, 'B:J', row);
-
-    } else if(txn.kategori==='UMUM'){
-      // DATABASE Outflow Umum: B TANGGAL, C KETERANGAN, D JUMLAH, E SATUAN, F HARGA, G TOTAL (tidak ada No Polisi)
-      const row = [txn.date||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||''];
-      success = await _gsAppendRow(GS_TAB_OUT_UMUM, 'B:G', row);
-
-    } else {
-      // Tunai & Dokumen digabung ke sheet Outflow Tunai
-      // DATABASE Outflow Tunai: B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, H TOTAL
-      const row = [txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||''];
-      success = await _gsAppendRow(GS_TAB_OUT_TUNAI, 'B:H', row);
-    }
-
-    if(success){
-      const lsEl=document.getElementById('gs-last-sync');
-      if(lsEl) lsEl.innerHTML = `✅ Sync terakhir: ${new Date().toLocaleString('id-ID')}`;
-    }
+    const {tab, colRange, idCol} = _gsConfigFor(txn);
+    const row = _gsBuildRow(txn);
+    const success = await _gsAppendRow(tab, colRange, idCol, row, txn.id);
+    if(success) _gsSyncOk();
   }catch(e){
     console.warn('syncTxnToGSheet error:', e);
+  }
+}
+// Update baris yang sudah ada (dicari berdasarkan ID tersembunyi) saat transaksi di-edit.
+async function syncTxnUpdateToGSheet(txn){
+  try{
+    if(!gsSpreadsheetId) return;
+    const ok = await ensureGSheetToken();
+    if(!ok) return;
+    const {tab, colRange, idCol} = _gsConfigFor(txn);
+    const rowNum = await _gsFindRowByTxnId(tab, idCol, txn.id);
+    if(!rowNum){ console.warn('Google Sheets: baris untuk txn '+txn.id+' tidak ditemukan di "'+tab+'", sync update dilewati'); return; }
+    const [startCol, endCol] = colRange.split(':');
+    const row = _gsBuildRow(txn);
+    const success = await _gsWriteRange(`'${tab}'!${startCol}${rowNum}:${endCol}${rowNum}`, row);
+    if(success) _gsSyncOk(); else _gsSyncErr(tab, 'update baris gagal');
+  }catch(e){
+    console.warn('syncTxnUpdateToGSheet error:', e);
+  }
+}
+// Hapus baris yang sesuai (dicari berdasarkan ID tersembunyi) saat transaksi dihapus dari app.
+async function syncTxnDeleteFromGSheet(txn){
+  try{
+    if(!gsSpreadsheetId||!txn) return;
+    const ok = await ensureGSheetToken();
+    if(!ok) return;
+    const {tab, idCol} = _gsConfigFor(txn);
+    const rowNum = await _gsFindRowByTxnId(tab, idCol, txn.id);
+    if(!rowNum){ console.warn('Google Sheets: baris untuk txn '+txn.id+' tidak ditemukan di "'+tab+'", sync hapus dilewati'); return; }
+    const gridId = await _gsGetGridId(tab);
+    if(gridId===null||gridId===undefined){ console.warn('Google Sheets: sheetId untuk "'+tab+'" tidak ditemukan'); return; }
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}:batchUpdate`;
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+gsAccessToken, 'Content-Type':'application/json'},
+      body: JSON.stringify({requests:[{deleteDimension:{range:{sheetId:gridId, dimension:'ROWS', startIndex:rowNum-1, endIndex:rowNum}}}]})
+    });
+    if(res.ok) _gsSyncOk(); else _gsSyncErr(tab, 'hapus baris gagal');
+  }catch(e){
+    console.warn('syncTxnDeleteFromGSheet error:', e);
   }
 }
 function confirmReset(){
