@@ -5,6 +5,7 @@
 <title>BHD SmartFlow System</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -1151,6 +1152,41 @@ input,select,textarea{font-size:16px!important;}
         <div id="kat-donut-total" style="display:flex;padding:8px 4px 2px;font-size:11.5px;font-weight:800;color:var(--text);border-top:1px solid var(--card-b);margin-top:4px;gap:6px;"></div>
       </div>
     </div>
+
+    <!-- Rekap Inflow per Armada -->
+    <div class="chart-wrap" style="margin-bottom:14px;">
+      <div class="cw-hdr" style="flex-direction:column;align-items:flex-start;gap:7px;">
+        <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+          <span class="cw-title">Inflow per Armada</span>
+        </div>
+        <div class="cw-filters" id="ador-filter-btns" style="flex-wrap:wrap;">
+          <button class="cf-btn" onclick="setArmadaInflowPeriod('hari-ini',this)">Hari Ini</button>
+          <button class="cf-btn" onclick="setArmadaInflowPeriod('bulan-ini',this)">Bln Ini</button>
+          <button class="cf-btn" onclick="setArmadaInflowPeriod('3bulan',this)">3 Bln</button>
+          <button class="cf-btn" onclick="setArmadaInflowPeriod('tahun-ini',this)">Thn Ini</button>
+          <button class="cf-btn active" onclick="setArmadaInflowPeriod('semua',this)">Semua</button>
+          <button class="cf-btn" id="ador-btn-custom" onclick="toggleArmadaInflowCustom()">Custom</button>
+        </div>
+        <div id="ador-custom-range" style="display:none;gap:5px;width:100%;flex-wrap:wrap;align-items:center;">
+          <input type="date" id="ador-from" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
+          <span style="font-size:10px;color:var(--text3);">s/d</span>
+          <input type="date" id="ador-to" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
+          <button onclick="applyArmadaInflowCustom()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--green-bd);background:var(--green-bg);color:var(--green2);font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;white-space:nowrap;">Terapkan</button>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <div style="display:flex;justify-content:center;margin-bottom:12px;">
+          <div style="position:relative;width:150px;height:150px;"><canvas id="armadaInflowChart" width="150" height="150"></canvas></div>
+        </div>
+        <div style="display:flex;padding:0 4px 6px;font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--card-b);margin-bottom:2px;gap:6px;">
+          <div style="flex:1;min-width:0;">Armada</div>
+          <div style="flex-shrink:0;width:118px;text-align:right;white-space:nowrap;">Nominal</div>
+          <div style="flex-shrink:0;width:36px;text-align:right;white-space:nowrap;">%</div>
+        </div>
+        <div id="armada-inflow-legend" style="max-height:180px;overflow-y:auto;"></div>
+        <div id="armada-inflow-total" style="display:flex;padding:8px 4px 2px;font-size:11.5px;font-weight:800;color:var(--text);border-top:1px solid var(--card-b);margin-top:4px;gap:6px;"></div>
+      </div>
+    </div>
     <!-- Search & Filter -->
     <div class="search-bar">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1342,6 +1378,30 @@ input,select,textarea{font-size:16px!important;}
         <input type="range" min="0" max="80" value="50" id="overlay-range"/>
         <button onclick="resetBg()" style="padding:10px;border-radius:11px;border:1px solid rgba(224,48,48,.25);background:rgba(224,48,48,.06);color:var(--danger);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;">Reset Background</button>
       </div>
+    </div>
+    <div class="settings-card">
+      <div class="settings-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>📊 Sync ke Google Sheets</span>
+        <span id="gs-status-badge" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--bg3);color:var(--text3);white-space:nowrap;">Belum terhubung</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin:6px 0 10px;line-height:1.5;">
+        Setiap transaksi baru (Inflow/Outflow) otomatis ditambahkan sebagai baris baru ke Google Sheet ini — kolom A (No) tidak disentuh, aman kalau Kakak pakai formor nomor otomatis sendiri.
+      </div>
+      <div style="display:grid;gap:8px;margin-bottom:10px;">
+        <div>
+          <label class="form-label">Spreadsheet ID</label>
+          <input class="form-input" id="gs-sheet-id" placeholder="ID dari link Google Sheet"/>
+        </div>
+        <div>
+          <label class="form-label">Nama Tab/Sheet</label>
+          <input class="form-input" id="gs-tab-name" placeholder="Misal: DATA BASE"/>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="saveGSheetConfig()" style="flex:1;padding:10px;border-radius:11px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">💾 Simpan</button>
+        <button onclick="connectGoogleSheets()" id="gs-connect-btn" style="flex:1;padding:10px;border-radius:11px;border:1.5px solid var(--green);background:var(--green-bg);color:var(--green2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">🔗 Hubungkan</button>
+      </div>
+      <div id="gs-last-sync" style="font-size:10px;color:var(--text3);margin-top:8px;"></div>
     </div>
     <div class="settings-card">
       <div class="settings-title" style="color:var(--danger);">Zona Berbahaya</div>
@@ -1572,6 +1632,7 @@ function renderKeuanganStats(){
   if(kOut)kOut.textContent=fmt(out);
   if(kPrf){kPrf.textContent=fmt(inf-out);kPrf.style.color=(inf-out)>=0?'#86EFAC':'#FCA5A5';}
   renderKatDonut();
+  renderArmadaInflowDonut();
 }
 
 // ═══════════════════════════════ STATE ═══════════════════════════
@@ -2267,6 +2328,7 @@ async function confirmPasang(spId){
     // Setelah berhasil simpan ke server, update state lokal
     transactions.unshift(newTxn);
     logAudit('create','gudang',`Pasang ${sp.nama} ${jml}u ke ${armada}`);
+    syncTxnToGSheet(newTxn);
     closeSm(); renderGudang(); renderDashboard(); applyTxnFilters(); renderLaporanTable(); refreshDetailHero();
     showToast(sp.nama+' terpasang ke '+armada);
     _isSyncing = false;
@@ -2979,22 +3041,6 @@ function editTxn(id){
       </div>
     ` : ''}
     ${spInfo}
-    <div id="et-pos-field" style="display:${(isOnderdil || (txn.label||'').toLowerCase().includes('ban'))?'block':'none'};">
-      <label class="form-label">📍 Posisi Ban (Sumbu)</label>
-      <select class="form-select" id="et-pos">
-        <option value="">— Pilih Posisi —</option>
-        <option value="SKR 1" ${txn.posisi==='SKR 1'?'selected':''}>Sumbu 1 Kiri (SKR 1)</option>
-        <option value="SKN 1" ${txn.posisi==='SKN 1'?'selected':''}>Sumbu 1 Kanan (SKN 1)</option>
-        <option value="SKR D 2" ${txn.posisi==='SKR D 2'?'selected':''}>Sumbu 2 Kiri Dalam (SKR D 2)</option>
-        <option value="SKR L 2" ${txn.posisi==='SKR L 2'?'selected':''}>Sumbu 2 Kiri Luar (SKR L 2)</option>
-        <option value="SKN D 2" ${txn.posisi==='SKN D 2'?'selected':''}>Sumbu 2 Kanan Dalam (SKN D 2)</option>
-        <option value="SKN L 2" ${txn.posisi==='SKN L 2'?'selected':''}>Sumbu 2 Kanan Luar (SKN L 2)</option>
-        <option value="SKR D 3" ${txn.posisi==='SKR D 3'?'selected':''}>Sumbu 2 Kiri Dalam (SKR D 3)</option>
-        <option value="SKR L 3" ${txn.posisi==='SKR L 3'?'selected':''}>Sumbu 2 Kiri Luar (SKR L 3)</option>
-        <option value="SKN D 3" ${txn.posisi==='SKN D 3'?'selected':''}>Sumbu 2 Kanan Dalam (SKN D 3)</option>
-        <option value="SKN L 3" ${txn.posisi==='SKN L 3'?'selected':''}>Sumbu 2 Kanan Luar (SKN L 3)</option>
-      </select>
-    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <button onclick="closeSm()" style="padding:10px;border-radius:11px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Batal</button>
       <button onclick="confirmSaveEditTxn('${id}')" style="padding:10px;border-radius:11px;border:none;background:var(--green-bg);color:var(--green2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">💾 Simpan</button>
@@ -3069,8 +3115,6 @@ function confirmSaveEditTxn(id){
       );
 
             // Update local object with new fields
-      txn.posisi = (txn.sparepartId || txn.label.toLowerCase().includes('ban')) ? (document.getElementById('et-pos')?.value || txn.posisi) : '';
-      
       const dbData = {
         label: newLabel,
         amount: txn.amount,
@@ -3421,6 +3465,92 @@ function renderKatDonut(){
         <div style="flex:1;display:flex;align-items:center;gap:7px;min-width:0;">
           <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]};flex-shrink:0;"></div>
           <div style="color:var(--text2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;">${k}</div>
+        </div>
+        <div style="flex-shrink:0;width:118px;text-align:right;white-space:nowrap;color:var(--text);font-weight:700;">${fmt(amt)}</div>
+        <div style="flex-shrink:0;width:36px;text-align:right;white-space:nowrap;color:var(--text3);font-weight:600;">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+  if(totalEl){
+    totalEl.innerHTML=`<div style="flex:1;min-width:0;">TOTAL</div><div style="flex-shrink:0;width:118px;text-align:right;white-space:nowrap;">${fmt(total)}</div><div style="flex-shrink:0;width:36px;text-align:right;white-space:nowrap;">100%</div>`;
+  }
+}
+
+// ═══ REKAP INFLOW PER ARMADA (Keuangan) ═══
+let armadaInflowChart=null;
+let _armadaInflowPeriod='semua', _armadaInflowFrom='', _armadaInflowTo='';
+
+function setArmadaInflowPeriod(preset,btn){
+  _armadaInflowPeriod=preset;
+  document.querySelectorAll('#ador-filter-btns .cf-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const customRange=document.getElementById('ador-custom-range');
+  if(customRange) customRange.style.display='none';
+  renderArmadaInflowDonut();
+}
+function toggleArmadaInflowCustom(){
+  const el=document.getElementById('ador-custom-range');
+  if(!el) return;
+  el.style.display=el.style.display==='none'?'flex':'none';
+}
+function applyArmadaInflowCustom(){
+  _armadaInflowFrom=document.getElementById('ador-from')?.value||'';
+  _armadaInflowTo=document.getElementById('ador-to')?.value||'';
+  if(!_armadaInflowFrom||!_armadaInflowTo){showToast('Isi tanggal awal & akhir dulu');return;}
+  _armadaInflowPeriod='custom';
+  document.querySelectorAll('#ador-filter-btns .cf-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ador-btn-custom')?.classList.add('active');
+  document.getElementById('ador-custom-range').style.display='none';
+  renderArmadaInflowDonut();
+}
+function _armadaInflowRange(){
+  const now=new Date(),y=now.getFullYear(),m=now.getMonth();
+  if(_armadaInflowPeriod==='hari-ini') return {from:today(),to:today()};
+  if(_armadaInflowPeriod==='bulan-ini') return {from:`${y}-${String(m+1).padStart(2,'0')}-01`,to:today()};
+  if(_armadaInflowPeriod==='3bulan'){const d=new Date(y,m-2,1);return {from:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`,to:today()};}
+  if(_armadaInflowPeriod==='tahun-ini') return {from:`${y}-01-01`,to:today()};
+  if(_armadaInflowPeriod==='custom') return {from:_armadaInflowFrom,to:_armadaInflowTo};
+  return {from:'',to:''}; // 'semua'
+}
+function renderArmadaInflowDonut(){
+  if(typeof Chart==='undefined')return;
+  const ctx=document.getElementById('armadaInflowChart');if(!ctx)return;
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const {from,to}=_armadaInflowRange();
+  const inflowTxns=transactions.filter(t=>t.type==='inflow'&&(!from||t.date>=from)&&(!to||t.date<=to));
+  const byArmada={};
+  inflowTxns.forEach(t=>{
+    const nm=t.armada&&t.armada.trim()?t.armada.trim():'Tanpa Armada';
+    byArmada[nm]=(byArmada[nm]||0)+t.amount;
+  });
+  const entries=Object.entries(byArmada).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  const legendEl=document.getElementById('armada-inflow-legend');
+  const totalEl=document.getElementById('armada-inflow-total');
+
+  if(armadaInflowChart){armadaInflowChart.destroy();armadaInflowChart=null;}
+
+  if(!entries.length){
+    if(legendEl) legendEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:8px 0;">Belum ada inflow di periode ini</div>';
+    if(totalEl) totalEl.innerHTML='';
+    armadaInflowChart=new Chart(ctx,{type:'pie',data:{datasets:[{data:[1],backgroundColor:[dark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)'],borderWidth:0}]},options:{plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+    return;
+  }
+
+  const labels=entries.map(e=>e[0]);
+  const data=entries.map(e=>e[1]);
+  const colors=labels.map((_,i)=>DRIVER_DONUT_COLORS[i%DRIVER_DONUT_COLORS.length]);
+
+  armadaInflowChart=new Chart(ctx,{type:'pie',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:dark?'#12192B':'#fff',borderWidth:2,hoverOffset:6}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+fmtFull(c.raw)+' ('+(c.raw/total*100).toFixed(1)+'%)'},backgroundColor:dark?'rgba(22,30,46,.95)':'rgba(255,255,255,.95)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#7DCE13':'#12A060',borderColor:'rgba(125,206,19,.2)',borderWidth:1,padding:9,cornerRadius:9}},animation:{animateRotate:true,duration:800}}});
+
+  if(legendEl){
+    legendEl.innerHTML=entries.map(([nm,amt],i)=>{
+      const pct=(amt/total*100).toFixed(1);
+      return `<div style="display:flex;align-items:center;padding:6px 4px;font-size:11px;border-bottom:1px solid var(--card-b);gap:6px;">
+        <div style="flex:1;display:flex;align-items:center;gap:7px;min-width:0;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]};flex-shrink:0;"></div>
+          <div style="color:var(--text2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;">${nm}</div>
         </div>
         <div style="flex-shrink:0;width:118px;text-align:right;white-space:nowrap;color:var(--text);font-weight:700;">${fmt(amt)}</div>
         <div style="flex-shrink:0;width:36px;text-align:right;white-space:nowrap;color:var(--text3);font-weight:600;">${pct}%</div>
@@ -4740,6 +4870,7 @@ async function submitAccDoc(unitId, docType){
     f[docType]=nextDate;
     transactions.unshift(newOut);
     logAudit('create','dokumen',`ACC ${labels[docType]} ${f.nopol} - ${fmt(amount)} - jatuh tempo baru ${fmtDate(nextDate)}`);
+    syncTxnToGSheet(newOut);
     closeSm();
     renderDashboard();applyTxnFilters();renderLaporanTable();checkDocWarnings();
     if(typeof renderKeuanganStats==='function') renderKeuanganStats();
@@ -5254,12 +5385,14 @@ async function submitInflow(){
     // Setelah berhasil, update state lokal
     transactions.unshift(newTxn);
     if(fUnit){fUnit.status=antre;fUnit.driver=driver;}
-    // Ritase hanya bertambah untuk setoran/trip beneran (nominal > 0), bukan sekadar update status
-    if(amount>0){
+    // Ritase hanya bertambah untuk trip beneran: nominal > 0 DAN status armada "Jalan"
+    // (status Antre/Bengkel tidak dihitung ritase walau ada nominal setoran)
+    if(amount>0 && antre==='jalan'){
       await incrementRitaseForArmada(armada, statusSebelum);
     }
 
     logAudit('create','transaksi',`Inflow ${fmt(amount)} - ${armada}`);
+    syncTxnToGSheet(newTxn);
     closeModal();
     renderDashboard(); applyTxnFilters(); renderLaporanTable();
     if(typeof renderKeuanganStats==='function') renderKeuanganStats();
@@ -5425,6 +5558,7 @@ async function submitOutflow(){
     transactions.unshift(newOut);
 
     logAudit('create','transaksi',`Outflow ${fmt(amount)} - ${txnLabel}`);
+    syncTxnToGSheet(newOut);
     closeModal();
     renderDashboard(); applyTxnFilters(); renderGudang(); renderLaporanTable();
     if(typeof renderKeuanganStats==='function') renderKeuanganStats();
@@ -5467,7 +5601,7 @@ function showPage(name,sbEl,bnId){
   if(name==='gudang'){renderGudang();}
   if(name==='armada'){renderFleetUnits();renderDashboard();}
   if(name==='audit'){loadAuditLogs();}
-  if(name==='settings'){updateSettingsAdminInfo();loadCompanyProfileUI();}
+  if(name==='settings'){updateSettingsAdminInfo();loadCompanyProfileUI();initGSheetSettings();}
 }
 function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open');}
 function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
@@ -5491,6 +5625,128 @@ function toggleTheme(){setTheme(isDark?'light':'dark');}
 
 // ═══════════════════════════════ OTHER ═══════════════════════════
 function updateFleetCount(v){const n=parseInt(v);if(n>0){FLEET_COUNT=n;renderDashboard();}}
+
+// ═══════════════════════════════ GOOGLE SHEETS SYNC ═══════════════════════
+const GOOGLE_CLIENT_ID = '506098654913-te7s7orbndipk04vttaisg79mug4fbtv.apps.googleusercontent.com';
+const GS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+let gsTokenClient = null;
+let gsAccessToken = null;
+let gsTokenExpiry = 0; // epoch ms
+let gsSpreadsheetId = localStorage.getItem('bhd_gs_sheet_id') || '1kPfQ2jj6KYVuH4SXOZBIUduNmmB335sImcy7xFFAF0k';
+let gsTabName = localStorage.getItem('bhd_gs_tab_name') || 'DATA BASE';
+
+function initGSheetSettings(){
+  const idEl=document.getElementById('gs-sheet-id');
+  const tabEl=document.getElementById('gs-tab-name');
+  if(idEl) idEl.value = gsSpreadsheetId;
+  if(tabEl) tabEl.value = gsTabName;
+  updateGSStatusBadge();
+  // Setup Google Identity Services token client
+  if(typeof google!=='undefined' && google.accounts && google.accounts.oauth2){
+    gsTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: GS_SCOPE,
+      callback: (tokenResponse)=>{
+        if(tokenResponse && tokenResponse.access_token){
+          gsAccessToken = tokenResponse.access_token;
+          gsTokenExpiry = Date.now() + ((tokenResponse.expires_in||3600)*1000) - 60000; // minus 1 menit buffer
+          localStorage.setItem('bhd_gs_ever_connected','1');
+          updateGSStatusBadge();
+          showToast('✅ Terhubung ke Google Sheets');
+        }
+      }
+    });
+    // Coba silent reconnect kalau sebelumnya pernah connect
+    if(localStorage.getItem('bhd_gs_ever_connected')==='1'){
+      setTimeout(()=>{ try{ gsTokenClient.requestAccessToken({prompt:''}); }catch(e){} }, 800);
+    }
+  }
+}
+function updateGSStatusBadge(){
+  const badge=document.getElementById('gs-status-badge');
+  if(!badge) return;
+  const connected = gsAccessToken && Date.now()<gsTokenExpiry;
+  badge.textContent = connected ? '🟢 Terhubung' : '⚪ Belum terhubung';
+  badge.style.background = connected ? 'var(--green-bg)' : 'var(--bg3)';
+  badge.style.color = connected ? 'var(--green2)' : 'var(--text3)';
+}
+function saveGSheetConfig(){
+  gsSpreadsheetId = document.getElementById('gs-sheet-id')?.value?.trim()||'';
+  gsTabName = document.getElementById('gs-tab-name')?.value?.trim()||'';
+  localStorage.setItem('bhd_gs_sheet_id', gsSpreadsheetId);
+  localStorage.setItem('bhd_gs_tab_name', gsTabName);
+  showToast('✅ Konfigurasi Google Sheets disimpan');
+}
+function connectGoogleSheets(){
+  if(!gsTokenClient){showToast('⚠️ Google belum siap, coba lagi sebentar');return;}
+  if(!gsSpreadsheetId||!gsTabName){showToast('Isi & simpan Spreadsheet ID + Nama Tab dulu');return;}
+  gsTokenClient.requestAccessToken({prompt:'consent'});
+}
+async function ensureGSheetToken(){
+  if(gsAccessToken && Date.now()<gsTokenExpiry) return true;
+  if(!gsTokenClient) return false;
+  return new Promise((resolve)=>{
+    const origCallback = gsTokenClient.callback;
+    gsTokenClient.callback = (tokenResponse)=>{
+      if(tokenResponse && tokenResponse.access_token){
+        gsAccessToken = tokenResponse.access_token;
+        gsTokenExpiry = Date.now() + ((tokenResponse.expires_in||3600)*1000) - 60000;
+        updateGSStatusBadge();
+        resolve(true);
+      } else resolve(false);
+      gsTokenClient.callback = origCallback;
+    };
+    try{ gsTokenClient.requestAccessToken({prompt:''}); }catch(e){ resolve(false); }
+    setTimeout(()=>resolve(false), 5000); // timeout fallback
+  });
+}
+// Kirim 1 baris data transaksi ke Google Sheet (kolom B s/d J — kolom A/No tidak disentuh)
+async function syncTxnToGSheet(txn){
+  try{
+    if(!gsSpreadsheetId||!gsTabName) return; // belum dikonfigurasi, skip diam-diam
+    const ok = await ensureGSheetToken();
+    if(!ok){ console.warn('Google Sheets: token tidak tersedia, sync dilewati'); return; }
+
+    const isInflow = txn.type==='inflow';
+    const setoran = isInflow ? txn.amount : '';
+    const outTunai = (!isInflow && txn.kategori==='Tunai') ? txn.amount : '';
+    const outOnderdil = (!isInflow && txn.kategori==='Onderdil') ? txn.amount : '';
+    const outUmum = (!isInflow && txn.kategori==='UMUM') ? txn.amount : '';
+    const outDokumen = (!isInflow && txn.kategori==='Dokumen') ? txn.amount : '';
+    const keterangan = txn.label||'';
+
+    const row = [
+      txn.date||'',           // B - Tanggal
+      txn.armada||'',         // C - No Polisi
+      txn.driver||'',         // D - Nama Sopir
+      setoran,                // E - Setoran
+      outTunai,                // F - Pengeluaran Tunai
+      outOnderdil,             // G - Pengeluaran Onderdil
+      outUmum,                 // H - Pengeluaran Umum
+      outDokumen,               // I - Outflow Dokumen
+      keterangan               // J - Keterangan
+    ];
+
+    const range = `'${gsTabName}'!B:J`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+gsAccessToken, 'Content-Type':'application/json'},
+      body: JSON.stringify({values:[row]})
+    });
+    if(!res.ok){
+      const errBody = await res.json().catch(()=>({}));
+      console.warn('Google Sheets sync fail:', res.status, errBody);
+      const lsEl=document.getElementById('gs-last-sync');
+      if(lsEl) lsEl.innerHTML = `<span style="color:var(--danger);">⚠️ Sync terakhir gagal (${res.status})</span>`;
+      return;
+    }
+    const lsEl=document.getElementById('gs-last-sync');
+    if(lsEl) lsEl.innerHTML = `✅ Sync terakhir: ${new Date().toLocaleString('id-ID')}`;
+  }catch(e){
+    console.warn('syncTxnToGSheet error:', e);
+  }
+}
 function confirmReset(){
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent='🚨 Hapus Semua Transaksi';
@@ -6172,6 +6428,7 @@ async function _appInit(){
     updateSettingsAdminInfo();
     initCarouselSwipe();
     goToChart(0);
+    setTimeout(()=>{ if(typeof initGSheetSettings==='function') initGSheetSettings(); }, 300);
     showToast('⏳ Memuat data...');
     await syncFromSupabase();
     showToast('✅ Data berhasil dimuat');
