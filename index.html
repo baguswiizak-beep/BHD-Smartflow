@@ -1385,7 +1385,7 @@ input,select,textarea{font-size:16px!important;}
         <span id="gs-status-badge" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--bg3);color:var(--text3);white-space:nowrap;">Belum terhubung</span>
       </div>
       <div style="font-size:11px;color:var(--text3);margin:6px 0 10px;line-height:1.5;">
-        Setiap transaksi baru otomatis masuk ke salah satu dari 4 sheet berikut sesuai jenisnya — kolom No/Saldo/Total tidak disentuh. Edit &amp; hapus transaksi di app juga ikut ter-update/terhapus di sheet (pakai 1 kolom ID tersembunyi di ujung kanan tiap sheet, boleh di-hide, jangan dihapus/diedit manual):
+        Setiap transaksi baru otomatis masuk ke salah satu dari 4 sheet berikut sesuai jenisnya — kolom No & TOTAL <b>tidak pernah disentuh sama sekali</b>, aman untuk rumus manual sendiri. Edit &amp; hapus transaksi di app juga ikut ter-update/terhapus di sheet (pakai 1 kolom ID tersembunyi di ujung kanan tiap sheet, boleh di-hide, jangan dihapus/diedit manual):
         <div style="margin-top:6px;display:flex;flex-direction:column;gap:2px;color:var(--text2);font-weight:600;">
           <span>📥 Inflow → <i>DATABASE Inflow</i></span>
           <span>💵 Outflow Tunai &amp; Dokumen → <i>DATABASE Outflow Tunai</i></span>
@@ -2386,6 +2386,25 @@ async function incrementRitaseForArmada(nopol, statusSebelum){
     setTimeout(()=>warnings.forEach(w=>showToast('🔧 '+w)),900);
   }
 }
+// Kebalikan dari incrementRitaseForArmada — dipanggil saat inflow yang tadinya terhitung +1 ritase
+// ternyata di-edit atau dihapus, supaya angka ritase tidak "nyangkut" salah.
+async function decrementRitaseForArmada(nopol){
+  if(!nopol) return;
+  const patches=[];
+  sparepartStock.forEach(sp=>{
+    sp.installed.forEach(i=>{
+      if(i.armada!==nopol) return;
+      i.ritase=Math.max(0, i.ritase-1);
+      if(i.txnId){
+        patches.push(
+          sbFetch('inventory_installed',{method:'PATCH',filters:{txn_id:i.txnId},body:{ritase:i.ritase}})
+            .catch(e=>console.warn('Update ritase (kurangi) fail:',e))
+        );
+      }
+    });
+  });
+  await Promise.all(patches);
+}
 
 function getRitaseStatusColor(ritase,kategori){
   const t=getRitaseThreshold(kategori);
@@ -2931,7 +2950,9 @@ function deleteTxn(id){
     ?(isCustomItem
         ?'<br><span style="color:var(--danger);font-size:11px;">⚠️ Onderdil "'+linkedSp.nama+'" (beli luar stok) juga akan ikut terhapus dari tab Onderdil.</span>'
         :'<br><span style="color:var(--success);font-size:11px;">✅ Stok onderdil akan otomatis kembali +'+(txn.jmlPasang||1)+' unit</span>')
-    :'';
+    :(txn.type==='inflow'&&txn.ritaseCounted
+        ?'<br><span style="color:var(--warning);font-size:11px;">⚠️ Ritase onderdil di '+(txn.ritaseArmada||txn.armada)+' akan otomatis dikurangi -1</span>'
+        :'');
   showConfirmPopup('🗑️ Hapus Transaksi',
     `<b>${txn.type==='inflow'?'Pemasukan':'Pengeluaran'}</b>: ${txn.label||''}<br>
      Nominal: <b>${fmt(txn.amount)}</b> · ${fmtDate(txn.date)}${stockMsg}`,
@@ -2950,6 +2971,11 @@ function deleteTxn(id){
           }
         } else if(isCustomItem){
           const i=sparepartStock.findIndex(s=>s.id===txn.sparepartId);if(i>-1)sparepartStock.splice(i,1);
+        }
+
+        // === RITASE REVERSAL — batalkan +1 ritase kalau inflow ini dulu benar-benar terhitung ===
+        if(txn.type==='inflow'&&txn.ritaseCounted){
+          await decrementRitaseForArmada(txn.ritaseArmada||txn.armada);
         }
         
         // Optimistic UI update
@@ -2982,7 +3008,7 @@ function deleteTxn(id){
         }
 
         logAudit('delete','transaksi',
-          `[${waktu}] - [${adminName}] - [Hapus Transaksi] - [${txn.label}, Rp ${fmt(txn.amount)}${txn.sparepartId?(isCustomItem?', onderdil custom ikut dihapus':', Qty '+jml+' unit dikembalikan'):''}]`
+          `[${waktu}] - [${adminName}] - [Hapus Transaksi] - [${txn.label}, Rp ${fmt(txn.amount)}${txn.sparepartId?(isCustomItem?', onderdil custom ikut dihapus':', Qty '+jml+' unit dikembalikan'):''}${txn.type==='inflow'&&txn.ritaseCounted?', ritase -1 di '+(txn.ritaseArmada||txn.armada):''}]`
         );
         syncTxnDeleteFromGSheet(txn);
 
@@ -3076,11 +3102,25 @@ function confirmSaveEditTxn(id){
       (${selisih>0?'+':''}{${selisih}})
     </span>`.replace('{','').replace('}','');
   }
+  // Penyesuaian ritase (khusus inflow) — bandingkan status "terhitung ritase" lama vs baru
+  const oldRitaseCounted = txn.type==='inflow' && !!txn.ritaseCounted;
+  const oldRitaseArmada = txn.ritaseArmada || txn.armada;
+  const newRitaseCounted = txn.type==='inflow' && newAmount>0;
+  let ritaseMsg='';
+  if(txn.type==='inflow'){
+    if(oldRitaseCounted && !newRitaseCounted){
+      ritaseMsg=`<br><span style="font-size:11px;color:var(--warning);">⚠️ Ritase di ${oldRitaseArmada} akan dikurangi -1 (nominal jadi 0)</span>`;
+    } else if(!oldRitaseCounted && newRitaseCounted){
+      ritaseMsg=`<br><span style="font-size:11px;color:var(--success);">✅ Ritase di ${newArmada} akan ditambah +1 (sebelumnya tidak terhitung)</span>`;
+    } else if(oldRitaseCounted && newRitaseCounted && oldRitaseArmada!==newArmada){
+      ritaseMsg=`<br><span style="font-size:11px;color:var(--warning);">⚠️ Ritase dipindah: ${oldRitaseArmada} -1 → ${newArmada} +1</span>`;
+    }
+  }
 
   closeSm();
   showConfirmPopup('💾 Konfirmasi Perubahan',
     `<b>${txn.type==='inflow'?'Pemasukan':'Pengeluaran'}</b><br>
-     Nominal: ${fmt(oldAmount)} → <b>${fmt(newAmount)}</b>${stockMsg}`,
+     Nominal: ${fmt(oldAmount)} → <b>${fmt(newAmount)}</b>${stockMsg}${ritaseMsg}`,
     ()=>{
       // === STOCK REVERSAL LOGIC ===
       if(txn.sparepartId && newJml!==oldJml){
@@ -3113,6 +3153,8 @@ function confirmSaveEditTxn(id){
       // Selaraskan harga satuan dengan Total & Jumlah terbaru (form edit ini tidak punya field harga satuan sendiri)
       const jmlUntukHarga = txn.jmlPasang||1;
       txn.hargaSatuan = jmlUntukHarga>0 ? Math.round(txn.amount/jmlUntukHarga) : txn.amount;
+      txn.ritaseCounted = newRitaseCounted;
+      txn.ritaseArmada = newRitaseCounted ? newArmada : null;
 
       // Audit log format: [Waktu] - [Admin] - [Aksi] - [Detail]
       const waktu=new Date().toLocaleString('id-ID');
@@ -3133,7 +3175,9 @@ function confirmSaveEditTxn(id){
         posisi: txn.posisi || '',
         sparepart_id: txn.sparepartId || null,
         jml_pasang: txn.jmlPasang || 1,
-        harga_satuan: txn.hargaSatuan || null
+        harga_satuan: txn.hargaSatuan || null,
+        ritase_counted: txn.ritaseCounted || false,
+        ritase_armada: txn.ritaseArmada || null
       };
       
       // Execute as async block
@@ -3145,10 +3189,20 @@ function confirmSaveEditTxn(id){
             const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
             if(sp) await sbFetch('inventory', {method:'PATCH', filters:{id:txn.sparepartId}, body:{stok_sisa:sp.stokSisa, installed:sp.installed}});
           }
+          // === RITASE ADJUSTMENT — batalkan hitungan lama, terapkan yang baru kalau memang berubah ===
+          if(txn.type==='inflow'){
+            if(oldRitaseCounted && !(newRitaseCounted && oldRitaseArmada===newArmada)){
+              await decrementRitaseForArmada(oldRitaseArmada);
+            }
+            if(newRitaseCounted && !(oldRitaseCounted && oldRitaseArmada===newArmada)){
+              await incrementRitaseForArmada(newArmada, 'jalan');
+            }
+            if(currentDetailUnit) renderOnderdilTab(currentDetailUnit);
+          }
           syncTxnUpdateToGSheet(txn);
           _isSyncing = false;
           await syncFromSupabase();
-          showToast('✅ Transaksi diperbarui'+(txn.sparepartId&&newJml!==oldJml?' · Stok disesuaikan':''));
+          showToast('✅ Transaksi diperbarui'+(txn.sparepartId&&newJml!==oldJml?' · Stok disesuaikan':'')+(txn.type==='inflow'&&(oldRitaseCounted!==newRitaseCounted||oldRitaseArmada!==newArmada)?' · Ritase disesuaikan':''));
         } catch (e) {
           console.error('Update fail:', e);
           showToast('⚠️ Gagal menyimpan ke server: ' + (e.message.includes('403') ? 'Akses ditolak' : 'Koneksi bermasalah'));
@@ -5390,6 +5444,9 @@ async function submitInflow(){
   const statusSebelum=fUnit?fUnit.status:'jalan';
   const txnId = 'txn_'+Date.now();
   const txnLabel = (amount > 0) ? 'Setoran ' + armada : 'Antrean ' + armada;
+  // Apakah trip ini beneran dihitung sebagai +1 ritase? (dipakai utk membatalkannya lagi kalau nanti di-edit/dihapus)
+  const willCountRitase = (amount>0 && antre==='jalan');
+  const statusLabel = {jalan:'Jalan', antre:'Antre', bengkel:'Bengkel'}[antre] || antre;
 
   // Object yang dikirim ke Supabase — kolom harus sesuai schema DB
   const dbTxn = {
@@ -5410,6 +5467,9 @@ async function submitInflow(){
     sparepart_id: null,
     jml_pasang: 1,
     posisi: '',
+    ritase_counted: willCountRitase,
+    ritase_armada: willCountRitase ? armada : null,
+    status_armada: statusLabel,
     created_at: new Date().toISOString()
   };
 
@@ -5419,7 +5479,9 @@ async function submitInflow(){
     sub: driver + ' · Netto', amount, date, armada,
     muat: muat || '', bongkar: bongkar || '',
     driver, nota: '', toko: '', kategori: 'Inflow',
-    status: 'lunas', sparepartId: null, jmlPasang: 1, posisi: ''
+    status: 'lunas', sparepartId: null, jmlPasang: 1, posisi: '',
+    statusArmada: statusLabel,
+    ritaseCounted: willCountRitase, ritaseArmada: willCountRitase ? armada : null
   };
 
   try {
@@ -5434,7 +5496,7 @@ async function submitInflow(){
     if(fUnit){fUnit.status=antre;fUnit.driver=driver;}
     // Ritase hanya bertambah untuk trip beneran: nominal > 0 DAN status armada "Jalan"
     // (status Antre/Bengkel tidak dihitung ritase walau ada nominal setoran)
-    if(amount>0 && antre==='jalan'){
+    if(willCountRitase){
       await incrementRitaseForArmada(armada, statusSebelum);
     }
 
@@ -5759,29 +5821,38 @@ const GS_TAB_OUT_UMUM = 'DATABASE Outflow Umum';
 let gsSheetIdCache = {}; // cache tabName -> numeric grid sheetId (utk hapus baris)
 
 // Tentukan sheet tujuan + rentang kolom data + kolom ID tersembunyi (persis 1 kolom setelah kolom terakhir data)
-function _gsConfigFor(txn){
-  if(txn.type==='inflow') return {tab:GS_TAB_INFLOW, colRange:'B:H', idCol:'I'};
-  if(txn.kategori==='Onderdil') return {tab:GS_TAB_OUT_ONDERDIL, colRange:'B:J', idCol:'K'};
-  if(txn.kategori==='UMUM') return {tab:GS_TAB_OUT_UMUM, colRange:'B:G', idCol:'H'};
-  return {tab:GS_TAB_OUT_TUNAI, colRange:'B:H', idCol:'I'}; // Tunai & Dokumen digabung
+// Helper: geser huruf kolom (A + offset), cuma untuk kolom tunggal A-Z
+function _colOffset(letter, offset){
+  return String.fromCharCode(letter.charCodeAt(0) + offset);
 }
-// Susun nilai baris sesuai kolom masing-masing sheet
-function _gsBuildRow(txn){
+// Rencana penulisan per tipe transaksi: dipecah jadi beberapa "segmen" kolom yang berdekatan,
+// dengan sengaja MELOMPATI kolom TOTAL supaya rumus manual milik Kakak di situ tidak pernah tertimpa.
+function _gsRowPlan(txn){
   const keterangan = txn.label||'';
   if(txn.type==='inflow'){
-    // B TANGGAL, C NO POLISI, D NAMA SOPIR, E TITIK MUAT, F TITIK BONGKAR, G SETORAN, H TOTAL
-    return [txn.date||'', txn.armada||'', txn.driver||'', txn.muat||'', txn.bongkar||'', txn.amount||'', txn.amount||''];
+    // B TANGGAL, C NO POLISI, D NAMA SOPIR, E TITIK MUAT, F TITIK BONGKAR, G SETORAN, [H TOTAL - dilewati], I STATUS ARMADA, J ID
+    return { tab:GS_TAB_INFLOW, idCol:'J', segments:[
+      {start:'B', values:[txn.date||'', txn.armada||'', txn.driver||'', txn.muat||'', txn.bongkar||'', txn.amount||'']},
+      {start:'I', values:[txn.statusArmada||'']}
+    ]};
   }
   if(txn.kategori==='Onderdil'){
-    // B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, H TOTAL, I NO.NOTA, J NAMA TOKO
-    return [txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||'', txn.nota||'', txn.toko||''];
+    // B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, [H TOTAL - dilewati], I NO.NOTA, J NAMA TOKO, K ID
+    return { tab:GS_TAB_OUT_ONDERDIL, idCol:'K', segments:[
+      {start:'B', values:[txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'']},
+      {start:'I', values:[txn.nota||'', txn.toko||'']}
+    ]};
   }
   if(txn.kategori==='UMUM'){
-    // B TANGGAL, C KETERANGAN, D JUMLAH, E SATUAN, F HARGA, G TOTAL
-    return [txn.date||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||''];
+    // B TANGGAL, C KETERANGAN, D JUMLAH, E SATUAN, F HARGA, [G TOTAL - dilewati], H ID
+    return { tab:GS_TAB_OUT_UMUM, idCol:'H', segments:[
+      {start:'B', values:[txn.date||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'']}
+    ]};
   }
-  // Tunai & Dokumen — B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, H TOTAL
-  return [txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||''];
+  // Tunai & Dokumen — B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, [H TOTAL - dilewati], I ID
+  return { tab:GS_TAB_OUT_TUNAI, idCol:'I', segments:[
+    {start:'B', values:[txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'']}
+  ]};
 }
 function _gsSyncErr(tabName, msg){
   const lsEl=document.getElementById('gs-last-sync');
@@ -5813,14 +5884,31 @@ async function _gsGetGridId(tabName){
   (data.sheets||[]).forEach(s=>{ gsSheetIdCache[s.properties.title] = s.properties.sheetId; });
   return gsSheetIdCache[tabName]!==undefined ? gsSheetIdCache[tabName] : null;
 }
+async function _gsWriteRange(range, row){
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
+  const res = await fetch(url, {
+    method:'PUT',
+    headers:{'Authorization':'Bearer '+gsAccessToken, 'Content-Type':'application/json'},
+    body: JSON.stringify({values:[row]})
+  });
+  return res.ok;
+}
+// Tulis semua segmen (yang melompati kolom TOTAL) ke 1 baris tertentu.
+async function _gsWriteSegments(tabName, rowNum, segments){
+  for(const seg of segments){
+    const endCol = _colOffset(seg.start, seg.values.length-1);
+    const ok = await _gsWriteRange(`'${tabName}'!${seg.start}${rowNum}:${endCol}${rowNum}`, seg.values);
+    if(!ok) return false;
+  }
+  return true;
+}
 
 // Tulis baris baru — dipakai saat transaksi pertama kali dibuat. Kolom ID tersembunyi ikut ditulis.
-async function _gsAppendRow(tabName, colRange, idCol, row, txnId){
+async function _gsAppendRow(tabName, idCol, segments, txnId){
   try{
-    const [startCol, endCol] = colRange.split(':');
-    // 1) Cari baris kosong berikutnya — baca kolom TANGGAL (selalu terisi tiap ada data)
+    // 1) Cari baris kosong berikutnya — baca kolom B (selalu terisi tiap ada data)
     //    supaya tidak bergantung ke fitur auto-detect "append" bawaan Google yang ternyata suka salah kolom.
-    const checkUrl = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(`'${tabName}'!${startCol}:${startCol}`)}`;
+    const checkUrl = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(`'${tabName}'!B:B`)}`;
     const checkRes = await fetch(checkUrl, {headers:{'Authorization':'Bearer '+gsAccessToken}});
     if(!checkRes.ok){
       const errBody = await checkRes.json().catch(()=>({}));
@@ -5832,9 +5920,8 @@ async function _gsAppendRow(tabName, colRange, idCol, row, txnId){
     const usedRows = (checkData.values||[]).length;
     const nextRow = Math.max(usedRows+1, 4); // baris data minimal mulai row 4 (header di row 3)
 
-    // 2) Tulis PERSIS ke baris & kolom itu — tidak ada tebak-tebakan lagi
-    const targetRange = `'${tabName}'!${startCol}${nextRow}:${endCol}${nextRow}`;
-    const ok1 = await _gsWriteRange(targetRange, row);
+    // 2) Tulis tiap segmen PERSIS ke baris itu — kolom TOTAL dilewati sama sekali, tidak pernah ditulis
+    const ok1 = await _gsWriteSegments(tabName, nextRow, segments);
     if(!ok1){ _gsSyncErr(tabName, 'tulis data gagal'); return false; }
 
     // 3) Tulis ID tersembunyi di baris yang sama, kolom idCol
@@ -5847,26 +5934,16 @@ async function _gsAppendRow(tabName, colRange, idCol, row, txnId){
     return false;
   }
 }
-async function _gsWriteRange(range, row){
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
-  const res = await fetch(url, {
-    method:'PUT',
-    headers:{'Authorization':'Bearer '+gsAccessToken, 'Content-Type':'application/json'},
-    body: JSON.stringify({values:[row]})
-  });
-  return res.ok;
-}
 
 // Kirim 1 baris transaksi BARU ke salah satu dari 4 sheet, sesuai tipe & kategorinya.
-// Kolom "No" (selalu di kolom A) tidak pernah disentuh — biar nomor otomatis Kakak tetap jalan.
+// Kolom "No" (A) dan "TOTAL" tidak pernah disentuh — biar nomor & rumus otomatis Kakak tetap jalan.
 async function syncTxnToGSheet(txn){
   try{
     if(!gsSpreadsheetId) return; // belum dikonfigurasi, skip diam-diam
     const ok = await ensureGSheetToken();
     if(!ok){ console.warn('Google Sheets: token tidak tersedia, sync dilewati'); return; }
-    const {tab, colRange, idCol} = _gsConfigFor(txn);
-    const row = _gsBuildRow(txn);
-    const success = await _gsAppendRow(tab, colRange, idCol, row, txn.id);
+    const {tab, idCol, segments} = _gsRowPlan(txn);
+    const success = await _gsAppendRow(tab, idCol, segments, txn.id);
     if(success) _gsSyncOk();
   }catch(e){
     console.warn('syncTxnToGSheet error:', e);
@@ -5878,12 +5955,10 @@ async function syncTxnUpdateToGSheet(txn){
     if(!gsSpreadsheetId) return;
     const ok = await ensureGSheetToken();
     if(!ok) return;
-    const {tab, colRange, idCol} = _gsConfigFor(txn);
+    const {tab, idCol, segments} = _gsRowPlan(txn);
     const rowNum = await _gsFindRowByTxnId(tab, idCol, txn.id);
     if(!rowNum){ console.warn('Google Sheets: baris untuk txn '+txn.id+' tidak ditemukan di "'+tab+'", sync update dilewati'); return; }
-    const [startCol, endCol] = colRange.split(':');
-    const row = _gsBuildRow(txn);
-    const success = await _gsWriteRange(`'${tab}'!${startCol}${rowNum}:${endCol}${rowNum}`, row);
+    const success = await _gsWriteSegments(tab, rowNum, segments);
     if(success) _gsSyncOk(); else _gsSyncErr(tab, 'update baris gagal');
   }catch(e){
     console.warn('syncTxnUpdateToGSheet error:', e);
@@ -5895,7 +5970,7 @@ async function syncTxnDeleteFromGSheet(txn){
     if(!gsSpreadsheetId||!txn) return;
     const ok = await ensureGSheetToken();
     if(!ok) return;
-    const {tab, idCol} = _gsConfigFor(txn);
+    const {tab, idCol} = _gsRowPlan(txn);
     const rowNum = await _gsFindRowByTxnId(tab, idCol, txn.id);
     if(!rowNum){ console.warn('Google Sheets: baris untuk txn '+txn.id+' tidak ditemukan di "'+tab+'", sync hapus dilewati'); return; }
     const gridId = await _gsGetGridId(tab);
@@ -6416,7 +6491,8 @@ async function syncFromSupabase(){
           driver:t.driver||'', nota:t.nota||'', toko:t.toko||'',
           kategori:t.kategori||'', subKategori:t.sub_kategori||'', status:t.status||'lunas',
           sparepartId:t.sparepart_id||null, posisi:t.posisi||'', jmlPasang:t.jml_pasang||1,
-          hargaSatuan:Number(t.harga_satuan||0), satuan:t.satuan||'', created_at:t.created_at
+          hargaSatuan:Number(t.harga_satuan||0), satuan:t.satuan||'',
+          ritaseCounted:!!t.ritase_counted, ritaseArmada:t.ritase_armada||null, statusArmada:t.status_armada||'', created_at:t.created_at
         }));
         txnSuccess = true;
       }
