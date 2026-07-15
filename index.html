@@ -1385,16 +1385,18 @@ input,select,textarea{font-size:16px!important;}
         <span id="gs-status-badge" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--bg3);color:var(--text3);white-space:nowrap;">Belum terhubung</span>
       </div>
       <div style="font-size:11px;color:var(--text3);margin:6px 0 10px;line-height:1.5;">
-        Setiap transaksi baru (Inflow/Outflow) otomatis ditambahkan sebagai baris baru ke Google Sheet ini — kolom A (No) tidak disentuh, aman kalau Kakak pakai formor nomor otomatis sendiri.
+        Setiap transaksi baru otomatis masuk ke salah satu dari 4 sheet berikut sesuai jenisnya — kolom No/Saldo/Total tidak disentuh:
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:2px;color:var(--text2);font-weight:600;">
+          <span>📥 Inflow → <i>DATABASE Inflow</i></span>
+          <span>💵 Outflow Tunai &amp; Dokumen → <i>DATABASE Outflow Tunai</i></span>
+          <span>🔧 Outflow Onderdil → <i>DATABASE Outflow Onderdil</i></span>
+          <span>🏢 Outflow Umum → <i>DATABASE Outflow Umum</i></span>
+        </div>
       </div>
       <div style="display:grid;gap:8px;margin-bottom:10px;">
         <div>
           <label class="form-label">Spreadsheet ID</label>
           <input class="form-input" id="gs-sheet-id" placeholder="ID dari link Google Sheet"/>
-        </div>
-        <div>
-          <label class="form-label">Nama Tab/Sheet</label>
-          <input class="form-input" id="gs-tab-name" placeholder="Misal: DATA BASE"/>
         </div>
       </div>
       <div style="display:flex;gap:8px;">
@@ -2298,7 +2300,7 @@ async function confirmPasang(spId){
     sub:'No.Nota: '+sp.nota+' · '+sp.toko+' · '+driver,
     amount:sp.hargaSatuan*jml, date:tgl,
     armada, nota:sp.nota, toko:sp.toko, kategori:'Onderdil', subKategori: sp.kategori||'', driver, status:'lunas',
-    sparepartId:spId, jmlPasang:jml, posisi
+    sparepartId:spId, jmlPasang:jml, hargaSatuan: sp.hargaSatuan, satuan:'', posisi
   };
   try {
     // Build DB object sesuai kolom Supabase
@@ -2308,7 +2310,7 @@ async function confirmPasang(spId){
       amount: newTxn.amount, date: newTxn.date,
       armada, nota: sp.nota, toko: sp.toko,
       kategori: 'Onderdil', sub_kategori: sp.kategori||'', driver, status: 'lunas',
-      sparepart_id: spId, jml_pasang: jml, posisi: '',
+      sparepart_id: spId, jml_pasang: jml, harga_satuan: sp.hargaSatuan||null, satuan: '', posisi: '',
       created_at: new Date().toISOString()
     };
     await sbFetch('transactions', {method:'POST', body:dbTxn});
@@ -4859,9 +4861,9 @@ async function submitAccDoc(unitId, docType){
     id:outId, type:'outflow', label:labels[docType]+' — '+f.nopol, sub:subText,
     amount:amount, date:today(), armada:f.nopol, nota:note||'—', toko:'—',
     kategori:'Tunai', driver:f.driver||'', status:'lunas',
-    sparepart_id:null, jml_pasang:1, posisi:'', created_at:new Date().toISOString()
+    sparepart_id:null, jml_pasang:1, harga_satuan:amount||null, satuan:'', posisi:'', created_at:new Date().toISOString()
   };
-  const newOut={id:outId,type:'outflow',label:dbOut.label,sub:subText,amount,date:today(),armada:f.nopol,nota:note||'—',toko:'—',kategori:'Tunai',driver:f.driver||'',status:'lunas',sparepartId:null,jmlPasang:1,posisi:''};
+  const newOut={id:outId,type:'outflow',label:dbOut.label,sub:subText,amount,date:today(),armada:f.nopol,nota:note||'—',toko:'—',kategori:'Tunai',driver:f.driver||'',status:'lunas',sparepartId:null,jmlPasang:1,hargaSatuan:amount,satuan:'',posisi:''};
 
   try{
     showToast('⏳ Menyimpan ACC...');
@@ -5174,7 +5176,7 @@ function openModal(type){
           <div id="out-sp-info" style="display:none;background:var(--bg3);border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:11px;color:var(--text2);"></div>
           <div class="form-group">
             <label class="form-label">🔢 Jumlah (Unit)</label>
-            <input class="form-input" id="out-sp-jml" type="number" value="1" min="1"/>
+            <input class="form-input" id="out-sp-jml" type="number" value="1" min="1" oninput="recalcOutTotal()"/>
           </div>
         </div>
         <div id="out-onderdil-baru-block" style="display:none;">
@@ -5196,7 +5198,7 @@ function openModal(type){
           </div>
           <div class="form-group">
             <label class="form-label">🔢 Jumlah (Unit)</label>
-            <input class="form-input" id="out-custom-jml" type="number" value="1" min="1"/>
+            <input class="form-input" id="out-custom-jml" type="number" value="1" min="1" oninput="recalcOutTotal()"/>
           </div>
           <label style="display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:11.5px;color:var(--text2);cursor:pointer;">
             <input type="checkbox" id="out-custom-track" checked style="width:16px;height:16px;flex-shrink:0;"/>
@@ -5221,15 +5223,27 @@ function openModal(type){
           <select class="form-select" id="out-driver">${getDriverOpts()}</select>
         </div>
       </div>
-      <div class="form-group"><label class="form-label">Jumlah (Rp)</label>
-        <input class="form-input" id="out-amount" placeholder="0" inputmode="numeric"/>
+      <div class="form-group"><label class="form-label">💰 Harga Satuan (Rp)</label>
+        <input class="form-input" id="out-harga-satuan" placeholder="0" inputmode="numeric" oninput="recalcOutTotal()"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="form-group" id="out-qty-umum-wrap"><label class="form-label">🔢 Jumlah</label>
+          <input class="form-input" id="out-qty-umum" type="number" value="1" min="1" oninput="recalcOutTotal()"/>
+        </div>
+        <div class="form-group"><label class="form-label">📏 Satuan</label>
+          <input class="form-input" id="out-satuan" placeholder="Liter, Pcs, Botol..."/>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Total (Rp)</label>
+        <input class="form-input" id="out-amount" placeholder="0" readonly style="background:var(--bg3);font-weight:800;color:var(--green2);cursor:not-allowed;"/>
       </div>
       <div class="form-group"><label class="form-label">Tanggal</label>
         <input type="date" class="form-input" id="out-date" value="${today()}"/>
       </div>
       <button class="form-btn outflow" onclick="submitOutflow()">Simpan Outflow</button>`;
-    setupCurrencyInput('out-amount');
+    setupCurrencyInput('out-harga-satuan');
     outOnderdilMode='stok';
+    recalcOutTotal();
   }
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -5238,8 +5252,11 @@ function onOutCatChange(){
   const cat=document.getElementById('out-cat')?.value;
   const onderdilWrap=document.getElementById('out-onderdil-wrap');
   const armadaWrap=document.getElementById('out-armada-wrap');
+  const qtyUmumWrap=document.getElementById('out-qty-umum-wrap');
   if(onderdilWrap) onderdilWrap.style.display=cat==='Onderdil'?'block':'none';
   if(armadaWrap) armadaWrap.style.display=(cat==='Onderdil'||cat==='Tunai'||cat==='Dokumen')?'block':'none';
+  // Field Jumlah generik cuma dipakai kalau bukan Onderdil (Onderdil sudah punya Jumlah sendiri)
+  if(qtyUmumWrap) qtyUmumWrap.style.display=cat==='Onderdil'?'none':'block';
   // Reset gudang selection when switching away
   if(cat!=='Onderdil'){
     const sel=document.getElementById('out-sp-select');
@@ -5248,6 +5265,27 @@ function onOutCatChange(){
     if(info) info.style.display='none';
     setOutOnderdilMode('stok');
   }
+  recalcOutTotal();
+}
+
+// Hitung ulang Total (Rp) = Harga Satuan x Jumlah, berapapun kategori outflow-nya
+function recalcOutTotal(){
+  const cat=document.getElementById('out-cat')?.value;
+  const harga=getRaw('out-harga-satuan');
+  let qty=1;
+  if(cat==='Onderdil'){
+    if(outOnderdilMode==='baru'){
+      qty=parseInt(document.getElementById('out-custom-jml')?.value||'1')||1;
+    } else {
+      qty=parseInt(document.getElementById('out-sp-jml')?.value||'1')||1;
+    }
+  } else {
+    qty=parseInt(document.getElementById('out-qty-umum')?.value||'1')||1;
+  }
+  if(qty<1) qty=1;
+  const total=harga*qty;
+  const amtEl=document.getElementById('out-amount');
+  if(amtEl) amtEl.value = total>0 ? new Intl.NumberFormat('id-ID').format(total) : '';
 }
 
 // Toggle antara "pilih dari stok gudang" vs "beli baru di luar stok" untuk outflow Onderdil
@@ -5276,6 +5314,7 @@ function setOutOnderdilMode(mode){
     const info=document.getElementById('out-sp-info');
     if(info) info.style.display='none';
   }
+  recalcOutTotal();
 }
 
 function onGudangItemSelect(){
@@ -5295,12 +5334,12 @@ function onGudangItemSelect(){
   const labelEl=document.getElementById('out-label');
   const tokoEl=document.getElementById('out-toko');
   const notaEl=document.getElementById('out-nota');
-  const amtEl=document.getElementById('out-amount');
+  const hargaEl=document.getElementById('out-harga-satuan');
   if(labelEl&&!labelEl.value) labelEl.value=sp.nama+' ('+sp.spek+')';
   if(tokoEl&&!tokoEl.value) tokoEl.value=sp.toko;
   if(notaEl&&!notaEl.value) notaEl.value=sp.nota;
-  if(amtEl){
-    amtEl.value=new Intl.NumberFormat('id-ID').format(sp.hargaSatuan);
+  if(hargaEl){
+    hargaEl.value=new Intl.NumberFormat('id-ID').format(sp.hargaSatuan);
   }
   // Show info badge
   if(info){
@@ -5317,6 +5356,7 @@ function onGudangItemSelect(){
     if(!jmlEl.value||parseInt(jmlEl.value)<1) jmlEl.value=1;
     if(parseInt(jmlEl.value)>sp.stokSisa) jmlEl.value=Math.max(1,sp.stokSisa);
   }
+  recalcOutTotal();
 }
 
 function toggleArmadaField(){
@@ -5465,6 +5505,11 @@ async function submitOutflow(){
     ? (isCustomOnderdil ? customKategori : (spId ? (sparepartStock.find(s=>s.id===spId)?.kategori||'') : ''))
     : '';
 
+  // Jumlah, Harga Satuan & Satuan — generik untuk semua kategori outflow (dipakai utk sheet backup)
+  const finalJml = cat==='Onderdil' ? jmlOnderdil : (parseInt(document.getElementById('out-qty-umum')?.value||'1')||1);
+  const hargaSatuan = getRaw('out-harga-satuan');
+  const satuan = document.getElementById('out-satuan')?.value?.trim()||'';
+
   // Object yang dikirim ke Supabase — kolom sesuai schema DB
   const outPosisi = '';
   const dbOut = {
@@ -5482,7 +5527,9 @@ async function submitOutflow(){
     driver: driver,
     status: 'lunas',
     sparepart_id: (isCustomOnderdil && trackRitase) ? null : (spId || null),
-    jml_pasang: jmlOnderdil,
+    jml_pasang: finalJml,
+    harga_satuan: hargaSatuan || null,
+    satuan: satuan,
     posisi: outPosisi,
     created_at: new Date().toISOString()
   };
@@ -5492,7 +5539,8 @@ async function submitOutflow(){
     id: outId, type: 'outflow', label: txnLabel,
     sub: `No.Nota: ${nota} · ${toko}${driver?' · '+driver:''}`,
     amount, date, armada, nota, toko, kategori: cat, subKategori, driver,
-    status: 'lunas', sparepartId: (isCustomOnderdil && trackRitase) ? null : (spId || null), jmlPasang: jmlOnderdil,
+    status: 'lunas', sparepartId: (isCustomOnderdil && trackRitase) ? null : (spId || null), jmlPasang: finalJml,
+    hargaSatuan, satuan,
     posisi: outPosisi
   };
   const customSpId = isCustomOnderdil ? 'spc'+Date.now() : null;
@@ -5633,13 +5681,10 @@ let gsTokenClient = null;
 let gsAccessToken = null;
 let gsTokenExpiry = 0; // epoch ms
 let gsSpreadsheetId = localStorage.getItem('bhd_gs_sheet_id') || '1kPfQ2jj6KYVuH4SXOZBIUduNmmB335sImcy7xFFAF0k';
-let gsTabName = localStorage.getItem('bhd_gs_tab_name') || 'DATA BASE';
 
 function initGSheetSettings(){
   const idEl=document.getElementById('gs-sheet-id');
-  const tabEl=document.getElementById('gs-tab-name');
   if(idEl) idEl.value = gsSpreadsheetId;
-  if(tabEl) tabEl.value = gsTabName;
   updateGSStatusBadge();
   // Setup Google Identity Services token client
   if(typeof google!=='undefined' && google.accounts && google.accounts.oauth2){
@@ -5672,14 +5717,12 @@ function updateGSStatusBadge(){
 }
 function saveGSheetConfig(){
   gsSpreadsheetId = document.getElementById('gs-sheet-id')?.value?.trim()||'';
-  gsTabName = document.getElementById('gs-tab-name')?.value?.trim()||'';
   localStorage.setItem('bhd_gs_sheet_id', gsSpreadsheetId);
-  localStorage.setItem('bhd_gs_tab_name', gsTabName);
   showToast('✅ Konfigurasi Google Sheets disimpan');
 }
 function connectGoogleSheets(){
   if(!gsTokenClient){showToast('⚠️ Google belum siap, coba lagi sebentar');return;}
-  if(!gsSpreadsheetId||!gsTabName){showToast('Isi & simpan Spreadsheet ID + Nama Tab dulu');return;}
+  if(!gsSpreadsheetId){showToast('Isi & simpan Spreadsheet ID dulu');return;}
   gsTokenClient.requestAccessToken({prompt:'consent'});
 }
 async function ensureGSheetToken(){
@@ -5701,48 +5744,67 @@ async function ensureGSheetToken(){
   });
 }
 // Kirim 1 baris data transaksi ke Google Sheet (kolom B s/d J — kolom A/No tidak disentuh)
+// Nama tab tetap (sesuai struktur 4-sheet yang sudah dibuat) — spreadsheet ID tetap bisa diatur di Settings
+const GS_TAB_INFLOW = 'DATABASE Inflow';
+const GS_TAB_OUT_TUNAI = 'DATABASE Outflow Tunai';
+const GS_TAB_OUT_ONDERDIL = 'DATABASE Outflow Onderdil';
+const GS_TAB_OUT_UMUM = 'DATABASE Outflow Umum';
+
+async function _gsAppendRow(tabName, range, row){
+  const fullRange = `'${tabName}'!${range}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(fullRange)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{'Authorization':'Bearer '+gsAccessToken, 'Content-Type':'application/json'},
+    body: JSON.stringify({values:[row]})
+  });
+  if(!res.ok){
+    const errBody = await res.json().catch(()=>({}));
+    console.warn('Google Sheets sync fail ('+tabName+'):', res.status, errBody);
+    const lsEl=document.getElementById('gs-last-sync');
+    if(lsEl) lsEl.innerHTML = `<span style="color:var(--danger);">⚠️ Sync ke "${tabName}" gagal (${res.status})</span>`;
+    return false;
+  }
+  return true;
+}
+
+// Kirim 1 baris transaksi ke salah satu dari 4 sheet, sesuai tipe & kategorinya.
+// Kolom "No" (selalu di kolom A) tidak pernah disentuh — biar nomor otomatis Kakak tetap jalan.
 async function syncTxnToGSheet(txn){
   try{
-    if(!gsSpreadsheetId||!gsTabName) return; // belum dikonfigurasi, skip diam-diam
+    if(!gsSpreadsheetId) return; // belum dikonfigurasi, skip diam-diam
     const ok = await ensureGSheetToken();
     if(!ok){ console.warn('Google Sheets: token tidak tersedia, sync dilewati'); return; }
 
-    const isInflow = txn.type==='inflow';
-    const setoran = isInflow ? txn.amount : '';
-    const outTunai = (!isInflow && txn.kategori==='Tunai') ? txn.amount : '';
-    const outOnderdil = (!isInflow && txn.kategori==='Onderdil') ? txn.amount : '';
-    const outUmum = (!isInflow && txn.kategori==='UMUM') ? txn.amount : '';
-    const outDokumen = (!isInflow && txn.kategori==='Dokumen') ? txn.amount : '';
     const keterangan = txn.label||'';
+    let success=false;
 
-    const row = [
-      txn.date||'',           // B - Tanggal
-      txn.armada||'',         // C - No Polisi
-      txn.driver||'',         // D - Nama Sopir
-      setoran,                // E - Setoran
-      outTunai,                // F - Pengeluaran Tunai
-      outOnderdil,             // G - Pengeluaran Onderdil
-      outUmum,                 // H - Pengeluaran Umum
-      outDokumen,               // I - Outflow Dokumen
-      keterangan               // J - Keterangan
-    ];
+    if(txn.type==='inflow'){
+      // DATABASE Inflow: B TANGGAL, C NO POLISI, D NAMA SOPIR, E TITIK MUAT, F TITIK BONGKAR, G SETORAN, H TOTAL
+      const row = [txn.date||'', txn.armada||'', txn.driver||'', txn.muat||'', txn.bongkar||'', txn.amount||'', txn.amount||''];
+      success = await _gsAppendRow(GS_TAB_INFLOW, 'B:H', row);
 
-    const range = `'${gsTabName}'!B:J`;
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-    const res = await fetch(url, {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+gsAccessToken, 'Content-Type':'application/json'},
-      body: JSON.stringify({values:[row]})
-    });
-    if(!res.ok){
-      const errBody = await res.json().catch(()=>({}));
-      console.warn('Google Sheets sync fail:', res.status, errBody);
-      const lsEl=document.getElementById('gs-last-sync');
-      if(lsEl) lsEl.innerHTML = `<span style="color:var(--danger);">⚠️ Sync terakhir gagal (${res.status})</span>`;
-      return;
+    } else if(txn.kategori==='Onderdil'){
+      // DATABASE Outflow Onderdil: B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, H TOTAL, I NO.NOTA, J NAMA TOKO
+      const row = [txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||'', txn.nota||'', txn.toko||''];
+      success = await _gsAppendRow(GS_TAB_OUT_ONDERDIL, 'B:J', row);
+
+    } else if(txn.kategori==='UMUM'){
+      // DATABASE Outflow Umum: B TANGGAL, C KETERANGAN, D JUMLAH, E SATUAN, F HARGA, G TOTAL (tidak ada No Polisi)
+      const row = [txn.date||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||''];
+      success = await _gsAppendRow(GS_TAB_OUT_UMUM, 'B:G', row);
+
+    } else {
+      // Tunai & Dokumen digabung ke sheet Outflow Tunai
+      // DATABASE Outflow Tunai: B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, H TOTAL
+      const row = [txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'', txn.amount||''];
+      success = await _gsAppendRow(GS_TAB_OUT_TUNAI, 'B:H', row);
     }
-    const lsEl=document.getElementById('gs-last-sync');
-    if(lsEl) lsEl.innerHTML = `✅ Sync terakhir: ${new Date().toLocaleString('id-ID')}`;
+
+    if(success){
+      const lsEl=document.getElementById('gs-last-sync');
+      if(lsEl) lsEl.innerHTML = `✅ Sync terakhir: ${new Date().toLocaleString('id-ID')}`;
+    }
   }catch(e){
     console.warn('syncTxnToGSheet error:', e);
   }
@@ -6251,7 +6313,8 @@ async function syncFromSupabase(){
           armada:t.armada||'', muat:t.muat||'', bongkar:t.bongkar||'',
           driver:t.driver||'', nota:t.nota||'', toko:t.toko||'',
           kategori:t.kategori||'', subKategori:t.sub_kategori||'', status:t.status||'lunas',
-          sparepartId:t.sparepart_id||null, posisi:t.posisi||'', jmlPasang:t.jml_pasang||1, created_at:t.created_at
+          sparepartId:t.sparepart_id||null, posisi:t.posisi||'', jmlPasang:t.jml_pasang||1,
+          hargaSatuan:Number(t.harga_satuan||0), satuan:t.satuan||'', created_at:t.created_at
         }));
         txnSuccess = true;
       }
