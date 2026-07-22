@@ -4348,18 +4348,28 @@ function handleImportFile(event){
 
 async function confirmImportTxn(){
   if(!_importRows.length){showToast('Tidak ada data valid untuk diimport');return;}
+
+  // Cek dulu koneksi Google Sheets SEBELUM mulai import massal — supaya tidak diam-diam gagal sync
+  let gsReady=false;
+  if(gsSpreadsheetId){
+    gsReady = await ensureGSheetToken();
+  }
+  const gsWarning = gsReady
+    ? '<br><span style="color:var(--success);font-size:11px;">✅ Google Sheets terhubung, data akan ikut ter-sync.</span>'
+    : '<br><span style="color:var(--warning);font-size:11px;">⚠️ Google Sheets TIDAK terhubung — data cuma masuk ke database, tidak akan muncul di Sheets. Hubungkan dulu lewat Settings kalau mau ikut ter-sync.</span>';
+
   showConfirmPopup('📥 Konfirmasi Import',
-    `Akan menambahkan <b>${_importRows.length} transaksi baru</b> ke database (dan ikut ter-sync ke Google Sheets kalau sudah terhubung). Ritase tidak otomatis dihitung untuk data import (supaya tidak mengganggu data ritase yang sudah berjalan). Proses bisa agak lama kalau datanya banyak. Lanjutkan?`,
+    `Akan menambahkan <b>${_importRows.length} transaksi baru</b> ke database. Ritase tidak otomatis dihitung untuk data import (supaya tidak mengganggu data ritase yang sudah berjalan).${gsWarning}<br>Lanjutkan?`,
     async ()=>{
       const btn=document.getElementById('import-confirm-btn');
       const statusElLive=document.getElementById('import-status');
       if(btn){btn.disabled=true;}
-      let success=0, failed=0;
+      let success=0, failed=0, gsSynced=0, gsFailed=0;
       let idx=0;
       for(const r of _importRows){
         idx++;
         if(btn) btn.textContent=`⏳ Mengimport ${idx}/${_importRows.length}...`;
-        if(statusElLive) statusElLive.textContent=`⏳ Memproses baris ${idx} dari ${_importRows.length} (termasuk sync ke Google Sheets, mohon tunggu)...`;
+        if(statusElLive) statusElLive.textContent=`⏳ Memproses baris ${idx} dari ${_importRows.length}${gsReady?' (termasuk sync ke Google Sheets, mohon tunggu)':''}...`;
         const txnId='txn_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
         const label=r.keterangan;
         const dbTxn={
@@ -4381,21 +4391,27 @@ async function confirmImportTxn(){
             hargaSatuan:0, satuan:'', ritaseCounted:false, ritaseArmada:null, statusArmada:''
           };
           transactions.unshift(localTxn);
-          await syncTxnToGSheet(localTxn);
           success++;
+          if(gsReady){
+            const synced=await syncTxnToGSheet(localTxn);
+            if(synced) gsSynced++; else gsFailed++;
+          }
         }catch(e){
           console.warn('Import row fail:',r,e);
           failed++;
         }
       }
-      logAudit('create','transaksi',`Import Excel: ${success} transaksi berhasil${failed?', '+failed+' gagal':''}`);
+      logAudit('create','transaksi',`Import Excel: ${success} transaksi berhasil${failed?', '+failed+' gagal':''}${gsReady?' · Sheets: '+gsSynced+' sync, '+gsFailed+' gagal':' · Sheets: dilewati (tidak terhubung)'}`);
       renderDashboard(); applyTxnFilters(); renderLaporanTable();
       if(typeof renderKeuanganStats==='function') renderKeuanganStats();
       _importRows=[];
       const previewWrap=document.getElementById('import-preview-wrap');
       if(previewWrap) previewWrap.style.display='none';
       const statusEl=document.getElementById('import-status');
-      if(statusEl) statusEl.innerHTML=`✅ Import selesai: ${success} berhasil${failed?', ⚠️ '+failed+' gagal':''}`;
+      let finalMsg=`✅ Import selesai: ${success} berhasil ke database${failed?', ⚠️ '+failed+' gagal':''}`;
+      if(gsReady) finalMsg+=`<br>📊 Google Sheets: ${gsSynced} ter-sync${gsFailed?', ⚠️ '+gsFailed+' gagal sync':''}`;
+      else finalMsg+=`<br>⚠️ Google Sheets: dilewati semua (tidak terhubung saat import — hubungkan di Settings lalu import ulang kalau perlu)`;
+      if(statusEl) statusEl.innerHTML=finalMsg;
       if(btn){btn.disabled=false;btn.textContent='✅ Import Sekarang';}
       showToast(`✅ ${success} transaksi berhasil diimport`);
       _isSyncing=false;
@@ -6234,14 +6250,16 @@ async function _gsAppendRow(tabName, idCol, segments, txnId){
 // Kolom "No" (A) dan "TOTAL" tidak pernah disentuh — biar nomor & rumus otomatis Kakak tetap jalan.
 async function syncTxnToGSheet(txn){
   try{
-    if(!gsSpreadsheetId) return; // belum dikonfigurasi, skip diam-diam
+    if(!gsSpreadsheetId) return false; // belum dikonfigurasi, skip diam-diam
     const ok = await ensureGSheetToken();
-    if(!ok){ console.warn('Google Sheets: token tidak tersedia, sync dilewati'); return; }
+    if(!ok){ console.warn('Google Sheets: token tidak tersedia, sync dilewati'); return false; }
     const {tab, idCol, segments} = _gsRowPlan(txn);
     const success = await _gsAppendRow(tab, idCol, segments, txn.id);
     if(success) _gsSyncOk();
+    return !!success;
   }catch(e){
     console.warn('syncTxnToGSheet error:', e);
+    return false;
   }
 }
 // Update baris yang sudah ada (dicari berdasarkan ID tersembunyi) saat transaksi di-edit.
