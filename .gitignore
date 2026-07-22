@@ -2,3 +2,12 @@
 node_modules
 .env
 package-lock.json
+.vercel
+
+# Excel / CSV files and Office temp files
+~$*
+*.xlsx
+*.csv
+index_20.html
+scratch/
+
