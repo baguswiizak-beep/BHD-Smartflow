@@ -9,3 +9,5 @@ package-lock.json
 *.xlsx
 *.csv
 index_20.html
+scratch/
+
