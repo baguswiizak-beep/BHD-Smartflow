@@ -4349,12 +4349,17 @@ function handleImportFile(event){
 async function confirmImportTxn(){
   if(!_importRows.length){showToast('Tidak ada data valid untuk diimport');return;}
   showConfirmPopup('📥 Konfirmasi Import',
-    `Akan menambahkan <b>${_importRows.length} transaksi baru</b> ke database. Ritase tidak otomatis dihitung untuk data import (supaya tidak mengganggu data ritase yang sudah berjalan). Lanjutkan?`,
+    `Akan menambahkan <b>${_importRows.length} transaksi baru</b> ke database (dan ikut ter-sync ke Google Sheets kalau sudah terhubung). Ritase tidak otomatis dihitung untuk data import (supaya tidak mengganggu data ritase yang sudah berjalan). Proses bisa agak lama kalau datanya banyak. Lanjutkan?`,
     async ()=>{
       const btn=document.getElementById('import-confirm-btn');
-      if(btn){btn.disabled=true;btn.textContent='⏳ Mengimport...';}
+      const statusElLive=document.getElementById('import-status');
+      if(btn){btn.disabled=true;}
       let success=0, failed=0;
+      let idx=0;
       for(const r of _importRows){
+        idx++;
+        if(btn) btn.textContent=`⏳ Mengimport ${idx}/${_importRows.length}...`;
+        if(statusElLive) statusElLive.textContent=`⏳ Memproses baris ${idx} dari ${_importRows.length} (termasuk sync ke Google Sheets, mohon tunggu)...`;
         const txnId='txn_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
         const label=r.keterangan;
         const dbTxn={
@@ -4369,12 +4374,14 @@ async function confirmImportTxn(){
         };
         try{
           await sbFetch('transactions',{method:'POST',body:dbTxn});
-          transactions.unshift({
+          const localTxn={
             id:txnId, type:r.tipe, label, sub:dbTxn.sub, amount:r.nominal, date:r.tgl,
             armada:r.armada||'', driver:r.driver||'', muat:'', bongkar:'', nota:'', toko:'',
             kategori:r.kategori, subKategori:'', status:'lunas', sparepartId:null, jmlPasang:1,
             hargaSatuan:0, satuan:'', ritaseCounted:false, ritaseArmada:null, statusArmada:''
-          });
+          };
+          transactions.unshift(localTxn);
+          await syncTxnToGSheet(localTxn);
           success++;
         }catch(e){
           console.warn('Import row fail:',r,e);
