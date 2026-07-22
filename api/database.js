@@ -598,9 +598,9 @@ const db = {
         try {
             await client.query('BEGIN');
             
-            // 1. Dapatkan daftar txn_id terkait pemakaian item ini
-            const { rows: usages } = await client.query('SELECT txn_id FROM inventory_installed WHERE inventory_id = $1', [id]);
-            const txnIds = usages.map(u => u.txn_id).filter(t => t);
+            // Cek stok
+            const { rows } = await client.query('SELECT stok_sisa FROM inventory WHERE id = $1', [id]);
+            if (rows.length === 0) throw new Error('Item tidak ditemukan');
             
             const jml = installData.jumlah || 1;
             if (rows[0].stok_sisa < jml) throw new Error('Stok tidak cukup');
