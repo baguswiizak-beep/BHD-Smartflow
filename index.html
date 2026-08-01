@@ -4238,11 +4238,12 @@ function downloadImportTemplate(){
   if(typeof XLSX==='undefined'){showToast('⚠️ Library Excel belum siap, coba lagi sebentar');return;}
   const wb=XLSX.utils.book_new();
   const contoh=[
-    {'Tipe':'Inflow','Tanggal':'2026-07-01','No Polisi':'B 9199 BYW','Nama Driver':'KOMENG','Kategori':'','Jumlah':'','Satuan':'','Harga Satuan':'','Nominal':1100000,'Keterangan':'Setoran'},
-    {'Tipe':'Outflow','Tanggal':'2026-07-01','No Polisi':'B 9199 BYW','Nama Driver':'KOMENG','Kategori':'Tunai','Jumlah':40,'Satuan':'Liter','Harga Satuan':3750,'Nominal':150000,'Keterangan':'Beli Solar'},
+    {'Tipe':'Inflow','Tanggal':'2026-07-01','No Polisi':'B 9199 BYW','Nama Driver':'KOMENG','Titik Muat':'Pasir Cilegon','Titik Bongkar':'Cisauk','Kategori':'','Sub Kategori':'','Jumlah':'','Satuan':'','Harga Satuan':'','Nominal':1100000,'No Nota':'','Nama Toko':'','Keterangan':'Setoran'},
+    {'Tipe':'Outflow','Tanggal':'2026-07-01','No Polisi':'B 9199 BYW','Nama Driver':'KOMENG','Titik Muat':'','Titik Bongkar':'','Kategori':'Tunai','Sub Kategori':'','Jumlah':40,'Satuan':'Liter','Harga Satuan':3750,'Nominal':150000,'No Nota':'','Nama Toko':'','Keterangan':'Beli Solar'},
+    {'Tipe':'Outflow','Tanggal':'2026-07-01','No Polisi':'B 9199 BYW','Nama Driver':'KOMENG','Titik Muat':'','Titik Bongkar':'','Kategori':'Onderdil','Sub Kategori':'Ban','Jumlah':2,'Satuan':'set','Harga Satuan':4275000,'Nominal':8550000,'No Nota':'7350','Nama Toko':'HIMALAYA','Keterangan':'Ban Golden Crown 1100 CR 926'},
   ];
   const ws=XLSX.utils.json_to_sheet(contoh);
-  ws['!cols']=[{wch:10},{wch:12},{wch:14},{wch:14},{wch:12},{wch:9},{wch:10},{wch:13},{wch:14},{wch:24}];
+  ws['!cols']=[{wch:10},{wch:12},{wch:14},{wch:14},{wch:16},{wch:16},{wch:12},{wch:12},{wch:9},{wch:10},{wch:13},{wch:14},{wch:12},{wch:16},{wch:28}];
   XLSX.utils.book_append_sheet(wb,ws,'Transaksi');
 
   const petunjuk=[
@@ -4250,15 +4251,20 @@ function downloadImportTemplate(){
     {'Kolom':'Tanggal','Wajib':'Ya','Keterangan':'Format YYYY-MM-DD, contoh 2026-07-01'},
     {'Kolom':'No Polisi','Wajib':'Tidak','Keterangan':'Kosongkan untuk Outflow kategori UMUM'},
     {'Kolom':'Nama Driver','Wajib':'Tidak','Keterangan':'Boleh dikosongkan'},
+    {'Kolom':'Titik Muat','Wajib':'Tidak','Keterangan':'Hanya relevan untuk Inflow — Pelabuhan / Gudang Asal, boleh dikosongkan'},
+    {'Kolom':'Titik Bongkar','Wajib':'Tidak','Keterangan':'Hanya relevan untuk Inflow — Gudang / Kota Tujuan, boleh dikosongkan'},
     {'Kolom':'Kategori','Wajib':'Utk Outflow','Keterangan':'UMUM / Tunai / Onderdil / Dokumen — kosongkan untuk Inflow'},
+    {'Kolom':'Sub Kategori','Wajib':'Tidak','Keterangan':'Hanya relevan untuk Outflow Onderdil — misal Ban, Oli, Kampas Rem. Boleh dikosongkan'},
     {'Kolom':'Jumlah','Wajib':'Tidak','Keterangan':'Kuantitas (contoh: 40) — kosongkan kalau tidak relevan, default 1'},
-    {'Kolom':'Satuan','Wajib':'Tidak','Keterangan':'Liter / Pcs / Botol / dll — boleh kosong'},
+    {'Kolom':'Satuan','Wajib':'Tidak','Keterangan':'Liter / Pcs / Botol / Set / dll — boleh kosong'},
     {'Kolom':'Harga Satuan','Wajib':'Tidak','Keterangan':'Harga per unit (angka murni) — kosongkan kalau tidak relevan'},
     {'Kolom':'Nominal','Wajib':'Ya','Keterangan':'Total nominal transaksi, angka murni, tanpa titik/koma/Rp'},
-    {'Kolom':'Keterangan','Wajib':'Tidak','Keterangan':'Label/deskripsi bebas'},
+    {'Kolom':'No Nota','Wajib':'Tidak','Keterangan':'Nomor nota/invoice pembelian — boleh dikosongkan'},
+    {'Kolom':'Nama Toko','Wajib':'Tidak','Keterangan':'Nama toko/vendor tempat beli — boleh dikosongkan'},
+    {'Kolom':'Keterangan','Wajib':'Tidak','Keterangan':'Label/deskripsi/nama barang'},
   ];
   const ws2=XLSX.utils.json_to_sheet(petunjuk);
-  ws2['!cols']=[{wch:14},{wch:12},{wch:50}];
+  ws2['!cols']=[{wch:14},{wch:12},{wch:55}];
   XLSX.utils.book_append_sheet(wb,ws2,'Petunjuk');
 
   XLSX.writeFile(wb,'BHD_Template_Import_Transaksi.xlsx');
@@ -4303,6 +4309,11 @@ function handleImportFile(event){
 
         const armada=String(r['No Polisi']||'').trim();
         const driver=String(r['Nama Driver']||'').trim();
+        const muat=String(r['Titik Muat']||'').trim();
+        const bongkar=String(r['Titik Bongkar']||'').trim();
+        const subKategori=String(r['Sub Kategori']||'').trim();
+        const nota=String(r['No Nota']||'').trim();
+        const toko=String(r['Nama Toko']||'').trim();
         let kategori=String(r['Kategori']||'').trim();
         const keterangan=String(r['Keterangan']||'').trim();
         const jumlahRaw=parseFloat(String(r['Jumlah']||'').toString().replace(/[^\d.-]/g,''));
@@ -4319,7 +4330,7 @@ function handleImportFile(event){
           kategori='Inflow';
         }
 
-        valid.push({tipe,tgl,armada,driver,kategori,nominal,jumlah,satuan,hargaSatuan,keterangan:keterangan||(tipe==='inflow'?'Setoran '+armada:'Pengeluaran')});
+        valid.push({tipe,tgl,armada,driver,muat,bongkar,kategori,subKategori,nota,toko,nominal,jumlah,satuan,hargaSatuan,keterangan:keterangan||(tipe==='inflow'?'Setoran '+armada:'Pengeluaran')});
       });
 
       _importRows=valid;
@@ -4334,7 +4345,7 @@ function handleImportFile(event){
           <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--bg3);border-radius:9px;font-size:11px;">
             <div style="flex:1;min-width:0;">
               <div style="font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.keterangan}</div>
-              <div style="color:var(--text3);font-size:10px;">${fmtDate(r.tgl)} · ${r.armada||'—'} · ${r.kategori}</div>
+              <div style="color:var(--text3);font-size:10px;">${fmtDate(r.tgl)} · ${r.armada||'—'} · ${r.tipe==='inflow'&&(r.muat||r.bongkar)?((r.muat||'—')+' → '+(r.bongkar||'—')):r.kategori}</div>
             </div>
             <div style="font-weight:800;color:${r.tipe==='inflow'?'var(--success)':'var(--danger)'};white-space:nowrap;margin-left:8px;">${r.tipe==='inflow'?'+':'-'}${fmt(r.nominal)}</div>
           </div>`).join('') + (valid.length>50?`<div style="text-align:center;font-size:10px;color:var(--text3);padding:4px;">...dan ${valid.length-50} baris lainnya</div>`:'');
@@ -4380,12 +4391,15 @@ async function confirmImportTxn(){
         if(statusElLive) statusElLive.textContent=`⏳ Memproses baris ${idx} dari ${_importRows.length}${gsReady?' (termasuk sync ke Google Sheets, mohon tunggu)':''}...`;
         const txnId='txn_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
         const label=r.keterangan;
+        const subLabel = r.tipe==='outflow'
+          ? `No.Nota: ${r.nota||'—'} · ${r.toko||'—'}${r.driver?' · '+r.driver:''}`
+          : (r.driver?r.driver+' · ':'')+'Import Excel';
         const dbTxn={
           id:txnId, type:r.tipe, label,
-          sub:(r.driver?r.driver+' · ':'')+'Import Excel',
+          sub:subLabel,
           amount:r.nominal, date:r.tgl, armada:r.armada||'', driver:r.driver||'',
-          muat:'', bongkar:'', nota:'', toko:'', kategori:r.kategori,
-          sub_kategori:'', status:'lunas', sparepart_id:null, jml_pasang:r.jumlah||1,
+          muat:r.muat||'', bongkar:r.bongkar||'', nota:r.nota||'', toko:r.toko||'', kategori:r.kategori,
+          sub_kategori:r.subKategori||'', status:'lunas', sparepart_id:null, jml_pasang:r.jumlah||1,
           harga_satuan:r.hargaSatuan||null, satuan:r.satuan||'', posisi:'',
           ritase_counted:false, ritase_armada:null, status_armada:'',
           created_at:new Date().toISOString()
@@ -4394,8 +4408,8 @@ async function confirmImportTxn(){
           await sbFetch('transactions',{method:'POST',body:dbTxn});
           const localTxn={
             id:txnId, type:r.tipe, label, sub:dbTxn.sub, amount:r.nominal, date:r.tgl,
-            armada:r.armada||'', driver:r.driver||'', muat:'', bongkar:'', nota:'', toko:'',
-            kategori:r.kategori, subKategori:'', status:'lunas', sparepartId:null, jmlPasang:r.jumlah||1,
+            armada:r.armada||'', driver:r.driver||'', muat:r.muat||'', bongkar:r.bongkar||'', nota:r.nota||'', toko:r.toko||'',
+            kategori:r.kategori, subKategori:r.subKategori||'', status:'lunas', sparepartId:null, jmlPasang:r.jumlah||1,
             hargaSatuan:r.hargaSatuan||0, satuan:r.satuan||'', ritaseCounted:false, ritaseArmada:null, statusArmada:''
           };
           transactions.unshift(localTxn);
