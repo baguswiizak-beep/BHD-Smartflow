@@ -6349,8 +6349,8 @@ async function clearAllGSheetData(){
   for(const plan of clearPlans){
     for(const rangeCol of plan.ranges){
       try{
-        // clear values dari row 2 sampai row 100000 (sisakan header row 1)
-        const range = `'${plan.tab}'!${rangeCol.split(':')[0]}2:${rangeCol.split(':')[1]}100000`;
+        // Header ada di ROW 3 (bukan row 1) — clear data mulai row 4 supaya header TIDAK PERNAH tersentuh
+        const range = `'${plan.tab}'!${rangeCol.split(':')[0]}4:${rangeCol.split(':')[1]}100000`;
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(range)}:clear`;
         const res = await fetch(url, {method:'POST', headers:{'Authorization':'Bearer '+gsAccessToken}});
         if(res.ok) successCount++; else failCount++;
