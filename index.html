@@ -4054,9 +4054,16 @@ function renderLaporanTable(){
     const outDokumen=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Dokumen').reduce((s,t)=>s+t.amount,0);
     const outUmum=bebanPerUnit;
     const nett=inflow-(outTunai+outOnderdil+outUmum+outDokumen);
-    const ritase=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.amount>0).length;
+    const ritaseTxns=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.amount>0);
+    const ritase=ritaseTxns.length;
     const rpPerRit=ritase>0?Math.round(inflow/ritase):0;
-    return{nopol:f.nopol,driver:f.driver,status:f.status,inflow,outTunai,outOnderdil,outUmum,outDokumen,nett,ritase,rpPerRit};
+    // Nama sopir dinamis: ambil dari transaksi Inflow di periode ini, bukan cuma driver statis di data master.
+    // Jika lebih dari 1 sopir berbeda tercatat di periode ini (pergantian sopir), tampilkan gabungan namanya.
+    const driversInPeriod=[...new Set(ritaseTxns.map(t=>t.driver).filter(Boolean))];
+    const driverLabel = driversInPeriod.length===0 ? f.driver
+                       : driversInPeriod.length===1 ? driversInPeriod[0]
+                       : driversInPeriod.join(' / ');
+    return{nopol:f.nopol,driver:driverLabel,status:f.status,inflow,outTunai,outOnderdil,outUmum,outDokumen,nett,ritase,rpPerRit};
   });
   // Sort
   rows.sort((a,b)=>{
