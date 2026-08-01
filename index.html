@@ -6328,6 +6328,41 @@ async function syncTxnDeleteFromGSheet(txn){
     console.warn('syncTxnDeleteFromGSheet error:', e);
   }
 }
+// Hapus SEMUA baris data (bukan cuma 1) di ke-4 tab Database sekaligus — dipakai oleh "Hapus Semua Transaksi".
+// Beda dari syncTxnDeleteFromGSheet (yang hapus 1 baris per transaksi, lambat kalau dipanggil ribuan kali):
+// fungsi ini KOSONGKAN ISI (clear values) seluruh baris data dalam beberapa batch per tab — bukan hapus baris
+// secara struktural — supaya kolom TOTAL (rumus manual milik Kakak) di sebelahnya tidak pernah tersentuh/geser.
+async function clearAllGSheetData(){
+  if(!gsSpreadsheetId) return {ok:false, reason:'not_configured'};
+  const ok = await ensureGSheetToken();
+  if(!ok) return {ok:false, reason:'auth_failed'};
+
+  // Kolom data mentah per tab (TIDAK termasuk kolom TOTAL/H atau G, sesuai _gsRowPlan di atas — dilewati sengaja)
+  const clearPlans = [
+    {tab:GS_TAB_INFLOW,        ranges:['B:G','I:J']},   // lewati H (TOTAL)
+    {tab:GS_TAB_OUT_ONDERDIL,  ranges:['B:G','I:K']},   // lewati H (TOTAL)
+    {tab:GS_TAB_OUT_UMUM,      ranges:['B:F','H:H']},   // lewati G (TOTAL)
+    {tab:GS_TAB_OUT_TUNAI,     ranges:['B:G','I:I']},   // lewati H (TOTAL)
+  ];
+
+  let successCount=0, failCount=0;
+  for(const plan of clearPlans){
+    for(const rangeCol of plan.ranges){
+      try{
+        // clear values dari row 2 sampai row 100000 (sisakan header row 1)
+        const range = `'${plan.tab}'!${rangeCol.split(':')[0]}2:${rangeCol.split(':')[1]}100000`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(range)}:clear`;
+        const res = await fetch(url, {method:'POST', headers:{'Authorization':'Bearer '+gsAccessToken}});
+        if(res.ok) successCount++; else failCount++;
+      }catch(e){
+        console.warn('clearAllGSheetData error on', plan.tab, e);
+        failCount++;
+      }
+    }
+  }
+  return {ok:failCount===0, successCount, failCount};
+}
+
 function confirmReset(){
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent='🚨 Hapus Semua Transaksi';
@@ -6344,6 +6379,12 @@ function confirmReset(){
         if(btn){btn.disabled=v!=='HAPUS SEMUA';btn.style.opacity=v==='HAPUS SEMUA'?'1':'0.4';}
       "/>
     </div>
+    ${gsSpreadsheetId ? `
+    <label style="display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text2);cursor:pointer;">
+      <input type="checkbox" id="reset-also-gsheet" checked style="width:16px;height:16px;flex-shrink:0;"/>
+      📊 Ikut kosongkan data di Google Sheets (kolom rumus TOTAL tidak akan tersentuh)
+    </label>` : `
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px;">💡 Google Sheets belum terhubung — hapus hanya berlaku di aplikasi.</div>`}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <button onclick="closeSm()" style="padding:12px;border-radius:12px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Batal</button>
       <button id="reset-confirm-btn" disabled style="opacity:0.4;padding:12px;border-radius:12px;border:none;background:var(--danger);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;" onclick="executeResetAll()">🗑️ Hapus Semua</button>
@@ -6352,6 +6393,7 @@ function confirmReset(){
 }
 
 async function executeResetAll(){
+  const alsoGSheet = document.getElementById('reset-also-gsheet')?.checked && gsSpreadsheetId;
   closeSm();
   try {
     showToast('⏳ Sedang menghapus semua data...');
@@ -6368,7 +6410,20 @@ async function executeResetAll(){
     transactions=[];
     renderDashboard(); applyTxnFilters(); renderLaporanTable(); renderGudang();
     if(typeof renderKeuanganStats==='function') renderKeuanganStats();
-    showToast('✅ Berhasil menghapus semua transaksi');
+
+    if(alsoGSheet){
+      showToast('⏳ Mengosongkan data di Google Sheets...');
+      const gsResult = await clearAllGSheetData();
+      if(gsResult.ok){
+        showToast('✅ Berhasil menghapus semua transaksi (aplikasi + Google Sheets)');
+      } else if(gsResult.reason==='auth_failed'){
+        showToast('⚠️ Transaksi terhapus, tapi gagal konek ke Google Sheets — kosongkan manual atau hubungkan ulang di Settings');
+      } else {
+        showToast('⚠️ Transaksi terhapus. Google Sheets: '+gsResult.successCount+' berhasil, '+gsResult.failCount+' gagal dikosongkan');
+      }
+    } else {
+      showToast('✅ Berhasil menghapus semua transaksi');
+    }
     _isSyncing = false;
     syncFromSupabase();
   } catch(e) {
