@@ -1511,6 +1511,37 @@ body{background:var(--bg);}
       </div>
     </div>
 
+    <div class="settings-card" style="margin-bottom:14px;">
+      <div class="settings-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>📒 Import Laporan Harian</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin:6px 0 10px;line-height:1.5;">
+        Baca langsung file <b>Laporan HARIAN</b> (1 sheet per tanggal): Setoran → Inflow, Pengeluaran Tunai → Outflow Tunai/UMUM, Pemakaian Onderdil → Outflow Onderdil. Transaksi yang sudah ada otomatis dilewati.
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <button onclick="lhPickFromDrive()" style="flex:1;min-width:140px;padding:10px;border-radius:11px;border:1.5px solid var(--green);background:var(--green-bg);color:var(--green2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">☁️ Pilih dari Google Drive</button>
+        <button onclick="document.getElementById('lh-file-input').click()" style="flex:1;min-width:140px;padding:10px;border-radius:11px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">📤 Upload dari Komputer</button>
+        <input type="file" id="lh-file-input" accept=".xlsx,.xls" style="display:none;" onchange="lhHandleLocalFile(event)"/>
+      </div>
+      <button id="lh-reload-btn" onclick="lhReloadLastDrive()" style="display:none;width:100%;padding:9px;border-radius:11px;border:1px dashed var(--green-bd);background:transparent;color:var(--green2);font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px;"></button>
+      <div id="lh-status" style="font-size:11px;color:var(--text3);"></div>
+      <div id="lh-preview" style="display:none;margin-top:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:11px;font-weight:700;color:var(--text2);">Pilih tanggal yang mau diimport</span>
+          <span style="display:flex;gap:6px;">
+            <button onclick="lhToggleAll(true)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:'Inter',sans-serif;">Semua</button>
+            <button onclick="lhToggleAll(false)" style="font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:'Inter',sans-serif;">Kosongkan</button>
+          </span>
+        </div>
+        <div id="lh-day-list" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+        <label style="display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:10px;padding:9px 11px;margin-bottom:10px;font-size:11px;color:var(--text2);cursor:pointer;">
+          <input type="checkbox" id="lh-ritase" checked style="width:15px;height:15px;flex-shrink:0;"/>
+          🔄 Hitung ritase onderdil untuk setiap setoran (sama seperti input Inflow manual)
+        </label>
+        <button onclick="lhConfirmImport()" id="lh-import-btn" style="width:100%;padding:11px;border-radius:11px;border:none;background:linear-gradient(135deg,#1F4A57,#3F8197);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;">✅ Import</button>
+      </div>
+    </div>
+
     <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between;">
       <span>Rekap Transaksi per Armada</span>
       <span id="rekap-period-badge" style="font-size:10px;color:var(--text3);background:var(--bg3);padding:3px 9px;border-radius:20px;border:1px solid var(--card-b);">Bulan Ini</span>
@@ -1651,6 +1682,10 @@ body{background:var(--bg);}
         <div>
           <label class="form-label">Spreadsheet ID</label>
           <input class="form-input" id="gs-sheet-id" placeholder="ID dari link Google Sheet"/>
+        </div>
+        <div>
+          <label class="form-label">Google API Key (untuk pilih file dari Drive)</label>
+          <input class="form-input" id="gs-api-key" placeholder="AIza... dari Google Cloud → Credentials"/>
         </div>
       </div>
       <div style="display:flex;gap:8px;">
@@ -6287,6 +6322,8 @@ let _gsSilentReconnectAttempted = false;
 function initGSheetSettings(){
   const idEl=document.getElementById('gs-sheet-id');
   if(idEl) idEl.value = gsSpreadsheetId;
+  const akEl=document.getElementById('gs-api-key');
+  if(akEl) akEl.value = localStorage.getItem('bhd_gdrive_api_key')||'';
   updateGSStatusBadge();
   // Setup Google Identity Services token client — cukup sekali per sesi, tidak perlu dibuat ulang tiap buka Settings
   if(_gsClientInitialized) return;
@@ -6325,7 +6362,9 @@ function updateGSStatusBadge(){
 function saveGSheetConfig(){
   gsSpreadsheetId = document.getElementById('gs-sheet-id')?.value?.trim()||'';
   localStorage.setItem('bhd_gs_sheet_id', gsSpreadsheetId);
-  showToast('✅ Konfigurasi Google Sheets disimpan');
+  const ak=document.getElementById('gs-api-key')?.value?.trim()||'';
+  localStorage.setItem('bhd_gdrive_api_key', ak);
+  showToast('✅ Konfigurasi Google disimpan');
 }
 function connectGoogleSheets(){
   if(!gsTokenClient){showToast('⚠️ Google belum siap, coba lagi sebentar');return;}
@@ -6644,6 +6683,235 @@ let ptrStartY=0,ptrActive=false;
 document.getElementById('main').addEventListener('touchstart',e=>{if(document.getElementById('main').scrollTop===0)ptrStartY=e.touches[0].clientY;});
 document.getElementById('main').addEventListener('touchmove',e=>{const dy=e.touches[0].clientY-ptrStartY;if(dy>60&&!ptrActive){ptrActive=true;document.getElementById('ptr-indicator').classList.add('show');vibrate(15);}});
 document.getElementById('main').addEventListener('touchend',()=>{if(ptrActive){ptrActive=false;setTimeout(()=>{document.getElementById('ptr-indicator').classList.remove('show');showSkeleton();renderDashboard();showToast('Data diperbarui');},600);}ptrStartY=0;});
+
+
+// ═══════════════════════ IMPORT LAPORAN HARIAN (Excel, Drive/lokal) ═══════════════════════
+const GDRIVE_APP_ID = GOOGLE_CLIENT_ID.split('-')[0]; // nomor project Google Cloud
+const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+let _gdToken=null,_gdTokenExp=0,_gdTokenClient=null,_lhDays=[];
+
+function _xlDate(v){
+  if(typeof v==='number'&&v>20000){const d=XLSX.SSF.parse_date_code(v);if(d)return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;}
+  if(typeof v==='string'){const m=v.match(/(\d{4})-(\d{2})-(\d{2})/);if(m)return m[0];
+    const m2=v.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);if(m2)return `${m2[3]}-${m2[2].padStart(2,'0')}-${m2[1].padStart(2,'0')}`;}
+  return '';
+}
+function _xlNum(v){if(typeof v==='number')return v;if(v==null)return 0;const n=parseFloat(String(v).replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.'));return isNaN(n)?0:n;}
+function _xlStr(v){return v==null?'':String(v).trim();}
+function _lhSubKat(ket){
+  const k=ket.toLowerCase();
+  const exact=gudangKategori.find(c=>k.includes(String(c).toLowerCase()));
+  if(exact) return exact;
+  const map=[['ban','Ban'],['oli','Oli'],['rem','Rem'],['kampas','Rem'],['filter','Filter'],['aki','Aki'],['lampu','Lampu'],['kopling','Kopling'],['per ','Suspensi'],['shock','Suspensi'],['radiator','Radiator'],['baut','Baut'],['mur','Baut']];
+  for(const [kw,cat] of map){ if(k.includes(kw) && gudangKategori.includes(cat)) return cat; }
+  return '';
+}
+function parseLaporanHarian(wb){
+  const days=[];
+  wb.SheetNames.forEach(name=>{
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,raw:true,defval:null,blankrows:false});
+    let sec=null,sheetDate='';
+    const day={sheet:name,date:'',rows:[]};
+    const drv={};
+    rows.forEach(r=>{
+      const a=_xlStr(r[0]).toUpperCase();
+      if(a.startsWith('RINCIAN PENDAPATAN')){sec='inc';return;}
+      if(a.startsWith('RINCIAN PENGELUARAN')){sec='tun';return;}
+      if(a.startsWith('RINCIAN PEMAKAIAN')){sec='ond';return;}
+      if(!sec) return;
+      if(typeof r[0]==='number'&&r[0]>20000){ if(!sheetDate) sheetDate=_xlDate(r[0]); return; }
+      if(typeof r[0]!=='number'||r[0]<1||r[0]>2000) return; // bukan baris data
+      const tgl=_xlDate(r[1])||sheetDate;
+      const nopol=_xlStr(r[2]).toUpperCase().replace(/\s+/g,' ');
+      if(sec==='inc'){
+        const driver=_xlStr(r[3]);
+        if(nopol&&driver) drv[nopol]=driver;
+        const setoran=_xlNum(r[6]);
+        if(setoran>0&&nopol&&nopol!=='UMUM'){
+          day.rows.push({tipe:'inflow',tgl,armada:nopol,driver,muat:_xlStr(r[4]),bongkar:_xlStr(r[5]),kategori:'Inflow',subKategori:'',nota:'',toko:'',nominal:setoran,jumlah:1,satuan:'',hargaSatuan:setoran,keterangan:'Setoran '+nopol});
+        }
+      } else {
+        const ket=_xlStr(r[3]);
+        const jml=_xlNum(r[4])||1, harga=_xlNum(r[6]);
+        const total=_xlNum(r[7])||(jml*harga);
+        if(!(total>0)||!ket) return;
+        const isUmum=!nopol||nopol==='UMUM';
+        const kat= sec==='ond' ? 'Onderdil' : (isUmum?'UMUM':'Tunai');
+        day.rows.push({tipe:'outflow',tgl,armada:isUmum?'UMUM':nopol,driver:'',muat:'',bongkar:'',kategori:kat,subKategori:sec==='ond'?_lhSubKat(ket):'',nota:_xlStr(r[8]),toko:_xlStr(r[9]),nominal:total,jumlah:jml,satuan:_xlStr(r[5]),hargaSatuan:harga||Math.round(total/jml),keterangan:ket});
+      }
+    });
+    day.rows.forEach(x=>{ if(x.tipe==='outflow'&&!x.driver&&x.armada!=='UMUM') x.driver=drv[x.armada]||(fleetData.find(f=>f.nopol===x.armada)?.driver||''); });
+    // tanggal hari = tanggal yang paling sering muncul di baris data (header sheet kadang tidak ikut ter-update)
+    const cnt={}; day.rows.forEach(x=>{ if(x.tgl) cnt[x.tgl]=(cnt[x.tgl]||0)+1; });
+    day.date=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]||sheetDate||'';
+    if(day.rows.length) days.push(day);
+  });
+  // tandai duplikat terhadap transaksi yang sudah ada
+  const key=(t,lbl)=>[t.type||t.tipe,t.date||t.tgl,String(t.armada||'').toUpperCase().replace(/\s+/g,''),Math.round(Number(t.amount??t.nominal)),String(lbl||'').toLowerCase().trim()].join('|');
+  const existing={};
+  transactions.forEach(t=>{const k=key(t,t.label);existing[k]=(existing[k]||0)+1;});
+  const seen={};
+  days.forEach(d=>d.rows.forEach(x=>{
+    const k=key(x,x.keterangan);
+    seen[k]=(seen[k]||0)+1;
+    x.dup = seen[k] <= (existing[k]||0);
+  }));
+  return days;
+}
+function lhRenderPreview(fileName){
+  const wrap=document.getElementById('lh-preview'),list=document.getElementById('lh-day-list'),st=document.getElementById('lh-status');
+  if(!_lhDays.length){ if(st) st.innerHTML='⚠️ Tidak ada data yang bisa dibaca dari <b>'+_ovEsc(fileName)+'</b>. Pastikan formatnya Laporan HARIAN (bagian RINCIAN PENDAPATAN / PENGELUARAN / PEMAKAIAN ONDERDIL).'; if(wrap) wrap.style.display='none'; return; }
+  const totalNew=_lhDays.reduce((s,d)=>s+d.rows.filter(x=>!x.dup).length,0);
+  if(st) st.innerHTML=`✅ <b>${_ovEsc(fileName)}</b> terbaca: ${_lhDays.length} hari berisi data, <b>${totalNew}</b> transaksi baru.`;
+  list.innerHTML=_lhDays.map((d,i)=>{
+    const nw=d.rows.filter(x=>!x.dup), dp=d.rows.length-nw.length;
+    const inc=nw.filter(x=>x.tipe==='inflow'), tun=nw.filter(x=>x.tipe==='outflow'&&x.kategori!=='Onderdil'), ond=nw.filter(x=>x.kategori==='Onderdil');
+    const sum=a=>a.reduce((s,x)=>s+x.nominal,0);
+    const lbl=d.date?new Date(d.date+'T00:00:00').toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'}):'Sheet '+d.sheet;
+    return `<label style="display:flex;gap:10px;align-items:flex-start;padding:10px 11px;border:1px solid var(--card-b);border-radius:11px;background:var(--bg2);cursor:pointer;${nw.length?'':'opacity:.55;'}">
+      <input type="checkbox" class="lh-day-cb" data-i="${i}" ${nw.length?'checked':''} ${nw.length?'':'disabled'} style="width:15px;height:15px;margin-top:2px;flex-shrink:0;"/>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:700;color:var(--text);">${lbl}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px;line-height:1.6;">
+          💰 ${inc.length} setoran <b style="color:var(--success);">${fmt(sum(inc))}</b> ·
+          💵 ${tun.length} tunai/umum <b style="color:var(--danger);">${fmt(sum(tun))}</b> ·
+          🔧 ${ond.length} onderdil <b style="color:var(--danger);">${fmt(sum(ond))}</b>
+          ${dp?`<br><span style="color:var(--warning);">⏭ ${dp} transaksi sudah ada, dilewati</span>`:''}
+          ${!nw.length?'<br><span>Semua sudah pernah diimport</span>':''}
+        </div>
+      </div>
+    </label>`;
+  }).join('');
+  wrap.style.display='block';
+  const btn=document.getElementById('lh-import-btn'); if(btn){btn.disabled=false;btn.textContent='✅ Import Tanggal Terpilih';}
+}
+function lhToggleAll(on){document.querySelectorAll('.lh-day-cb').forEach(cb=>{if(!cb.disabled)cb.checked=on;});}
+function lhLoadArrayBuffer(buf,fileName){
+  try{
+    const wb=XLSX.read(buf,{type:'array',cellDates:false});
+    _lhDays=parseLaporanHarian(wb);
+    lhRenderPreview(fileName);
+  }catch(e){
+    console.error('Parse laporan harian fail:',e);
+    const st=document.getElementById('lh-status'); if(st) st.innerHTML='<span style="color:var(--danger);">⚠️ Gagal membaca file: '+_ovEsc(e.message)+'</span>';
+  }
+}
+function lhHandleLocalFile(ev){
+  const f=ev.target.files?.[0]; if(!f) return;
+  if(typeof XLSX==='undefined'){showToast('⚠️ Library Excel belum siap, coba lagi');return;}
+  const st=document.getElementById('lh-status'); if(st) st.textContent='⏳ Membaca file...';
+  const rd=new FileReader(); rd.onload=e=>lhLoadArrayBuffer(e.target.result,f.name); rd.readAsArrayBuffer(f);
+  ev.target.value='';
+}
+// ── Google Drive ──
+function _lhLoadScript(src){return new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`))return res();const s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=()=>rej(new Error('Gagal memuat '+src));document.head.appendChild(s);});}
+function _lhGetDriveToken(){
+  return new Promise((resolve,reject)=>{
+    if(_gdToken&&Date.now()<_gdTokenExp) return resolve(_gdToken);
+    if(typeof google==='undefined'||!google.accounts?.oauth2) return reject(new Error('Login Google belum siap, coba lagi sebentar'));
+    _gdTokenClient=google.accounts.oauth2.initTokenClient({client_id:GOOGLE_CLIENT_ID,scope:GDRIVE_SCOPE,callback:(r)=>{
+      if(r&&r.access_token){_gdToken=r.access_token;_gdTokenExp=Date.now()+((r.expires_in||3600)*1000)-60000;resolve(_gdToken);}
+      else reject(new Error(r?.error_description||r?.error||'Izin Google Drive ditolak'));
+    },error_callback:(err)=>reject(new Error(err?.message||'Login Google dibatalkan'))});
+    _gdTokenClient.requestAccessToken({prompt:localStorage.getItem('bhd_gdrive_consented')?'':'consent'});
+  });
+}
+async function _lhDownloadDriveFile(id,name){
+  const st=document.getElementById('lh-status'); if(st) st.textContent='⏳ Mengunduh '+name+' dari Google Drive...';
+  const token=await _lhGetDriveToken();
+  const res=await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?alt=media&supportsAllDrives=true`,{headers:{Authorization:'Bearer '+token}});
+  if(!res.ok){
+    if(res.status===404||res.status===403) throw new Error('File tidak bisa diakses ('+res.status+'). Pilih ulang file lewat tombol "Pilih dari Google Drive".');
+    throw new Error('Unduh gagal ('+res.status+')');
+  }
+  const buf=await res.arrayBuffer();
+  localStorage.setItem('bhd_lh_last_file',JSON.stringify({id,name}));
+  lhUpdateReloadBtn();
+  lhLoadArrayBuffer(buf,name);
+}
+async function lhPickFromDrive(){
+  const st=document.getElementById('lh-status');
+  const apiKey=localStorage.getItem('bhd_gdrive_api_key')||'';
+  if(!apiKey){ if(st) st.innerHTML='⚠️ Isi dulu <b>Google API Key</b> di <b>Pengaturan → Sync ke Google Sheets</b>, lalu klik Simpan.'; showToast('Isi Google API Key di Pengaturan dulu'); return; }
+  if(typeof XLSX==='undefined'){showToast('⚠️ Library Excel belum siap, coba lagi');return;}
+  try{
+    if(st) st.textContent='⏳ Membuka Google Drive...';
+    const token=await _lhGetDriveToken();
+    localStorage.setItem('bhd_gdrive_consented','1');
+    await _lhLoadScript('https://apis.google.com/js/api.js');
+    await new Promise(r=>gapi.load('picker',r));
+    const view=new google.picker.DocsView(google.picker.ViewId.DOCS)
+      .setMimeTypes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel')
+      .setMode(google.picker.DocsViewMode.LIST);
+    const picker=new google.picker.PickerBuilder()
+      .addView(view)
+      .setOAuthToken(token).setDeveloperKey(apiKey).setAppId(GDRIVE_APP_ID)
+      .setLocale('id').setTitle('Pilih file Laporan Harian')
+      .setCallback(async data=>{
+        if(data.action===google.picker.Action.PICKED){
+          const doc=data.docs[0];
+          try{ await _lhDownloadDriveFile(doc.id,doc.name); }
+          catch(e){ if(st) st.innerHTML='<span style="color:var(--danger);">⚠️ '+_ovEsc(e.message)+'</span>'; }
+        } else if(data.action===google.picker.Action.CANCEL){ if(st) st.textContent=''; }
+      }).build();
+    picker.setVisible(true);
+    if(st) st.textContent='';
+  }catch(e){
+    console.error('Drive picker fail:',e);
+    if(st) st.innerHTML='<span style="color:var(--danger);">⚠️ '+_ovEsc(e.message||'Gagal membuka Google Drive')+'</span>';
+  }
+}
+async function lhReloadLastDrive(){
+  const last=JSON.parse(localStorage.getItem('bhd_lh_last_file')||'null'); if(!last) return;
+  const st=document.getElementById('lh-status');
+  try{ await _lhDownloadDriveFile(last.id,last.name); }
+  catch(e){ if(st) st.innerHTML='<span style="color:var(--danger);">⚠️ '+_ovEsc(e.message)+'</span>'; }
+}
+function lhUpdateReloadBtn(){
+  const b=document.getElementById('lh-reload-btn'); if(!b) return;
+  let last=null; try{last=JSON.parse(localStorage.getItem('bhd_lh_last_file')||'null');}catch(e){}
+  if(last){b.style.display='block';b.textContent='🔄 Muat ulang dari Drive: '+last.name;} else b.style.display='none';
+}
+async function lhConfirmImport(){
+  const idx=[...document.querySelectorAll('.lh-day-cb')].filter(cb=>cb.checked).map(cb=>+cb.dataset.i);
+  const rows=idx.flatMap(i=>_lhDays[i].rows.filter(x=>!x.dup));
+  if(!rows.length){showToast('Pilih minimal satu tanggal yang berisi data baru');return;}
+  const countRitase=document.getElementById('lh-ritase')?.checked;
+  let gsReady=false; if(gsSpreadsheetId) gsReady=await ensureGSheetToken();
+  const nInc=rows.filter(r=>r.tipe==='inflow').length;
+  showConfirmPopup('📒 Import Laporan Harian',
+    `Akan menambahkan <b>${rows.length} transaksi</b> dari <b>${idx.length} tanggal</b> (${nInc} setoran, ${rows.length-nInc} pengeluaran).`
+    +(countRitase?'<br><span style="font-size:11px;color:var(--text3);">🔄 Ritase onderdil ikut dihitung untuk setiap setoran.</span>':'')
+    +(gsReady?'<br><span style="font-size:11px;color:var(--success);">✅ Ikut ter-sync ke Google Sheets.</span>':(gsSpreadsheetId?'<br><span style="font-size:11px;color:var(--warning);">⚠️ Google Sheets tidak terhubung, data hanya masuk database.</span>':'')),
+    async ()=>{
+      const btn=document.getElementById('lh-import-btn'),st=document.getElementById('lh-status');
+      if(btn) btn.disabled=true;
+      let ok=0,fail=0,i=0;
+      for(const r of rows){
+        i++; if(btn) btn.textContent=`⏳ Mengimport ${i}/${rows.length}...`;
+        const id='txn_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+        const isInf=r.tipe==='inflow', rit=isInf&&countRitase;
+        const sub=isInf?`${r.driver||'—'} · ${r.muat||'—'} → ${r.bongkar||'—'}`:`No.Nota: ${r.nota||'—'} · ${r.toko||'—'}${r.driver?' · '+r.driver:''}`;
+        const db={id,type:r.tipe,label:r.keterangan,sub,amount:r.nominal,date:r.tgl,armada:r.armada,driver:r.driver,muat:r.muat,bongkar:r.bongkar,nota:r.nota,toko:r.toko,kategori:r.kategori,sub_kategori:r.subKategori,status:'lunas',sparepart_id:null,jml_pasang:r.jumlah||1,harga_satuan:r.hargaSatuan||null,satuan:r.satuan,posisi:'',ritase_counted:!!rit,ritase_armada:rit?r.armada:null,status_armada:isInf?'Jalan':'',created_at:new Date().toISOString()};
+        try{
+          await sbFetch('transactions',{method:'POST',body:db});
+          const loc={id,type:r.tipe,label:r.keterangan,sub,amount:r.nominal,date:r.tgl,armada:r.armada,driver:r.driver,muat:r.muat,bongkar:r.bongkar,nota:r.nota,toko:r.toko,kategori:r.kategori,subKategori:r.subKategori,status:'lunas',sparepartId:null,jmlPasang:r.jumlah||1,hargaSatuan:r.hargaSatuan,satuan:r.satuan,ritaseCounted:!!rit,ritaseArmada:rit?r.armada:null,statusArmada:isInf?'Jalan':''};
+          transactions.unshift(loc); ok++;
+          if(rit) await incrementRitaseForArmada(r.armada,'jalan');
+          if(gsReady) await syncTxnToGSheet(loc);
+        }catch(e){console.warn('LH import row fail:',r,e);fail++;}
+      }
+      logAudit('create','transaksi',`Import Laporan Harian: ${ok} transaksi dari ${idx.length} tanggal${fail?', '+fail+' gagal':''}`);
+      renderDashboard();applyTxnFilters();renderLaporanTable();renderGudang();
+      if(typeof renderKeuanganStats==='function') renderKeuanganStats();
+      if(st) st.innerHTML=`✅ Import selesai: <b>${ok}</b> transaksi masuk${fail?`, <span style="color:var(--danger);">${fail} gagal</span>`:''}.`;
+      document.getElementById('lh-preview').style.display='none';
+      if(btn){btn.disabled=false;btn.textContent='✅ Import';}
+      showToast(`✅ ${ok} transaksi laporan harian diimport`);
+      _isSyncing=false; await syncFromSupabase();
+    });
+}
+document.addEventListener('DOMContentLoaded',lhUpdateReloadBtn);
 
 function ovSearch(q){
   showPage('keuangan',document.getElementById('sb-keuangan'),'bn-keuangan');
