@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="dark">
+<html lang="id" data-theme="light">
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
 <title>BHD SmartFlow System</title>
 <!-- PWA: bisa "Add to Home Screen" seperti aplikasi asli -->
 <link rel="manifest" href="manifest.json"/>
-<meta name="theme-color" content="#0A84FF"/>
+<meta name="theme-color" content="#1F4A57"/>
 <link rel="icon" type="image/png" href="icon-192.png"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -783,6 +783,159 @@ input,select,textarea{font-size:16px!important;}
   .dp-stats{grid-template-columns:1fr 1fr 1fr!important;}
 }
 
+
+/* ═════════════════════════════════════════════════════
+   TEMA "INVENTORY" — sidebar teal gelap, konten biru-abu lembut
+═════════════════════════════════════════════════════ */
+:root{
+  --green:#2C6577;--green2:#1E4D5C;--green-bg:rgba(44,101,119,.10);--green-bd:rgba(44,101,119,.24);
+  --bg:#DCE8ED;--bg2:#FFFFFF;--bg3:#EEF4F7;--bg4:#E3EDF2;--bg5:#F6F9FB;
+  --card:#F8FBFC;--card-b:rgba(30,77,92,.13);
+  --text:#173A46;--text2:#46636E;--text3:#7F959E;--text4:#B9C8CE;
+  --info:#2C6577;
+  --side-bg:#1F4A57;--side-txt:rgba(255,255,255,.74);
+  --bg-grad:linear-gradient(180deg,#E6F0F3 0%,#D3E3EA 55%,#C6DAE3 100%);
+  --sh:0 1px 3px rgba(23,58,70,.05),0 2px 10px rgba(23,58,70,.04);
+  --sh-md:0 4px 18px rgba(23,58,70,.09);
+}
+[data-theme="dark"]{
+  --green:#6FB4C7;--green2:#8FCBDB;--green-bg:rgba(111,180,199,.13);--green-bd:rgba(111,180,199,.28);
+  --bg:#0C171C;--bg2:#13232A;--bg3:#1A2E36;--bg4:#213840;--bg5:#13232A;
+  --card:#132329;--card-b:rgba(143,203,219,.12);
+  --text:#E6F0F3;--text2:#A9BEC5;--text3:#6C838B;--text4:#40545B;
+  --info:#6FB4C7;
+  --side-bg:#0F2229;--side-txt:rgba(230,240,243,.7);
+  --bg-grad:linear-gradient(180deg,#0E1B21 0%,#0A151A 100%);
+}
+body{background:var(--bg);}
+#bg-layer{background-color:var(--bg);background-image:var(--bg-grad);}
+
+/* Login */
+#login-overlay{background:linear-gradient(160deg,#0E2A33 0%,#1F4A57 55%,#2C6577 100%);}
+#login-overlay::before,#login-overlay::after{display:none;}
+.login-box{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);}
+.login-logo,.login-btn{background:linear-gradient(135deg,#1F4A57,#3F8197);box-shadow:0 6px 22px rgba(0,0,0,.3);}
+#ltab-masuk[style*="0A84FF"],#ltab-daftar[style*="0A84FF"]{background:#3F8197!important;}
+
+/* ── Sidebar ── */
+#sidebar{background:var(--side-bg);border-right:none;box-shadow:4px 0 24px rgba(15,40,50,.18);}
+.sb-logo{padding:26px 18px 18px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sb-logo .logo-mark{width:78px;height:78px;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 6px 20px rgba(0,0,0,.28);font-size:18px;background:linear-gradient(135deg,#2C6577,#5FA3B8);}
+.sb-logo .logo-mark img{border-radius:50%;}
+.lt-main{color:#fff;font-size:14px;}
+.lt-sub{color:rgba(255,255,255,.5);}
+.sb-clock{border-bottom:1px solid rgba(255,255,255,.08);}
+#sb-clock{color:rgba(255,255,255,.88);}
+#sb-date{color:rgba(255,255,255,.45);}
+.sb-input-btns{border-bottom:1px solid rgba(255,255,255,.08);}
+.sb-input-btn.inflow{background:rgba(255,255,255,.07);color:#A6E6C2;border:1px solid rgba(166,230,194,.22);}
+.sb-input-btn.outflow{background:rgba(255,255,255,.07);color:#F6B8AF;border:1px solid rgba(246,184,175,.22);}
+.sb-input-btn.inflow:hover,.sb-input-btn.outflow:hover{background:rgba(255,255,255,.13);}
+.nav-sec{padding:10px 0 0 12px;}
+.nav-lbl{color:rgba(255,255,255,.38);}
+.nav-item{color:var(--side-txt);border-radius:22px 0 0 22px;padding:10px 14px;margin:2px 0;}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff;}
+.nav-item.active{background:var(--bg);color:var(--text);font-weight:700;}
+.nav-item.active svg{stroke:var(--text);}
+.nav-item.active::before{display:none;}
+#sidebar .nav-sec > div:last-child{background:rgba(255,255,255,.06)!important;border-color:rgba(255,255,255,.1)!important;margin-right:12px!important;}
+#sync-text{color:rgba(255,255,255,.6)!important;}
+.sb-foot{border-top:1px solid rgba(255,255,255,.08);}
+.user-name{color:#fff;}
+.user-role{color:rgba(255,255,255,.5);}
+.sb-foot button{color:rgba(255,255,255,.6)!important;}
+
+/* ── Topbar (mobile) ── */
+#topbar{background:var(--card);box-shadow:var(--sh);}
+.tb-lm{border-radius:50%;background:linear-gradient(135deg,#1F4A57,#3F8197);}
+.tb-clock{color:var(--green2);}
+
+/* ── Kartu umum ── */
+.card,.chart-wrap,.kas-card,.settings-card,.wa-panel,.txn-item,.sp-card,.fleet-card-unit,.driver-card,.search-bar,.export-card{
+  background:var(--card);border:1px solid var(--card-b);box-shadow:var(--sh);border-radius:16px;}
+.sec-title{color:var(--text2);letter-spacing:.06em;}
+.kc-prf .kc-icon{background:var(--green-bg);border-color:var(--green-bd);}
+
+/* ── Hero halaman lain → kartu terang ── */
+.dash-hero,.armada-hero,.gudang-hero,.dp-hero{
+  background:var(--card)!important;color:var(--text)!important;
+  border:1px solid var(--card-b);box-shadow:var(--sh)!important;border-radius:18px;}
+.dash-hero::before,.dash-hero::after,.armada-hero::before,.gudang-hero::before,.dp-hero::before,.dh-texture{display:none;}
+.dh-greeting,.ah-label{opacity:1;color:var(--text3);}
+.dh-company,.ah-title{color:var(--text);}
+.dh-logo{background:var(--bg3);border-color:var(--card-b);box-shadow:none;}
+.dash-hero .dh-right button{background:var(--bg3)!important;color:var(--text2)!important;border-color:var(--card-b)!important;}
+#hero-clock{color:var(--text);}
+.dh-stat,.ah-stat,.gh-stat,.dp-stat,.dp-doc{background:var(--bg2);border:1px solid var(--card-b);backdrop-filter:none;}
+.dh-stat-label,.ah-stat-l,.gh-stat-l,.dp-stat-l,.dp-doc-lbl{color:var(--text3);opacity:1;}
+.dh-stat-val.up,.ah-stat-v.gr,.dp-stat-v.gr{color:#1F8A4C;}
+.dh-stat-val.dn,.dp-stat-v.rd,.gh-stat-v.rd{color:var(--danger);}
+.dh-stat-val.nt,.dp-stat-v.nt,.gh-stat-v.bl{color:var(--green2);}
+.ah-stat-v.or{color:#D9692E;} .ah-stat-v.yw,.gh-stat-v.yw{color:#B7791F;}
+#gh-nilai{color:#1F8A4C!important;}
+.dp-stat-v[style*="FFA060"]{color:#D9692E!important;}
+.dp-stat-v[style*="BAE6FD"]{color:var(--green2)!important;}
+.dp-doc-val.near{color:#D9692E;} .dp-doc-val.warn{color:#B7791F;}
+.ah-btn{background:var(--bg2);color:var(--text2);border:1px solid var(--card-b);}
+.ah-btn:hover{background:var(--green-bg);color:var(--green2);}
+.ah-icon,.gh-icon{background:linear-gradient(135deg,#1F4A57,#3F8197);box-shadow:none;}
+.cmp-badge.up{background:rgba(31,138,76,.1);color:#1F8A4C;}
+.cmp-badge.dn{background:rgba(224,48,48,.09);color:var(--danger);}
+
+/* ── Dashboard: Welcome + Over View ── */
+.ov-welcome{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--card);border:1px solid var(--card-b);box-shadow:var(--sh);border-radius:18px;padding:14px 20px;margin-bottom:14px;}
+.ov-wtitle{font-size:21px;font-weight:800;color:var(--text);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ov-wsub{font-size:11px;color:var(--text3);margin-top:2px;}
+.ov-wright{display:flex;align-items:center;gap:12px;}
+.ov-search{display:flex;align-items:center;gap:8px;border:1.5px solid var(--card-b);border-radius:22px;padding:7px 14px;background:var(--bg2);min-width:240px;}
+.ov-search:focus-within{border-color:var(--green);}
+.ov-search svg{width:15px;height:15px;stroke:var(--text3);fill:none;stroke-width:2;flex-shrink:0;}
+.ov-search input{border:none;outline:none;background:transparent;color:var(--text);font-family:'Inter',sans-serif;flex:1;min-width:0;font-size:13px!important;}
+.ov-clock{text-align:right;line-height:1.25;}
+.ov-clock #hero-clock{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--text);}
+.ov-clock #hero-date{font-size:10px;color:var(--text3);}
+.ov-card{background:var(--card);border:1px solid var(--card-b);box-shadow:var(--sh);border-radius:18px;padding:14px 16px 16px;margin-bottom:14px;}
+.ov-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;}
+.ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.ov-tile{display:flex;align-items:center;gap:12px;padding:14px;border:1.5px solid var(--card-b);border-radius:14px;background:var(--bg2);min-width:0;cursor:default;transition:transform .15s,box-shadow .15s;}
+.ov-tile:hover{transform:translateY(-1px);box-shadow:var(--sh-md);}
+.ov-ico{width:42px;height:42px;border-radius:12px;background:var(--green-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ov-ico svg{width:19px;height:19px;stroke:var(--green2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ov-body{min-width:0;}
+.ov-val{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ov-lbl{font-size:11px;color:var(--text3);font-weight:500;margin-top:1px;}
+.ov-tile .cmp-badge{margin-top:4px;}
+.ov-tile.warn{background:#FBEADF;border-color:#EFC0A4;cursor:pointer;}
+.ov-tile.warn .ov-ico{background:rgba(217,105,46,.15);} .ov-tile.warn .ov-ico svg{stroke:#C45A22;}
+[data-theme="dark"] .ov-tile.warn{background:rgba(217,105,46,.12);border-color:rgba(217,105,46,.35);}
+@media(max-width:900px){.ov-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:768px){
+  .ov-welcome{flex-direction:column;align-items:stretch;padding:12px 14px;}
+  .ov-wtitle{font-size:18px;}
+  .ov-search{min-width:0;flex:1;}
+  .ov-val{font-size:14px;}
+  .ov-tile{padding:11px;gap:9px;}
+  .ov-ico{width:34px;height:34px;}
+}
+
+/* ═══ PERFORMA: kurangi repaint saat scroll/animasi ═══ */
+#bg-layer{background-image:none;transition:none;transform:translateZ(0);}
+#bg-overlay{transition:none;}
+#sidebar{box-shadow:none;will-change:transform;}
+.ov-tile,.ov-tile:hover,.kas-card:hover,.sp-card:hover,.fleet-card-unit:hover,.export-card:hover{transform:none;}
+.ov-tile{transition:none;}
+.txn-item,.sp-card,.fleet-card-unit,.driver-card,.search-bar,.kas-card,.export-card,.ov-tile,.dh-stat,.ah-stat,.gh-stat,.dp-stat{box-shadow:none!important;}
+.kas-card::after{display:none;}
+.page{animation:none;}
+@media(min-width:769px){
+  #bg-layer{background-image:var(--bg-grad);}
+  #sidebar{box-shadow:2px 0 12px rgba(15,40,50,.12);}
+}
+@media(max-width:768px){
+  .card,.chart-wrap,.settings-card,.wa-panel,.ov-welcome,.ov-card,.dash-hero,.armada-hero,.gudang-hero,.dp-hero,#topbar{box-shadow:none!important;}
+  .pulse-ring,.ap-dot{animation:none;}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
 </style>
 </head>
 <body>
@@ -913,16 +1066,39 @@ input,select,textarea{font-size:16px!important;}
       <div class="skel skel-card"></div>
     </div>
     <div id="real-content">
-      <div class="dash-hero">
-        <div class="dh-top">
-          <div class="dh-left"><div><div class="dh-greeting">Selamat datang,</div><div class="dh-company">PT. Bagus Harya Dwiprima</div></div></div>
-          <div class="dh-texture"></div>
-          <div class="dh-right"><div id="hero-clock">00:00:00</div><div id="hero-date"></div></div>
+      <div class="ov-welcome">
+        <div style="min-width:0;">
+          <div class="ov-wtitle">Welcome <span id="ov-name">Admin</span> !</div>
+          <div class="ov-wsub">PT. Bagus Harya Dwiprima · BHD Smart Flow</div>
         </div>
-        <div class="dh-stats">
-          <div class="dh-stat"><div class="dh-stat-label">Inflow</div><div class="dh-stat-val up" id="h-in">—</div><div class="cmp-badge up" id="cmp-in">↑ 0%</div></div>
-          <div class="dh-stat"><div class="dh-stat-label">Outflow</div><div class="dh-stat-val dn" id="h-out">—</div><div class="cmp-badge dn" id="cmp-out">↓ 0%</div></div>
-          <div class="dh-stat"><div class="dh-stat-label">Net Profit</div><div class="dh-stat-val nt" id="h-prf">—</div><div class="cmp-badge up" id="cmp-prf">↑ 0%</div></div>
+        <div class="ov-wright">
+          <div class="ov-search">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="ov-search-input" type="text" placeholder="Cari transaksi, armada, driver..." onkeydown="if(event.key==='Enter')ovSearch(this.value)"/>
+          </div>
+          <div class="ov-clock"><div id="hero-clock">00:00:00</div><div id="hero-date"></div></div>
+        </div>
+      </div>
+
+      <div class="ov-card">
+        <div class="ov-title">Over View</div>
+        <div class="ov-grid">
+          <div class="ov-tile">
+            <div class="ov-ico"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <div class="ov-body"><div class="ov-val" id="h-in">—</div><div class="ov-lbl">Inflow</div><div class="cmp-badge up" id="cmp-in">↑ 0%</div></div>
+          </div>
+          <div class="ov-tile">
+            <div class="ov-ico"><svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
+            <div class="ov-body"><div class="ov-val" id="h-out">—</div><div class="ov-lbl">Outflow</div><div class="cmp-badge dn" id="cmp-out">↓ 0%</div></div>
+          </div>
+          <div class="ov-tile">
+            <div class="ov-ico"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <div class="ov-body"><div class="ov-val" id="h-prf">—</div><div class="ov-lbl">Net Profit</div><div class="cmp-badge up" id="cmp-prf">↑ 0%</div></div>
+          </div>
+          <div class="ov-tile warn" onclick="showPage('gudang',document.getElementById('sb-gudang'),'bn-gudang')">
+            <div class="ov-ico"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+            <div class="ov-body"><div class="ov-val" id="ov-kritis">0</div><div class="ov-lbl">Stok Kritis</div><div class="cmp-badge" style="background:transparent;color:var(--text3);padding-left:0;" id="ov-armada-jalan">0 armada jalan</div></div>
+          </div>
         </div>
       </div>
 
@@ -1700,7 +1876,7 @@ function renderKeuanganStats(){
 }
 
 // ═══════════════════════════════ STATE ═══════════════════════════
-let FLEET_COUNT=0,isDark=true,fabOpen=false; // selalu diupdate dari DB saat sync
+let FLEET_COUNT=0,isDark=false,fabOpen=false; // selalu diupdate dari DB saat sync
 let currentPeriod='today',currentBarFilter='6m',lapFilter='bulan-ini';
 let txnFilterTipe='all',txnSearch='',txnSort='newest',txnPage=10;
 let txnFilterKategori=''; // filter kategori pengeluaran di halaman keuangan
@@ -2931,6 +3107,10 @@ function renderDashboard(){
   const tc=document.getElementById('fleet-total-chip');if(tc)tc.textContent=FLEET_COUNT+' Unit';
   const ac=document.getElementById('armada-count-chip');if(ac)ac.textContent=FLEET_COUNT+' Unit';
 
+  const ovK=document.getElementById('ov-kritis');
+  if(ovK) ovK.textContent=sparepartStock.filter(sp=>(!isNonStokItem(sp)||sp.stokSisa>0)&&spStatus(sp)!=='fresh').length;
+  const ovJ=document.getElementById('ov-armada-jalan');
+  if(ovJ) ovJ.textContent=(counts.jalan||0)+' dari '+fleetData.length+' armada jalan';
   renderFleetRows('fleet-rows-dash',4);
   // Pastikan filtered diurutkan terbaru (descending)
   filtered.sort((a,b) => {
@@ -3470,7 +3650,7 @@ function loadMoreTxn(){txnPage+=10;applyTxnFilters();}
 // ═══ DISTRIBUSI INFLOW PER SUPIR (donut, periode bisa diedit) ═══
 let driverDonutChart=null;
 let _driverDonutPeriod='bulan-ini', _driverDonutFrom='', _driverDonutTo='';
-const DRIVER_DONUT_COLORS=['#0A84FF','#0EA5A4','#6366F1','#38BDF8','#64748B','#0064D6','#22B8B0','#7C93AB','#818CF8','#0891B2','#475569','#5AC8FA'];
+const DRIVER_DONUT_COLORS=['#1F4A57','#3F8197','#7FB3C4','#B9D4DE','#D9692E','#E9A27A','#2F7A6B','#7BB8A8','#5C6F7A','#9AAAB2','#B7791F','#E4C58A'];
 
 function setDriverDonutPeriod(preset,btn){
   _driverDonutPeriod=preset;
@@ -3863,14 +4043,14 @@ function _buildMiniLineChart(ctx,dark,gc,tc,labels,profits,inflowArr,outflowArr)
       {
         label:'Net Profit',
         data:profits,
-        borderColor:'#0A84FF',
+        borderColor:'#2C6577',
         backgroundColor:(ctx2)=>{
           const c=ctx2.chart.ctx;
           const g=c.createLinearGradient(0,0,0,ctx2.chart.height);
-          g.addColorStop(0,'rgba(10,132,255,.18)');g.addColorStop(1,'rgba(10,132,255,.01)');return g;
+          g.addColorStop(0,'rgba(44,101,119,.22)');g.addColorStop(1,'rgba(44,101,119,.01)');return g;
         },
         borderWidth:2.5,
-        pointBackgroundColor:profits.map(v=>v>=0?'#0A84FF':'#E03030'),
+        pointBackgroundColor:profits.map(v=>v>=0?'#2C6577':'#E03030'),
         pointBorderColor:dark?'#131921':'#fff',
         pointBorderWidth:2,
         pointRadius:hasAnyData?(labels.length>20?0:3):0,
@@ -4054,9 +4234,16 @@ function renderLaporanTable(){
     const outDokumen=list.filter(t=>t.type==='outflow'&&t.armada===f.nopol&&t.kategori==='Dokumen').reduce((s,t)=>s+t.amount,0);
     const outUmum=bebanPerUnit;
     const nett=inflow-(outTunai+outOnderdil+outUmum+outDokumen);
-    const ritase=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.amount>0).length;
+    const ritaseTxns=list.filter(t=>t.type==='inflow'&&t.armada===f.nopol&&t.amount>0);
+    const ritase=ritaseTxns.length;
     const rpPerRit=ritase>0?Math.round(inflow/ritase):0;
-    return{nopol:f.nopol,driver:f.driver,status:f.status,inflow,outTunai,outOnderdil,outUmum,outDokumen,nett,ritase,rpPerRit};
+    // Nama sopir dinamis: ambil dari transaksi Inflow di periode ini, bukan cuma driver statis di data master.
+    // Jika lebih dari 1 sopir berbeda tercatat di periode ini (pergantian sopir), tampilkan gabungan namanya.
+    const driversInPeriod=[...new Set(ritaseTxns.map(t=>t.driver).filter(Boolean))];
+    const driverLabel = driversInPeriod.length===0 ? f.driver
+                       : driversInPeriod.length===1 ? driversInPeriod[0]
+                       : driversInPeriod.join(' / ');
+    return{nopol:f.nopol,driver:driverLabel,status:f.status,inflow,outTunai,outOnderdil,outUmum,outDokumen,nett,ritase,rpPerRit};
   });
   // Sort
   rows.sort((a,b)=>{
@@ -4238,11 +4425,12 @@ function downloadImportTemplate(){
   if(typeof XLSX==='undefined'){showToast('⚠️ Library Excel belum siap, coba lagi sebentar');return;}
   const wb=XLSX.utils.book_new();
   const contoh=[
-    {'Tipe':'Inflow','Tanggal':'2026-07-01','No Polisi':'B 9199 BYW','Nama Driver':'KOMENG','Kategori':'','Nominal':1100000,'Keterangan':'Setoran'},
-    {'Tipe':'Outflow','Tanggal':'2026-07-01','No Polisi':'B 9199 BYW','Nama Driver':'KOMENG','Kategori':'Tunai','Nominal':150000,'Keterangan':'Beli Solar'},
+    {'Tipe':'Inflow','Tanggal':'2026-07-01','No Polisi':'B 9199 BYW','Nama Driver':'KOMENG','Titik Muat':'Pasir Cilegon','Titik Bongkar':'Cisauk','Kategori':'','Sub Kategori':'','Jumlah':'','Satuan':'','Harga Satuan':'','Nominal':1100000,'No Nota':'','Nama Toko':'','Keterangan':'Setoran'},
+    {'Tipe':'Outflow','Tanggal':'2026-07-01','No Polisi':'B 9199 BYW','Nama Driver':'KOMENG','Titik Muat':'','Titik Bongkar':'','Kategori':'Tunai','Sub Kategori':'','Jumlah':40,'Satuan':'Liter','Harga Satuan':3750,'Nominal':150000,'No Nota':'','Nama Toko':'','Keterangan':'Beli Solar'},
+    {'Tipe':'Outflow','Tanggal':'2026-07-01','No Polisi':'B 9199 BYW','Nama Driver':'KOMENG','Titik Muat':'','Titik Bongkar':'','Kategori':'Onderdil','Sub Kategori':'Ban','Jumlah':2,'Satuan':'set','Harga Satuan':4275000,'Nominal':8550000,'No Nota':'7350','Nama Toko':'HIMALAYA','Keterangan':'Ban Golden Crown 1100 CR 926'},
   ];
   const ws=XLSX.utils.json_to_sheet(contoh);
-  ws['!cols']=[{wch:10},{wch:12},{wch:14},{wch:14},{wch:12},{wch:14},{wch:24}];
+  ws['!cols']=[{wch:10},{wch:12},{wch:14},{wch:14},{wch:16},{wch:16},{wch:12},{wch:12},{wch:9},{wch:10},{wch:13},{wch:14},{wch:12},{wch:16},{wch:28}];
   XLSX.utils.book_append_sheet(wb,ws,'Transaksi');
 
   const petunjuk=[
@@ -4250,12 +4438,20 @@ function downloadImportTemplate(){
     {'Kolom':'Tanggal','Wajib':'Ya','Keterangan':'Format YYYY-MM-DD, contoh 2026-07-01'},
     {'Kolom':'No Polisi','Wajib':'Tidak','Keterangan':'Kosongkan untuk Outflow kategori UMUM'},
     {'Kolom':'Nama Driver','Wajib':'Tidak','Keterangan':'Boleh dikosongkan'},
+    {'Kolom':'Titik Muat','Wajib':'Tidak','Keterangan':'Hanya relevan untuk Inflow — Pelabuhan / Gudang Asal, boleh dikosongkan'},
+    {'Kolom':'Titik Bongkar','Wajib':'Tidak','Keterangan':'Hanya relevan untuk Inflow — Gudang / Kota Tujuan, boleh dikosongkan'},
     {'Kolom':'Kategori','Wajib':'Utk Outflow','Keterangan':'UMUM / Tunai / Onderdil / Dokumen — kosongkan untuk Inflow'},
-    {'Kolom':'Nominal','Wajib':'Ya','Keterangan':'Angka murni, tanpa titik/koma/Rp'},
-    {'Kolom':'Keterangan','Wajib':'Tidak','Keterangan':'Label/deskripsi bebas'},
+    {'Kolom':'Sub Kategori','Wajib':'Tidak','Keterangan':'Hanya relevan untuk Outflow Onderdil — misal Ban, Oli, Kampas Rem. Boleh dikosongkan'},
+    {'Kolom':'Jumlah','Wajib':'Tidak','Keterangan':'Kuantitas (contoh: 40) — kosongkan kalau tidak relevan, default 1'},
+    {'Kolom':'Satuan','Wajib':'Tidak','Keterangan':'Liter / Pcs / Botol / Set / dll — boleh kosong'},
+    {'Kolom':'Harga Satuan','Wajib':'Tidak','Keterangan':'Harga per unit (angka murni) — kosongkan kalau tidak relevan'},
+    {'Kolom':'Nominal','Wajib':'Ya','Keterangan':'Total nominal transaksi, angka murni, tanpa titik/koma/Rp'},
+    {'Kolom':'No Nota','Wajib':'Tidak','Keterangan':'Nomor nota/invoice pembelian — boleh dikosongkan'},
+    {'Kolom':'Nama Toko','Wajib':'Tidak','Keterangan':'Nama toko/vendor tempat beli — boleh dikosongkan'},
+    {'Kolom':'Keterangan','Wajib':'Tidak','Keterangan':'Label/deskripsi/nama barang'},
   ];
   const ws2=XLSX.utils.json_to_sheet(petunjuk);
-  ws2['!cols']=[{wch:14},{wch:12},{wch:50}];
+  ws2['!cols']=[{wch:14},{wch:12},{wch:55}];
   XLSX.utils.book_append_sheet(wb,ws2,'Petunjuk');
 
   XLSX.writeFile(wb,'BHD_Template_Import_Transaksi.xlsx');
@@ -4300,8 +4496,18 @@ function handleImportFile(event){
 
         const armada=String(r['No Polisi']||'').trim();
         const driver=String(r['Nama Driver']||'').trim();
+        const muat=String(r['Titik Muat']||'').trim();
+        const bongkar=String(r['Titik Bongkar']||'').trim();
+        const subKategori=String(r['Sub Kategori']||'').trim();
+        const nota=String(r['No Nota']||'').trim();
+        const toko=String(r['Nama Toko']||'').trim();
         let kategori=String(r['Kategori']||'').trim();
         const keterangan=String(r['Keterangan']||'').trim();
+        const jumlahRaw=parseFloat(String(r['Jumlah']||'').toString().replace(/[^\d.-]/g,''));
+        const jumlah=(!isNaN(jumlahRaw)&&jumlahRaw>0)?jumlahRaw:1;
+        const satuan=String(r['Satuan']||'').trim();
+        const hargaRaw=parseFloat(String(r['Harga Satuan']||'').toString().replace(/[^\d.-]/g,''));
+        const hargaSatuan=(!isNaN(hargaRaw)&&hargaRaw>0)?hargaRaw:(jumlah>0?Math.round(nominal/jumlah):0);
 
         if(tipe==='outflow'){
           const match=validKategori.find(k=>k.toLowerCase()===kategori.toLowerCase());
@@ -4311,7 +4517,7 @@ function handleImportFile(event){
           kategori='Inflow';
         }
 
-        valid.push({tipe,tgl,armada,driver,kategori,nominal,keterangan:keterangan||(tipe==='inflow'?'Setoran '+armada:'Pengeluaran')});
+        valid.push({tipe,tgl,armada,driver,muat,bongkar,kategori,subKategori,nota,toko,nominal,jumlah,satuan,hargaSatuan,keterangan:keterangan||(tipe==='inflow'?'Setoran '+armada:'Pengeluaran')});
       });
 
       _importRows=valid;
@@ -4326,7 +4532,7 @@ function handleImportFile(event){
           <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--bg3);border-radius:9px;font-size:11px;">
             <div style="flex:1;min-width:0;">
               <div style="font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.keterangan}</div>
-              <div style="color:var(--text3);font-size:10px;">${fmtDate(r.tgl)} · ${r.armada||'—'} · ${r.kategori}</div>
+              <div style="color:var(--text3);font-size:10px;">${fmtDate(r.tgl)} · ${r.armada||'—'} · ${r.tipe==='inflow'&&(r.muat||r.bongkar)?((r.muat||'—')+' → '+(r.bongkar||'—')):r.kategori}</div>
             </div>
             <div style="font-weight:800;color:${r.tipe==='inflow'?'var(--success)':'var(--danger)'};white-space:nowrap;margin-left:8px;">${r.tipe==='inflow'?'+':'-'}${fmt(r.nominal)}</div>
           </div>`).join('') + (valid.length>50?`<div style="text-align:center;font-size:10px;color:var(--text3);padding:4px;">...dan ${valid.length-50} baris lainnya</div>`:'');
@@ -4348,47 +4554,73 @@ function handleImportFile(event){
 
 async function confirmImportTxn(){
   if(!_importRows.length){showToast('Tidak ada data valid untuk diimport');return;}
+
+  // Cek dulu koneksi Google Sheets SEBELUM mulai import massal — supaya tidak diam-diam gagal sync
+  let gsReady=false;
+  if(gsSpreadsheetId){
+    gsReady = await ensureGSheetToken();
+  }
+  const gsWarning = gsReady
+    ? '<br><span style="color:var(--success);font-size:11px;">✅ Google Sheets terhubung, data akan ikut ter-sync.</span>'
+    : '<br><span style="color:var(--warning);font-size:11px;">⚠️ Google Sheets TIDAK terhubung — data cuma masuk ke database, tidak akan muncul di Sheets. Hubungkan dulu lewat Settings kalau mau ikut ter-sync.</span>';
+
   showConfirmPopup('📥 Konfirmasi Import',
-    `Akan menambahkan <b>${_importRows.length} transaksi baru</b> ke database. Ritase tidak otomatis dihitung untuk data import (supaya tidak mengganggu data ritase yang sudah berjalan). Lanjutkan?`,
+    `Akan menambahkan <b>${_importRows.length} transaksi baru</b> ke database. Ritase tidak otomatis dihitung untuk data import (supaya tidak mengganggu data ritase yang sudah berjalan).${gsWarning}<br>Lanjutkan?`,
     async ()=>{
       const btn=document.getElementById('import-confirm-btn');
-      if(btn){btn.disabled=true;btn.textContent='⏳ Mengimport...';}
-      let success=0, failed=0;
+      const statusElLive=document.getElementById('import-status');
+      if(btn){btn.disabled=true;}
+      let success=0, failed=0, gsSynced=0, gsFailed=0;
+      let idx=0;
       for(const r of _importRows){
+        idx++;
+        if(btn) btn.textContent=`⏳ Mengimport ${idx}/${_importRows.length}...`;
+        if(statusElLive) statusElLive.textContent=`⏳ Memproses baris ${idx} dari ${_importRows.length}${gsReady?' (termasuk sync ke Google Sheets, mohon tunggu)':''}...`;
         const txnId='txn_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
         const label=r.keterangan;
+        const subLabel = r.tipe==='outflow'
+          ? `No.Nota: ${r.nota||'—'} · ${r.toko||'—'}${r.driver?' · '+r.driver:''}`
+          : (r.driver?r.driver+' · ':'')+'Import Excel';
         const dbTxn={
           id:txnId, type:r.tipe, label,
-          sub:(r.driver?r.driver+' · ':'')+'Import Excel',
+          sub:subLabel,
           amount:r.nominal, date:r.tgl, armada:r.armada||'', driver:r.driver||'',
-          muat:'', bongkar:'', nota:'', toko:'', kategori:r.kategori,
-          sub_kategori:'', status:'lunas', sparepart_id:null, jml_pasang:1,
-          harga_satuan:null, satuan:'', posisi:'',
+          muat:r.muat||'', bongkar:r.bongkar||'', nota:r.nota||'', toko:r.toko||'', kategori:r.kategori,
+          sub_kategori:r.subKategori||'', status:'lunas', sparepart_id:null, jml_pasang:r.jumlah||1,
+          harga_satuan:r.hargaSatuan||null, satuan:r.satuan||'', posisi:'',
           ritase_counted:false, ritase_armada:null, status_armada:'',
           created_at:new Date().toISOString()
         };
         try{
           await sbFetch('transactions',{method:'POST',body:dbTxn});
-          transactions.unshift({
+          const localTxn={
             id:txnId, type:r.tipe, label, sub:dbTxn.sub, amount:r.nominal, date:r.tgl,
-            armada:r.armada||'', driver:r.driver||'', muat:'', bongkar:'', nota:'', toko:'',
-            kategori:r.kategori, subKategori:'', status:'lunas', sparepartId:null, jmlPasang:1,
-            hargaSatuan:0, satuan:'', ritaseCounted:false, ritaseArmada:null, statusArmada:''
-          });
+            armada:r.armada||'', driver:r.driver||'', muat:r.muat||'', bongkar:r.bongkar||'', nota:r.nota||'', toko:r.toko||'',
+            kategori:r.kategori, subKategori:r.subKategori||'', status:'lunas', sparepartId:null, jmlPasang:r.jumlah||1,
+            hargaSatuan:r.hargaSatuan||0, satuan:r.satuan||'', ritaseCounted:false, ritaseArmada:null, statusArmada:''
+          };
+          transactions.unshift(localTxn);
           success++;
+          if(gsReady){
+            const synced=await syncTxnToGSheet(localTxn);
+            if(synced) gsSynced++; else gsFailed++;
+          }
         }catch(e){
           console.warn('Import row fail:',r,e);
           failed++;
         }
       }
-      logAudit('create','transaksi',`Import Excel: ${success} transaksi berhasil${failed?', '+failed+' gagal':''}`);
+      logAudit('create','transaksi',`Import Excel: ${success} transaksi berhasil${failed?', '+failed+' gagal':''}${gsReady?' · Sheets: '+gsSynced+' sync, '+gsFailed+' gagal':' · Sheets: dilewati (tidak terhubung)'}`);
       renderDashboard(); applyTxnFilters(); renderLaporanTable();
       if(typeof renderKeuanganStats==='function') renderKeuanganStats();
       _importRows=[];
       const previewWrap=document.getElementById('import-preview-wrap');
       if(previewWrap) previewWrap.style.display='none';
       const statusEl=document.getElementById('import-status');
-      if(statusEl) statusEl.innerHTML=`✅ Import selesai: ${success} berhasil${failed?', ⚠️ '+failed+' gagal':''}`;
+      let finalMsg=`✅ Import selesai: ${success} berhasil ke database${failed?', ⚠️ '+failed+' gagal':''}`;
+      if(gsReady) finalMsg+=`<br>📊 Google Sheets: ${gsSynced} ter-sync${gsFailed?', ⚠️ '+gsFailed+' gagal sync':''}`;
+      else finalMsg+=`<br>⚠️ Google Sheets: dilewati semua (tidak terhubung saat import — hubungkan di Settings lalu import ulang kalau perlu)`;
+      if(statusEl) statusEl.innerHTML=finalMsg;
       if(btn){btn.disabled=false;btn.textContent='✅ Import Sekarang';}
       showToast(`✅ ${success} transaksi berhasil diimport`);
       _isSyncing=false;
@@ -6227,14 +6459,16 @@ async function _gsAppendRow(tabName, idCol, segments, txnId){
 // Kolom "No" (A) dan "TOTAL" tidak pernah disentuh — biar nomor & rumus otomatis Kakak tetap jalan.
 async function syncTxnToGSheet(txn){
   try{
-    if(!gsSpreadsheetId) return; // belum dikonfigurasi, skip diam-diam
+    if(!gsSpreadsheetId) return false; // belum dikonfigurasi, skip diam-diam
     const ok = await ensureGSheetToken();
-    if(!ok){ console.warn('Google Sheets: token tidak tersedia, sync dilewati'); return; }
+    if(!ok){ console.warn('Google Sheets: token tidak tersedia, sync dilewati'); return false; }
     const {tab, idCol, segments} = _gsRowPlan(txn);
     const success = await _gsAppendRow(tab, idCol, segments, txn.id);
     if(success) _gsSyncOk();
+    return !!success;
   }catch(e){
     console.warn('syncTxnToGSheet error:', e);
+    return false;
   }
 }
 // Update baris yang sudah ada (dicari berdasarkan ID tersembunyi) saat transaksi di-edit.
@@ -6274,6 +6508,41 @@ async function syncTxnDeleteFromGSheet(txn){
     console.warn('syncTxnDeleteFromGSheet error:', e);
   }
 }
+// Hapus SEMUA baris data (bukan cuma 1) di ke-4 tab Database sekaligus — dipakai oleh "Hapus Semua Transaksi".
+// Beda dari syncTxnDeleteFromGSheet (yang hapus 1 baris per transaksi, lambat kalau dipanggil ribuan kali):
+// fungsi ini KOSONGKAN ISI (clear values) seluruh baris data dalam beberapa batch per tab — bukan hapus baris
+// secara struktural — supaya kolom TOTAL (rumus manual milik Kakak) di sebelahnya tidak pernah tersentuh/geser.
+async function clearAllGSheetData(){
+  if(!gsSpreadsheetId) return {ok:false, reason:'not_configured'};
+  const ok = await ensureGSheetToken();
+  if(!ok) return {ok:false, reason:'auth_failed'};
+
+  // Kolom data mentah per tab (TIDAK termasuk kolom TOTAL/H atau G, sesuai _gsRowPlan di atas — dilewati sengaja)
+  const clearPlans = [
+    {tab:GS_TAB_INFLOW,        ranges:['B:G','I:J']},   // lewati H (TOTAL)
+    {tab:GS_TAB_OUT_ONDERDIL,  ranges:['B:G','I:K']},   // lewati H (TOTAL)
+    {tab:GS_TAB_OUT_UMUM,      ranges:['B:F','H:H']},   // lewati G (TOTAL)
+    {tab:GS_TAB_OUT_TUNAI,     ranges:['B:G','I:I']},   // lewati H (TOTAL)
+  ];
+
+  let successCount=0, failCount=0;
+  for(const plan of clearPlans){
+    for(const rangeCol of plan.ranges){
+      try{
+        // Header ada di ROW 3 (bukan row 1) — clear data mulai row 4 supaya header TIDAK PERNAH tersentuh
+        const range = `'${plan.tab}'!${rangeCol.split(':')[0]}4:${rangeCol.split(':')[1]}100000`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${gsSpreadsheetId}/values/${encodeURIComponent(range)}:clear`;
+        const res = await fetch(url, {method:'POST', headers:{'Authorization':'Bearer '+gsAccessToken}});
+        if(res.ok) successCount++; else failCount++;
+      }catch(e){
+        console.warn('clearAllGSheetData error on', plan.tab, e);
+        failCount++;
+      }
+    }
+  }
+  return {ok:failCount===0, successCount, failCount};
+}
+
 function confirmReset(){
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent='🚨 Hapus Semua Transaksi';
@@ -6290,6 +6559,12 @@ function confirmReset(){
         if(btn){btn.disabled=v!=='HAPUS SEMUA';btn.style.opacity=v==='HAPUS SEMUA'?'1':'0.4';}
       "/>
     </div>
+    ${gsSpreadsheetId ? `
+    <label style="display:flex;align-items:center;gap:8px;background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text2);cursor:pointer;">
+      <input type="checkbox" id="reset-also-gsheet" checked style="width:16px;height:16px;flex-shrink:0;"/>
+      📊 Ikut kosongkan data di Google Sheets (kolom rumus TOTAL tidak akan tersentuh)
+    </label>` : `
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px;">💡 Google Sheets belum terhubung — hapus hanya berlaku di aplikasi.</div>`}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <button onclick="closeSm()" style="padding:12px;border-radius:12px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Batal</button>
       <button id="reset-confirm-btn" disabled style="opacity:0.4;padding:12px;border-radius:12px;border:none;background:var(--danger);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;" onclick="executeResetAll()">🗑️ Hapus Semua</button>
@@ -6298,6 +6573,7 @@ function confirmReset(){
 }
 
 async function executeResetAll(){
+  const alsoGSheet = document.getElementById('reset-also-gsheet')?.checked && gsSpreadsheetId;
   closeSm();
   try {
     showToast('⏳ Sedang menghapus semua data...');
@@ -6314,7 +6590,20 @@ async function executeResetAll(){
     transactions=[];
     renderDashboard(); applyTxnFilters(); renderLaporanTable(); renderGudang();
     if(typeof renderKeuanganStats==='function') renderKeuanganStats();
-    showToast('✅ Berhasil menghapus semua transaksi');
+
+    if(alsoGSheet){
+      showToast('⏳ Mengosongkan data di Google Sheets...');
+      const gsResult = await clearAllGSheetData();
+      if(gsResult.ok){
+        showToast('✅ Berhasil menghapus semua transaksi (aplikasi + Google Sheets)');
+      } else if(gsResult.reason==='auth_failed'){
+        showToast('⚠️ Transaksi terhapus, tapi gagal konek ke Google Sheets — kosongkan manual atau hubungkan ulang di Settings');
+      } else {
+        showToast('⚠️ Transaksi terhapus. Google Sheets: '+gsResult.successCount+' berhasil, '+gsResult.failCount+' gagal dikosongkan');
+      }
+    } else {
+      showToast('✅ Berhasil menghapus semua transaksi');
+    }
     _isSyncing = false;
     syncFromSupabase();
   } catch(e) {
@@ -6338,6 +6627,12 @@ document.getElementById('main').addEventListener('touchstart',e=>{if(document.ge
 document.getElementById('main').addEventListener('touchmove',e=>{const dy=e.touches[0].clientY-ptrStartY;if(dy>60&&!ptrActive){ptrActive=true;document.getElementById('ptr-indicator').classList.add('show');vibrate(15);}});
 document.getElementById('main').addEventListener('touchend',()=>{if(ptrActive){ptrActive=false;setTimeout(()=>{document.getElementById('ptr-indicator').classList.remove('show');showSkeleton();renderDashboard();showToast('Data diperbarui');},600);}ptrStartY=0;});
 
+function ovSearch(q){
+  showPage('keuangan',document.getElementById('sb-keuangan'),'bn-keuangan');
+  const el=document.getElementById('txn-search');
+  if(el){el.value=q||'';}
+  txnPage=10;applyTxnFilters();
+}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 
 // ═══════════════════════════════════════════════════════
@@ -6590,6 +6885,8 @@ function updateSettingsAdminInfo(){
   }
   // Update sidebar footer
   if(!a) return;
+  const ovN=document.getElementById('ov-name');
+  if(ovN) ovN.textContent=a.name;
   const sbName=document.getElementById('sb-user-name');
   const sbRole=document.getElementById('sb-user-role');
   const sbAv=document.getElementById('sb-user-av');
