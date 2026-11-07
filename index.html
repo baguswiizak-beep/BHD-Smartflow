@@ -936,6 +936,23 @@ body{background:var(--bg);}
   .pulse-ring,.ap-dot{animation:none;}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+
+/* Dropdown hasil pencarian dashboard */
+.ov-search{position:relative;}
+.ov-dd{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;min-width:300px;max-height:380px;overflow-y:auto;background:var(--bg2);border:1px solid var(--card-b);border-radius:14px;box-shadow:0 10px 30px rgba(15,40,50,.18);z-index:150;padding:6px;}
+.ov-dd.open{display:block;}
+.ov-dd-sec{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:8px 10px 4px;}
+.ov-dd-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;}
+.ov-dd-item:hover,.ov-dd-item.active{background:var(--bg3);}
+.ov-dd-ic{width:28px;height:28px;border-radius:8px;background:var(--green-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;}
+.ov-dd-main{flex:1;min-width:0;}
+.ov-dd-t{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ov-dd-s{font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ov-dd-amt{font-size:11px;font-weight:800;white-space:nowrap;}
+.ov-dd-all{display:block;text-align:center;font-size:11px;font-weight:700;color:var(--green2);padding:9px;border-top:1px solid var(--card-b);margin-top:4px;cursor:pointer;border-radius:0 0 10px 10px;}
+.ov-dd-all:hover{background:var(--green-bg);}
+.ov-dd-empty{font-size:12px;color:var(--text3);text-align:center;padding:16px;}
+@media(max-width:768px){.ov-dd{min-width:0;}}
 </style>
 </head>
 <body>
@@ -1074,7 +1091,8 @@ body{background:var(--bg);}
         <div class="ov-wright">
           <div class="ov-search">
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input id="ov-search-input" type="text" placeholder="Cari transaksi, armada, driver..." onkeydown="if(event.key==='Enter')ovSearch(this.value)"/>
+            <input id="ov-search-input" type="search" autocomplete="off" placeholder="Cari transaksi, armada, driver..." oninput="ovSearchLive(this.value)" onfocus="ovSearchLive(this.value)" onblur="setTimeout(ovSearchHide,180)" onkeydown="if(event.key==='Enter'){ovSearchHide();ovSearch(this.value)}else if(event.key==='Escape'){ovSearchHide();this.blur()}"/>
+            <div id="ov-search-dd" class="ov-dd"></div>
           </div>
           <div class="ov-clock"><div id="hero-clock">00:00:00</div><div id="hero-date"></div></div>
         </div>
@@ -6632,7 +6650,37 @@ function ovSearch(q){
   const el=document.getElementById('txn-search');
   if(el){el.value=q||'';}
   txnPage=10;applyTxnFilters();
+  const pg=document.getElementById('page-keuangan');
+  if(el&&pg) setTimeout(()=>el.scrollIntoView({block:'start',behavior:'smooth'}),80);
 }
+function _ovEsc(t){return String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function ovSearchHide(){const dd=document.getElementById('ov-search-dd');if(dd)dd.classList.remove('open');}
+function ovSearchLive(q){
+  const dd=document.getElementById('ov-search-dd');if(!dd)return;
+  q=(q||'').trim().toLowerCase();
+  if(q.length<1){dd.classList.remove('open');dd.innerHTML='';return;}
+  const has=v=>String(v||'').toLowerCase().includes(q);
+  const units=fleetData.filter(f=>has(f.nopol)||has(f.driver)).slice(0,4);
+  const parts=sparepartStock.filter(sp=>!isNonStokItem(sp)&&(has(sp.nama)||has(sp.spek)||has(sp.kategori))).slice(0,4);
+  const allTx=transactions.filter(t=>has(t.label)||has(t.sub)||has(t.armada)||has(t.driver)||has(t.kategori)||has(t.toko)||has(t.nota));
+  const txs=[...allTx].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,5);
+  let h='';
+  if(units.length){
+    h+='<div class="ov-dd-sec">Armada</div>'+units.map(f=>`<div class="ov-dd-item" onmousedown="event.preventDefault();ovGoUnit('${f.id}')"><div class="ov-dd-ic">🚛</div><div class="ov-dd-main"><div class="ov-dd-t">${_ovEsc(f.nopol)}</div><div class="ov-dd-s">${_ovEsc(f.driver||'—')} · ${_ovEsc(f.status)}</div></div></div>`).join('');
+  }
+  if(parts.length){
+    h+='<div class="ov-dd-sec">Gudang Onderdil</div>'+parts.map(sp=>`<div class="ov-dd-item" onmousedown="event.preventDefault();ovGoPart('${_ovEsc(sp.nama).replace(/'/g,"&#39;")}')"><div class="ov-dd-ic">📦</div><div class="ov-dd-main"><div class="ov-dd-t">${_ovEsc(sp.nama)}</div><div class="ov-dd-s">${_ovEsc(sp.kategori)} · sisa ${sp.stokSisa} unit</div></div></div>`).join('');
+  }
+  if(txs.length){
+    h+='<div class="ov-dd-sec">Transaksi</div>'+txs.map(t=>`<div class="ov-dd-item" onmousedown="event.preventDefault();ovGoTxn('${t.id}')"><div class="ov-dd-ic">${t.type==='inflow'?'💰':'💸'}</div><div class="ov-dd-main"><div class="ov-dd-t">${_ovEsc(t.label)}</div><div class="ov-dd-s">${fmtDate(t.date)} · ${_ovEsc(t.armada||'—')}</div></div><div class="ov-dd-amt" style="color:${t.type==='inflow'?'var(--success)':'var(--danger)'};">${t.type==='inflow'?'+':'-'}${fmt(t.amount)}</div></div>`).join('');
+  }
+  if(!h) h='<div class="ov-dd-empty">Tidak ada hasil untuk "'+_ovEsc(q)+'"</div>';
+  if(allTx.length) h+=`<div class="ov-dd-all" onmousedown="event.preventDefault();ovSearchHide();ovSearch(document.getElementById('ov-search-input').value)">Lihat semua ${allTx.length} transaksi →</div>`;
+  dd.innerHTML=h;dd.classList.add('open');
+}
+function ovGoUnit(id){ovSearchHide();showPage('armada',document.getElementById('sb-armada'),'bn-armada');openUnitDetail(id);}
+function ovGoPart(nama){ovSearchHide();window._gudangSearch=String(nama).toLowerCase();gudangFilter='all';showPage('gudang',document.getElementById('sb-gudang'),'bn-gudang');}
+function ovGoTxn(id){ovSearchHide();showPage('keuangan',document.getElementById('sb-keuangan'),'bn-keuangan');setTimeout(()=>openTxnActionSheet(id),150);}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 
 // ═══════════════════════════════════════════════════════
