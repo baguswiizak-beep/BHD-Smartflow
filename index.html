@@ -1820,7 +1820,9 @@ function ensureXLSX(){
 }
 // Grafik: tanpa animasi di HP, animasi singkat di desktop (grafik digambar ulang tiap ganti filter/menu)
 if(window.Chart){
-  Chart.defaults.animation = window.matchMedia('(max-width:768px)').matches ? false : {duration:300};
+  // Ubah durasinya saja — mengganti seluruh objek animation menghapus easing dan membuat Chart.js error
+  if(window.matchMedia('(max-width:768px)').matches) Chart.defaults.animation.duration = 0;
+  else Chart.defaults.animation.duration = 300;
 }
 // ═══════════════════════════════════════════════════════
 // API CLIENT — BHD SmartFlow Backend
