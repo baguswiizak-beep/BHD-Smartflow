@@ -4418,7 +4418,7 @@ async function exportBackupXLSX(){
   // bukan dari transactions[] lokal yang sekarang cuma nyimpan 3 bulan terakhir.
   let allTxnRaw = [];
   try{
-    allTxnRaw = await sbFetch('transactions',{select:'*',limit:20000,order:'created_at.desc'});
+    allTxnRaw = await sbFetchAll('transactions',{order:'created_at.desc,id.desc'});
     if(!Array.isArray(allTxnRaw)) allTxnRaw = transactions.map(_toDbTxnShape);
   }catch(e){
     console.warn('Gagal ambil semua transaksi utk backup, pakai data lokal (3 bulan terakhir) saja:', e);
@@ -7075,6 +7075,22 @@ async function sbFetch(table, opts={}){
   return true;
 }
 
+// Ambil SEMUA baris secara bertahap per 1.000 (batas bawaan Supabase per permintaan).
+// filters: array string PostgREST mentah, mis. ['date=gte.2026-01-01','date=lte.2026-03-31']
+async function sbFetchAll(table, {select='*', order='created_at.desc', filters=[], pageSize=1000, maxRows=200000}={}){
+  const out=[];
+  for(let offset=0; offset<maxRows; offset+=pageSize){
+    const qs=[`select=${select}`, `order=${order}`, `limit=${pageSize}`, `offset=${offset}`, ...filters].join('&');
+    const res=await fetch(`${SB_URL}/rest/v1/${table}?${qs}`, {headers:sbHeaders({'Content-Type':'application/json'})});
+    if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.message||('HTTP '+res.status)); }
+    const rows=await res.json();
+    if(!Array.isArray(rows)) break;
+    out.push(...rows);
+    if(rows.length<pageSize) break;
+  }
+  return out;
+}
+
 // Log aksi ke Supabase audit_logs
 async function logAudit(action, modul, detail=''){
   try{
@@ -7465,10 +7481,7 @@ async function loadDataArsip(){
   if(btn){btn.disabled=true;btn.textContent='⏳ Memuat...';}
   if(statusEl) statusEl.textContent='';
   try{
-    const url=`${SB_URL}/rest/v1/transactions?select=*&limit=5000&order=created_at.desc&date=gte.${from}&date=lte.${to}`;
-    const res=await fetch(url,{headers:sbHeaders({'Content-Type':'application/json'})});
-    if(!res.ok) throw new Error('Server error '+res.status);
-    const txns=await res.json();
+    const txns=await sbFetchAll('transactions',{order:'created_at.desc,id.desc',filters:['date=gte.'+from,'date=lte.'+to]});
     const mapped=(Array.isArray(txns)?txns:[]).map(t=>({
       id:t.id, type:t.type, amount:Number(t.amount||0),
       label:t.label||(t.type==='inflow'?'Pemasukan':'Pengeluaran'),
@@ -7537,6 +7550,7 @@ async function resetDataArsip(){
 // Sidik jari data terakhir dari server. Sync otomatis (tiap 20 detik / saat tab aktif lagi)
 // hanya menggambar ulang layar kalau datanya benar-benar berubah — ini yang dulu bikin terasa patah-patah.
 let _lastSyncFingerprint = '';
+let _lastDataVersion = null; // dari fungsi server bhd_data_version (null = belum tahu / fungsi belum dipasang)
 async function syncFromSupabase(opts){
   const auto = !!(opts && opts.auto === true);
   if(auto && document.hidden) return; // tab tidak terlihat: tidak perlu tarik data
@@ -7546,15 +7560,22 @@ async function syncFromSupabase(opts){
   let txnSuccess = false;
   
   try{
+    // Cek versi data dulu: kalau sama dengan terakhir kali, tidak ada yang perlu diunduh
+    let _ver = null;
+    try { _ver = await sbRpc('bhd_data_version', {}); } catch(e){ _ver = null; } // belum dipasang → unduh penuh seperti biasa
+    if(auto && _ver !== null && _lastDataVersion !== null && String(_ver) === String(_lastDataVersion)){
+      setSyncStatus('ok');
+      return;
+    }
     // Ambil semua tabel sekaligus (paralel), bukan satu per satu
     const cutoff=new Date(); cutoff.setMonth(cutoff.getMonth()-SYNC_MONTHS_BACK);
     const cutoffStr=cutoff.toISOString().split('T')[0];
     const _wrap = p => p.then(v=>({v}), e=>({e}));
     const [rTxn, rFleet, rInv, rInvInst, rDrv, rSet] = await Promise.all([
-      sbFetch('transactions',{select:'*',limit:3000,order:'created_at.desc',filters:{date:'gte.'+cutoffStr}}),
+      sbFetchAll('transactions',{order:'created_at.desc,id.desc',filters:['date=gte.'+cutoffStr]}),
       sbFetch('fleet',{select:'*',limit:100,order:'nopol.asc'}),
       sbFetch('inventory',{select:'*',limit:500,order:'nama.asc'}),
-      sbFetch('inventory_installed',{select:'*',limit:2000,order:'id.asc'}),
+      sbFetchAll('inventory_installed',{order:'id.asc'}),
       sbFetch('drivers',{select:'*',limit:200,order:'name.asc'}),
       sbFetch('settings',{select:'*',limit:100,order:'key.asc'})
     ].map(_wrap));
@@ -7566,6 +7587,7 @@ async function syncFromSupabase(opts){
       return; // data sama persis: tidak ada yang perlu digambar ulang
     }
     _lastSyncFingerprint = _fp;
+    if(!_anyErr) _lastDataVersion = _ver;
     // 1. Sync Transaksi (KRUSIAL)
     try {
       // Sync rutin cuma narik 3 bulan terakhir (kayak mutasi rekening) — hemat kuota transfer data.
