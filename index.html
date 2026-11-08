@@ -1700,7 +1700,7 @@ body{background:var(--bg);}
       </div>
       <div id="gs-last-sync" style="font-size:10px;color:var(--text3);margin-top:8px;"></div>
     </div>
-    <div class="settings-card">
+    <div class="settings-card" id="danger-zone-card" style="display:none;">
       <div class="settings-title" style="color:var(--danger);">Zona Berbahaya</div>
       <button onclick="confirmReset()" class="form-btn warn">Hapus Semua Transaksi</button>
     </div>
@@ -2553,10 +2553,7 @@ function confirmDeleteOnderdilItem(id, nama){
         // Hapus transaksi outflow terkait (jika ada) beserta jejaknya di inventory_installed
         if(linkedTxn){
           await sbFetch('transactions', {method:'DELETE', filters:{id:linkedTxn.id}});
-          await fetch(`${SB_URL}/rest/v1/inventory_installed?txn_id=like.${encodeURIComponent(linkedTxn.id+'%')}`, {
-            method:'DELETE',
-            headers:sbHeaders({'Content-Type':'application/json','Prefer':'return=minimal'})
-          }).catch(e=>console.warn('inventory_installed delete fail:',e));
+          // Jejak di inventory_installed ikut terhapus oleh bhd_txn_delete (server)
           transactions=transactions.filter(t=>t.id!==linkedTxn.id);
           extraHistoryTxns=extraHistoryTxns.filter(t=>t.id!==linkedTxn.id);
         }
@@ -3376,10 +3373,7 @@ function deleteTxn(id){
           }
           // Hapus dari tabel inventory_installed (exact match dan prefix match untuk multi-unit)
           // Multi-unit pasang: txn_id bisa berformat "txnId_0", "txnId_1", dst
-          await fetch(`${SB_URL}/rest/v1/inventory_installed?txn_id=like.${encodeURIComponent(id+'%')}`, {
-            method:'DELETE',
-            headers:sbHeaders({'Content-Type':'application/json','Prefer':'return=minimal'})
-          }).catch(e=>console.warn('inventory_installed delete fail:',e));
+          // Jejak di inventory_installed ikut terhapus oleh bhd_txn_delete (server)
         }
 
         logAudit('delete','transaksi',
@@ -6634,6 +6628,7 @@ async function clearAllGSheetData(){
 }
 
 function confirmReset(){
+  if(window.activeAdmin?.role!=='superadmin'){showToast('⛔ Hanya superadmin yang bisa menghapus semua transaksi');return;}
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent='🚨 Hapus Semua Transaksi';
   body.innerHTML=`
@@ -6663,14 +6658,13 @@ function confirmReset(){
 }
 
 async function executeResetAll(){
+  if(window.activeAdmin?.role!=='superadmin'){showToast('⛔ Hanya superadmin yang bisa menghapus semua transaksi');return;}
   const alsoGSheet = document.getElementById('reset-also-gsheet')?.checked && gsSpreadsheetId;
   closeSm();
   try {
     showToast('⏳ Sedang menghapus semua data...');
-    // Delete all transactions from Supabase
-    await sbFetch('transactions', {method:'DELETE', filters:{}});
-    // Hapus juga inventory_installed (stok kembali ke awal)
-    await sbFetch('inventory_installed', {method:'DELETE', filters:{}}).catch(()=>{});
+    // Hapus semua transaksi + inventory_installed lewat server (dicek: harus superadmin)
+    await sbRpc('bhd_txn_reset_all', {p_token:_adminToken()});
     // Reset stok inventory ke stok_awal
     for(const sp of sparepartStock){
       sp.stokSisa = sp.stokAwal;
@@ -6991,6 +6985,11 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 // Supabase REST helper (generic)
 async function sbFetch(table, opts={}){
   const {select='*', filters={}, method='GET', body=null, limit=500, order='created_at.desc'} = opts;
+  // Hapus transaksi tidak boleh langsung ke tabel — lewat fungsi server yang mengecek login
+  if(method==='DELETE' && table==='transactions'){
+    if(filters && filters.id){ await sbRpc('bhd_txn_delete',{p_token:_adminToken(), p_id:String(filters.id)}); return true; }
+    throw new Error('Hapus semua transaksi hanya lewat menu Zona Berbahaya (superadmin)');
+  }
 
   // Build base URL
   let url = `${SB_URL}/rest/v1/${table}`;
@@ -7243,6 +7242,9 @@ function updateSettingsAdminInfo(){
     else{el.innerHTML=`<span style="font-weight:700;color:var(--text);">${a.name}</span>
       <span style="margin-left:8px;font-size:10px;padding:2px 7px;border-radius:20px;background:${a.role==='superadmin'?'rgba(94,92,230,.15)':'var(--green-bg)'};color:${a.role==='superadmin'?'#5E5CE6':'var(--green2)'};">${a.role}</span>`;}
   }
+  // Zona Berbahaya (Hapus Semua Transaksi) hanya untuk superadmin
+  const dz=document.getElementById('danger-zone-card');
+  if(dz) dz.style.display=a?.role==='superadmin'?'block':'none';
   // Show superadmin panel
   const saMgmt=document.getElementById('sa-admin-mgmt');
   if(saMgmt){
