@@ -4105,14 +4105,28 @@ function renderMiniLine(){
     const start=new Date(trendCustomFrom+'T00:00:00');
     const end=new Date(trendCustomTo+'T00:00:00');
     const totalDays=Math.round((end-start)/86400000)+1;
-    const limitDays=Math.min(totalDays,60);
-    for(let i=0;i<limitDays;i++){
-      const d=new Date(start.getTime());d.setDate(start.getDate()+i);
-      const ds=_ds(d);
-      labels.push(d.toLocaleDateString('id-ID',{day:'numeric',month:'short'}));
-      const dayTxns=transactions.filter(t=>t.date===ds);
-      const inf=totalInflow(dayTxns),out=totalOutflow(dayTxns);
-      inflowArr.push(inf);outflowArr.push(out);profits.push(inf-out);
+    if(totalDays<=62){
+      // Rentang pendek: per hari
+      for(let i=0;i<totalDays;i++){
+        const d=new Date(start.getTime());d.setDate(start.getDate()+i);
+        const ds=_ds(d);
+        labels.push(d.toLocaleDateString('id-ID',{day:'numeric',month:'short'}));
+        const dayTxns=transactions.filter(t=>t.date===ds);
+        const inf=totalInflow(dayTxns),out=totalOutflow(dayTxns);
+        inflowArr.push(inf);outflowArr.push(out);profits.push(inf-out);
+      }
+    } else {
+      // Rentang panjang: dijumlah per bulan supaya seluruh rentang tampil (dulu dipotong 60 hari pertama)
+      const fromStr=_ds(start), toStr=_ds(end);
+      const m=new Date(start.getFullYear(),start.getMonth(),1);
+      while(m<=end){
+        const ym=m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0');
+        labels.push(m.toLocaleDateString('id-ID',{month:'short',year:'2-digit'}));
+        const monTxns=transactions.filter(t=>t.date&&t.date.startsWith(ym)&&t.date>=fromStr&&t.date<=toStr);
+        const inf=totalInflow(monTxns),out=totalOutflow(monTxns);
+        inflowArr.push(inf);outflowArr.push(out);profits.push(inf-out);
+        m.setMonth(m.getMonth()+1);
+      }
     }
   } else {
     // Mode 7d / 30d: N hari terakhir dari hari ini
