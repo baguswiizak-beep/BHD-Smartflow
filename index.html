@@ -1836,7 +1836,7 @@ let _useAPI = false; // akan di-set true setelah ping berhasil
 const SB_URL = 'https://fwuuhtmwhgisrkbtmasi.supabase.co';
 // Publishable key: kunci PUBLIK yang memang aman ada di halaman (akses dibatasi RLS di database).
 // JANGAN pernah taruh kunci service_role / sb_secret_ di sini.
-const SB_KEY = '__PUBLISHABLE_KEY__';
+const SB_KEY = 'sb_publishable_GXEqUosCtuIdKp-JFoU05Q_-kBwzDaI';
 // Kunci baru (sb_publishable_...) bukan JWT, jadi tidak dikirim sebagai Authorization: Bearer
 function sbHeaders(extra){
   const h = SB_KEY.startsWith('sb_') ? {'apikey':SB_KEY} : {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
