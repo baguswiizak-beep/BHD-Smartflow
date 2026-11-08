@@ -2474,7 +2474,8 @@ async function saveSparepart(editId){
         const dbData = {
           nama, spek, kategori: kat, toko, nota,
           tgl_masuk: tgl, stok_awal: jml,
-          stok_sisa: Math.min(isNaN(sp.stokSisa)?jml:sp.stokSisa, jml),
+          // Stok awal naik/turun → stok sisa ikut bergeser sebesar selisihnya (tetap 0..stok awal)
+          stok_sisa: Math.max(0, Math.min(jml, (isNaN(sp.stokSisa)?jml:sp.stokSisa) + (jml - (isNaN(sp.stokAwal)?jml:sp.stokAwal)))),
           harga_satuan: isNaN(harga)?0:harga, catatan: sp.catatan,
           ritase_threshold: ritaseThreshold || null, stok_min: stokMin
         };
@@ -3293,7 +3294,7 @@ function openTxnActionSheet(id){
       </div>
       ${t.muat?`<div style="margin-top:10px;padding:8px 10px;background:var(--bg2);border-radius:9px;font-size:11px;color:var(--text2);">📍 ${t.muat} → ${t.bongkar}</div>`:''}
       ${t.driver?`<div style="margin-top:6px;font-size:11px;color:var(--text3);">👤 ${t.driver}${t.nota&&t.nota!=='—'?' · No.Nota: '+t.nota:''}</div>`:''}
-      ${isOnderdil&&sp?`<div style="margin-top:8px;padding:7px 10px;background:var(--orange-bg);border-radius:9px;font-size:11px;color:var(--orange);font-weight:600;">🔧 ${sp.nama} · ${t.jmlPasang||1} unit${t.posisi?' · '+t.posisi:''}</div>`:''}
+      ${isOnderdil&&sp?`<div style="margin-top:8px;padding:7px 10px;background:var(--orange-bg);border-radius:9px;font-size:11px;color:var(--orange);font-weight:600;">🔧 ${sp.nama} · ${(t.jmlPasang ?? 1)} unit${t.posisi?' · '+t.posisi:''}</div>`:''}
     </div>
     <div style="display:grid;gap:10px;">
       <button onclick="closeSm();setTimeout(()=>editTxn('${id}'),200);" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--card-b);background:var(--card);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;text-align:left;width:100%;">
@@ -3320,7 +3321,7 @@ function deleteTxn(id){
   const stockMsg=txn.type==='outflow'&&txn.sparepartId
     ?(isCustomItem
         ?'<br><span style="color:var(--danger);font-size:11px;">⚠️ Onderdil "'+linkedSp.nama+'" (beli luar stok) juga akan ikut terhapus dari tab Onderdil.</span>'
-        :'<br><span style="color:var(--success);font-size:11px;">✅ Stok onderdil akan otomatis kembali +'+(txn.jmlPasang||1)+' unit</span>')
+        :'<br><span style="color:var(--success);font-size:11px;">✅ Stok onderdil akan otomatis kembali +'+((txn.jmlPasang ?? 1))+' unit</span>')
     :(txn.type==='inflow'&&txn.ritaseCounted
         ?'<br><span style="color:var(--warning);font-size:11px;">⚠️ Ritase onderdil di '+(txn.ritaseArmada||txn.armada)+' akan otomatis dikurangi -1</span>'
         :'');
@@ -3331,14 +3332,14 @@ function deleteTxn(id){
       try {
         const waktu=new Date().toLocaleString('id-ID');
         const adminName=window.activeAdmin?.name||'System';
-        const jml=txn.jmlPasang||1;
+        const jml=(txn.jmlPasang ?? 1);
         
         // === STOCK REVERSAL (item stok gudang biasa) ATAU HAPUS TOTAL (onderdil custom luar stok) ===
         if(txn.type==='outflow'&&txn.sparepartId&&!isCustomItem){
           const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
           if(sp){
             sp.stokSisa=Math.min(sp.stokAwal,(sp.stokSisa||0)+jml);
-            sp.installed=sp.installed.filter(i=>!String(i.txnId).startsWith(String(id)));
+            sp.installed=sp.installed.filter(i=>!_isInstallOf(i.txnId,id));
           }
         } else if(isCustomItem){
           const i=sparepartStock.findIndex(s=>s.id===txn.sparepartId);if(i>-1)sparepartStock.splice(i,1);
@@ -3395,6 +3396,8 @@ function deleteTxn(id){
   );
 }
 
+// Catatan pasang milik transaksi id: txnId persis sama, atau "id_..." (multi-unit / tambahan)
+function _isInstallOf(txnId, id){ const a=String(txnId), b=String(id); return a===b || a.startsWith(b+'_'); }
 function editTxn(id){
   const txn=transactions.find(t=>t.id===id);
   if(!txn) return;
@@ -3406,7 +3409,7 @@ function editTxn(id){
   if(isOnderdil){
     const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
     const spName=sp?sp.nama:'onderdil';
-    const jmlLama=txn.jmlPasang||1;
+    const jmlLama=(txn.jmlPasang ?? 1);
     spInfo=`<div style="background:var(--orange-bg);border:1px solid var(--orange-bd);border-radius:10px;padding:9px 11px;font-size:11px;color:var(--orange);">
       🔧 Terkait stok <b>${spName}</b> (${jmlLama} unit terpasang)<br>
       <span style="font-size:10px;opacity:.8;">Edit jumlah akan menyesuaikan stok otomatis. Rumus: Stok Baru = Stok Sekarang + (Jumlah Lama - Jumlah Baru)</span>
@@ -3455,7 +3458,7 @@ function confirmSaveEditTxn(id){
   const newDate=document.getElementById('et-date')?.value||txn.date;
   const newArmada=document.getElementById('et-armada')?.value||txn.armada;
   const oldAmount=txn.amount;
-  const oldJml=txn.jmlPasang||1;
+  const oldJml=(txn.jmlPasang ?? 1);
   const newJml=txn.sparepartId?parseInt(document.getElementById('et-jml')?.value||oldJml):oldJml;
   const newDriver=document.getElementById('et-driver')?.value||txn.driver;
   const newMuat=document.getElementById('et-muat')?.value||txn.muat;
@@ -3501,27 +3504,31 @@ function confirmSaveEditTxn(id){
           if(selisih>0){
             // Remove excess installed entries for this txnId
             let removed=0;
-            sp.installed=sp.installed.filter(i=>{
-              if(removed<selisih && String(i.txnId).startsWith(String(id))){removed++;return false;}
-              return true;
-            });
+            const kept=[];
+            for(let k=sp.installed.length-1;k>=0;k--){
+              const i=sp.installed[k];
+              if(removed<selisih && _isInstallOf(i.txnId,id)){removed++;continue;}
+              kept.unshift(i);
+            }
+            sp.installed=kept;
           } else if(selisih<0){
             // Add more installed entries
             for(let i=0;i<Math.abs(selisih);i++){
-              sp.installed.push({armada:txn.armada,tglPasang:txn.date,ritase:0,txnId:id+'_extra_'+i,posisi:txn.posisi||''});
+              sp.installed.push({armada:txn.armada,tglPasang:txn.date,ritase:0,txnId:id+'_extra_'+Date.now()+'_'+i,posisi:txn.posisi||''});
             }
           }
         }
         txn.jmlPasang=newJml;
-        txn.amount=newJml*(newAmount/oldJml);
+        const unitPrice = oldJml>0 ? newAmount/oldJml : (txn.hargaSatuan || sp?.hargaSatuan || 0);
+        txn.amount=newJml*unitPrice;
       } else {
         txn.amount=newAmount;
       }
       txn.label=newLabel; txn.date=newDate; txn.armada=newArmada;
       txn.driver=newDriver; txn.muat=newMuat; txn.bongkar=newBongkar;
       // Selaraskan harga satuan dengan Total & Jumlah terbaru (form edit ini tidak punya field harga satuan sendiri)
-      const jmlUntukHarga = txn.jmlPasang||1;
-      txn.hargaSatuan = jmlUntukHarga>0 ? Math.round(txn.amount/jmlUntukHarga) : txn.amount;
+      const jmlUntukHarga = (txn.jmlPasang ?? 1);
+      txn.hargaSatuan = jmlUntukHarga>0 ? Math.round(txn.amount/jmlUntukHarga) : (txn.hargaSatuan||0);
       txn.ritaseCounted = newRitaseCounted;
       txn.ritaseArmada = newRitaseCounted ? newArmada : null;
 
@@ -3543,7 +3550,7 @@ function confirmSaveEditTxn(id){
         bongkar: newBongkar,
         posisi: txn.posisi || '',
         sparepart_id: txn.sparepartId || null,
-        jml_pasang: txn.jmlPasang || 1,
+        jml_pasang: (txn.jmlPasang ?? 1),
         harga_satuan: txn.hargaSatuan || null,
         ritase_counted: txn.ritaseCounted || false,
         ritase_armada: txn.ritaseArmada || null
@@ -3557,6 +3564,17 @@ function confirmSaveEditTxn(id){
           if(txn.sparepartId && newJml!==oldJml){
             const sp=sparepartStock.find(s=>s.id===txn.sparepartId);
             if(sp) await sbFetch('inventory', {method:'PATCH', filters:{id:txn.sparepartId}, body:{stok_sisa:sp.stokSisa, installed:sp.installed}});
+            // Catatan "terpasang di armada" (tabel inventory_installed) ikut disesuaikan
+            if(newJml<oldJml){
+              await sbRpc('bhd_installed_trim',{p_token:_adminToken(), p_txn_id:id, p_keep:newJml});
+            } else if(sp){
+              const extra=sp.installed.filter(i=>String(i.txnId).startsWith(id+'_extra_'));
+              for(const i of extra.slice(-(newJml-oldJml))){
+                await sbFetch('inventory_installed',{method:'POST',body:{
+                  inventory_id:txn.sparepartId, armada:i.armada, tgl_pasang:i.tglPasang, ritase:0, txn_id:i.txnId, posisi:i.posisi||''
+                }}).catch(e=>console.warn('inventory_installed POST fail:',e));
+              }
+            }
           }
           // === RITASE ADJUSTMENT — batalkan hitungan lama, terapkan yang baru kalau memang berubah ===
           if(txn.type==='inflow'){
@@ -4397,7 +4415,7 @@ async function exportBackupXLSX(){
     armada:t.armada||'', muat:t.muat||'', bongkar:t.bongkar||'',
     driver:t.driver||'', nota:t.nota||'', toko:t.toko||'',
     kategori:t.kategori||'', subKategori:t.sub_kategori||t.subKategori||'', status:t.status||'',
-    sparepartId:t.sparepart_id||t.sparepartId||'', jmlPasang:t.jml_pasang||t.jmlPasang||1, posisi:t.posisi||'',
+    sparepartId:t.sparepart_id||t.sparepartId||'', jmlPasang:(t.jml_pasang ?? t.jmlPasang ?? 1), posisi:t.posisi||'',
     created_at:t.created_at||''
   }));
   showToast('⏳ Menyiapkan backup Excel...');
@@ -4422,7 +4440,7 @@ async function exportBackupXLSX(){
     'Toko/Vendor': t.toko||'',
     'Status': t.status||'',
     'Sparepart ID': t.sparepartId||'',
-    'Jumlah Unit': t.jmlPasang||1,
+    'Jumlah Unit': (t.jmlPasang ?? 1),
     'Posisi': t.posisi||'',
     'Dibuat': t.created_at||''
   }));
@@ -6443,19 +6461,19 @@ function _gsRowPlan(txn){
   if(txn.kategori==='Onderdil'){
     // B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, [H TOTAL - dilewati], I NO.NOTA, J NAMA TOKO, K ID
     return { tab:GS_TAB_OUT_ONDERDIL, idCol:'K', segments:[
-      {start:'B', values:[txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'']},
+      {start:'B', values:[txn.date||'', txn.armada||'', keterangan, (txn.jmlPasang ?? 1), txn.satuan||'', txn.hargaSatuan||'']},
       {start:'I', values:[txn.nota||'', txn.toko||'']}
     ]};
   }
   if(txn.kategori==='UMUM'){
     // B TANGGAL, C KETERANGAN, D JUMLAH, E SATUAN, F HARGA, [G TOTAL - dilewati], H ID
     return { tab:GS_TAB_OUT_UMUM, idCol:'H', segments:[
-      {start:'B', values:[txn.date||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'']}
+      {start:'B', values:[txn.date||'', keterangan, (txn.jmlPasang ?? 1), txn.satuan||'', txn.hargaSatuan||'']}
     ]};
   }
   // Tunai & Dokumen — B TANGGAL, C NO POLISI, D KETERANGAN, E JUMLAH, F SATUAN, G HARGA, [H TOTAL - dilewati], I ID
   return { tab:GS_TAB_OUT_TUNAI, idCol:'I', segments:[
-    {start:'B', values:[txn.date||'', txn.armada||'', keterangan, txn.jmlPasang||1, txn.satuan||'', txn.hargaSatuan||'']}
+    {start:'B', values:[txn.date||'', txn.armada||'', keterangan, (txn.jmlPasang ?? 1), txn.satuan||'', txn.hargaSatuan||'']}
   ]};
 }
 function _gsSyncErr(tabName, msg){
@@ -7442,7 +7460,7 @@ async function loadDataArsip(){
       armada:t.armada||'', muat:t.muat||'', bongkar:t.bongkar||'',
       driver:t.driver||'', nota:t.nota||'', toko:t.toko||'',
       kategori:t.kategori||'', subKategori:t.sub_kategori||'', status:t.status||'lunas',
-      sparepartId:t.sparepart_id||null, posisi:t.posisi||'', jmlPasang:t.jml_pasang||1,
+      sparepartId:t.sparepart_id||null, posisi:t.posisi||'', jmlPasang:(t.jml_pasang ?? 1),
       hargaSatuan:Number(t.harga_satuan||0), satuan:t.satuan||'',
       ritaseCounted:!!t.ritase_counted, ritaseArmada:t.ritase_armada||null, statusArmada:t.status_armada||'', created_at:t.created_at
     }));
@@ -7546,7 +7564,7 @@ async function syncFromSupabase(opts){
           armada:t.armada||'', muat:t.muat||'', bongkar:t.bongkar||'',
           driver:t.driver||'', nota:t.nota||'', toko:t.toko||'',
           kategori:t.kategori||'', subKategori:t.sub_kategori||'', status:t.status||'lunas',
-          sparepartId:t.sparepart_id||null, posisi:t.posisi||'', jmlPasang:t.jml_pasang||1,
+          sparepartId:t.sparepart_id||null, posisi:t.posisi||'', jmlPasang:(t.jml_pasang ?? 1),
           hargaSatuan:Number(t.harga_satuan||0), satuan:t.satuan||'',
           ritaseCounted:!!t.ritase_counted, ritaseArmada:t.ritase_armada||null, statusArmada:t.status_armada||'', created_at:t.created_at
         }));

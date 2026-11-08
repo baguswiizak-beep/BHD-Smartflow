@@ -53,6 +53,25 @@ begin
   end if;
 end $$;
 
+-- Edit jumlah pasang dikurangi: simpan p_keep catatan pasang tertua, buang sisanya
+create or replace function public.bhd_installed_trim(p_token uuid, p_txn_id text, p_keep int)
+returns void language plpgsql security definer
+set search_path = public
+as $$
+begin
+  perform public._bhd_require_session(p_token);
+  if coalesce(p_txn_id, '') = '' then raise exception 'ID transaksi kosong'; end if;
+  if to_regclass('public.inventory_installed') is null then return; end if;
+  delete from public.inventory_installed
+  where id in (
+    select id from public.inventory_installed
+    where txn_id = p_txn_id or left(txn_id, length(p_txn_id) + 1) = p_txn_id || '_'
+    order by id asc
+    offset greatest(coalesce(p_keep, 0), 0)
+  );
+end $$;
+
+grant execute on function public.bhd_installed_trim(uuid, text, int) to anon, authenticated;
 grant execute on function public.bhd_txn_delete(uuid, text) to anon, authenticated;
 grant execute on function public.bhd_txn_reset_all(uuid) to anon, authenticated;
 
