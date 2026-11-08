@@ -1715,7 +1715,7 @@ body{background:var(--bg);}
         <span>👑 Manajemen Admin</span>
         <button onclick="openAddAdminFromSettings()" style="font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;border:none;background:var(--green-bg);color:var(--green2);cursor:pointer;font-family:'Inter',sans-serif;">+ Tambah</button>
       </div>
-      <div style="font-size:10px;color:var(--text3);margin:6px 0 10px;">Kode daftar admin: <b id="reg-code-display" style="color:var(--text2);">BHD2024</b>
+      <div style="font-size:10px;color:var(--text3);margin:6px 0 10px;">Kode daftar admin: <b id="reg-code-display" style="color:var(--text2);">••••</b>
         <button onclick="changeRegCode()" style="margin-left:8px;font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text3);cursor:pointer;font-family:'Inter',sans-serif;">Ganti</button>
       </div>
       <div id="sa-admin-list" style="display:flex;flex-direction:column;gap:7px;"></div>
@@ -1834,7 +1834,28 @@ let _useAPI = false; // akan di-set true setelah ping berhasil
 
 // SUPABASE direct REST (works with file://)
 const SB_URL = 'https://fwuuhtmwhgisrkbtmasi.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3dXVodG13aGdpc3JrYnRtYXNpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjE1MTA1MywiZXhwIjoyMDkxNzI3MDUzfQ.6fQEKUdUtepUsykCWlTMDRQRCqcIugwYr0kWPt3A5FU';
+// Publishable key: kunci PUBLIK yang memang aman ada di halaman (akses dibatasi RLS di database).
+// JANGAN pernah taruh kunci service_role / sb_secret_ di sini.
+const SB_KEY = '__PUBLISHABLE_KEY__';
+// Kunci baru (sb_publishable_...) bukan JWT, jadi tidak dikirim sebagai Authorization: Bearer
+function sbHeaders(extra){
+  const h = SB_KEY.startsWith('sb_') ? {'apikey':SB_KEY} : {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+  return Object.assign(h, extra||{});
+}
+// Panggil fungsi server Supabase (login, daftar, kelola admin)
+async function sbRpc(fn, args){
+  const res = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
+    method:'POST', headers: sbHeaders({'Content-Type':'application/json'}), body: JSON.stringify(args||{})
+  });
+  const txt = await res.text();
+  let data = null; try { data = txt ? JSON.parse(txt) : null; } catch(e){ data = txt; }
+  if(!res.ok){
+    const err = new Error((data && data.message) || res.statusText || 'Gagal');
+    err.status = res.status; throw err;
+  }
+  return data;
+}
+function _adminToken(){ return window.activeAdmin?.token || null; }
 // (sbQuery has been replaced by the more robust sbFetch)
 
 async function apiPing(){
@@ -1865,10 +1886,9 @@ async function doLogin(){
   if(btn){btn.textContent='Memeriksa...';btn.disabled=true;}
   let ok=false, adminData=null, errMsg='';
   try{
-    const rows = await sbFetch('admins', {select:'id,username,password,role', filters:{username:u}, limit:1});
-    if(rows.length>0&&rows[0].password===p){ok=true;adminData={id:rows[0].id,name:rows[0].username,role:rows[0].role};}
-    else if(rows.length===0) errMsg='Username tidak ditemukan.';
-    else errMsg='Password salah.';
+    const r = await sbRpc('bhd_login', {p_username:u, p_password:p});
+    if(r && r.id){ok=true;adminData={id:r.id,name:r.username,role:r.role,token:r.token};}
+    else errMsg='Username atau password salah.';
   } catch(e){
     errMsg='Gagal terhubung ke server, coba lagi. ('+(e.message||'')+')';
   }
@@ -1878,6 +1898,7 @@ async function doLogin(){
     return;
   }
   if(ok&&adminData){
+    if(errEl) errEl.textContent='';
     window.activeAdmin=adminData;
     localStorage.setItem('bhd_active_admin',JSON.stringify(adminData));
     const overlay=document.getElementById('login-overlay');
@@ -1906,8 +1927,7 @@ function switchLoginTab(tab){
   }
 }
 
-// Kode rahasia untuk daftar admin — superadmin bisa lihat/ubah di Pengaturan
-const ADMIN_REG_CODE='BHD2024';
+// Kode daftar admin disimpan & dicek di server (superadmin bisa lihat/ubah di Pengaturan)
 
 async function doRegister(){
   const username=document.getElementById('reg-user')?.value?.trim();
@@ -1918,25 +1938,10 @@ async function doRegister(){
   if(!username||!pass){errEl.textContent='Username & password wajib diisi';errEl.style.color='#FCA5A5';return;}
   if(pass!==pass2){errEl.textContent='Password tidak cocok';errEl.style.color='#FCA5A5';return;}
   if(pass.length<6){errEl.textContent='Password minimal 6 karakter';errEl.style.color='#FCA5A5';return;}
-  // Validasi kode admin live dari database
-  let validCode = window._ADMIN_REG_CODE || ADMIN_REG_CODE;
-  try {
-    const sres = await fetch(`${SB_URL}/rest/v1/settings?key=eq.admin_reg_code&select=value`,
-      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-    const sdata = await sres.json();
-    if(Array.isArray(sdata) && sdata[0]) validCode = sdata[0].value;
-  } catch(e){ console.warn('Fetch live regcode fail, using last known'); }
-
-  if(code !== validCode){errEl.textContent='Kode admin tidak valid. Hubungi Superadmin.';errEl.style.color='#FCA5A5';return;}
+  // Kode daftar dicek di server — tidak lagi dibaca ke browser
   errEl.textContent='Mendaftar...';errEl.style.color='var(--orange)';
   try{
-    const id='adm_'+Date.now();
-    const res=await fetch(`${SB_URL}/rest/v1/admins`,{
-      method:'POST',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({id,username,password:pass,role:'admin',active:true,created_at:new Date().toISOString()})
-    });
-    if(!res.ok){const e=await res.json();throw new Error(e.message||'Username sudah dipakai');}
+    await sbRpc('bhd_register', {p_username:username, p_password:pass, p_code:code||''});
     errEl.textContent='✅ Berhasil! Silakan masuk dengan akun baru.';errEl.style.color='#86EFAC';
     setTimeout(()=>switchLoginTab('masuk'),1500);
   }catch(e){errEl.textContent='Gagal: '+e.message;errEl.style.color='#FCA5A5';}
@@ -2550,7 +2555,7 @@ function confirmDeleteOnderdilItem(id, nama){
           await sbFetch('transactions', {method:'DELETE', filters:{id:linkedTxn.id}});
           await fetch(`${SB_URL}/rest/v1/inventory_installed?txn_id=like.${encodeURIComponent(linkedTxn.id+'%')}`, {
             method:'DELETE',
-            headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'}
+            headers:sbHeaders({'Content-Type':'application/json','Prefer':'return=minimal'})
           }).catch(e=>console.warn('inventory_installed delete fail:',e));
           transactions=transactions.filter(t=>t.id!==linkedTxn.id);
           extraHistoryTxns=extraHistoryTxns.filter(t=>t.id!==linkedTxn.id);
@@ -3373,7 +3378,7 @@ function deleteTxn(id){
           // Multi-unit pasang: txn_id bisa berformat "txnId_0", "txnId_1", dst
           await fetch(`${SB_URL}/rest/v1/inventory_installed?txn_id=like.${encodeURIComponent(id+'%')}`, {
             method:'DELETE',
-            headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'}
+            headers:sbHeaders({'Content-Type':'application/json','Prefer':'return=minimal'})
           }).catch(e=>console.warn('inventory_installed delete fail:',e));
         }
 
@@ -7017,11 +7022,7 @@ async function sbFetch(table, opts={}){
 
   if(params.length > 0) url += '?' + params.join('&');
 
-  const headers = {
-    'apikey': SB_KEY,
-    'Authorization': 'Bearer ' + SB_KEY,
-    'Content-Type': 'application/json',
-  };
+  const headers = sbHeaders({'Content-Type': 'application/json'});
   if(method === 'POST' || method === 'PATCH' || method === 'DELETE'){
     headers['Prefer'] = 'return=minimal';
   }
@@ -7048,7 +7049,7 @@ async function logAudit(action, modul, detail=''){
     const adminId = window.activeAdmin?.id || null;
     await fetch(`${SB_URL}/rest/v1/audit_logs`, {
       method:'POST',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      headers:sbHeaders({'Content-Type':'application/json','Prefer':'return=minimal'}),
       body: JSON.stringify({
         user_id: adminId,
         user_name: adminName,
@@ -7228,6 +7229,7 @@ function loadCompanyProfileUI(){
 // Logout
 function doLogout(){
   if(!confirm('Yakin ingin logout?')) return;
+  const tok=_adminToken(); if(tok) sbRpc('bhd_logout',{p_token:tok}).catch(()=>{});
   localStorage.removeItem('bhd_active_admin');
   location.reload();
 }
@@ -7269,9 +7271,8 @@ async function loadSAAdminList(){
   const el=document.getElementById('sa-admin-list');if(!el)return;
   el.innerHTML='<div style="font-size:11px;color:var(--text3);">Memuat...</div>';
   try{
-    const res=await fetch(`${SB_URL}/rest/v1/admins?select=id,username,role&order=username.asc`,
-      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-    const admins=await res.json();
+    const admins=await sbRpc('bhd_admin_list', {p_token:_adminToken()});
+    _loadRegCodeDisplay();
     if(!Array.isArray(admins)||admins.length===0){el.innerHTML='<div style="font-size:11px;color:var(--text3);">Belum ada admin</div>';return;}
     el.innerHTML=admins.map(a=>`
       <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);padding:10px 12px;border-radius:11px;border:1px solid var(--card-b);">
@@ -7310,13 +7311,7 @@ async function saveSANewAdmin(){
   if(!username||!password){showToast('Username & password wajib');return;}
   if(password.length<6){showToast('Password minimal 6 karakter');return;}
   try{
-    const id='adm_'+Date.now();
-    const res=await fetch(`${SB_URL}/rest/v1/admins`,{
-      method:'POST',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({id,username,password,role,active:true,created_at:new Date().toISOString()})
-    });
-    if(!res.ok){const e=await res.json();throw new Error(e.message||'Gagal');}
+    await sbRpc('bhd_admin_add', {p_token:_adminToken(), p_username:username, p_password:password, p_role:role});
     const waktu=new Date().toLocaleString('id-ID');
     logAudit('create','admin',`[${waktu}] - [${window.activeAdmin?.name}] - [Tambah Admin] - [${username}, role: ${role}]`);
     closeSm();loadSAAdminList();showToast('Admin '+username+' ditambahkan ✅');
@@ -7345,15 +7340,9 @@ function editSAAdmin(id, username, currentRole){
 async function saveSAEditAdmin(id, username){
   const role=document.getElementById('ea-role')?.value;
   const pass=document.getElementById('ea-pass')?.value;
-  const body={role};
-  if(pass&&pass.length>=6) body.password=pass;
+  if(pass&&pass.length<6){showToast('Password minimal 6 karakter');return;}
   try{
-    const res=await fetch(`${SB_URL}/rest/v1/admins?id=eq.${id}`,{
-      method:'PATCH',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify(body)
-    });
-    if(!res.ok) throw new Error('Gagal update');
+    await sbRpc('bhd_admin_update', {p_token:_adminToken(), p_id:id, p_role:role, p_password:pass||null});
     const waktu=new Date().toLocaleString('id-ID');
     logAudit('update','admin',`[${waktu}] - [${window.activeAdmin?.name}] - [Edit Admin] - [${username}, role: ${role}]`);
     closeSm();loadSAAdminList();showToast('Admin '+username+' diperbarui ✅');
@@ -7365,7 +7354,7 @@ async function deleteSAAdmin(id, username){
     `Hapus admin <b>${username}</b>? Aksi ini tidak dapat dibatalkan.`,
     async()=>{
       try{
-        await fetch(`${SB_URL}/rest/v1/admins?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+        await sbRpc('bhd_admin_delete', {p_token:_adminToken(), p_id:id});
         const waktu=new Date().toLocaleString('id-ID');
         logAudit('delete','admin',`[${waktu}] - [${window.activeAdmin?.name}] - [Hapus Admin] - [${username}]`);
         loadSAAdminList();showToast('Admin '+username+' dihapus');
@@ -7374,6 +7363,12 @@ async function deleteSAAdmin(id, username){
   );
 }
 
+// Tampilkan kode daftar hanya untuk superadmin (diambil dari server dengan token login)
+async function _loadRegCodeDisplay(){
+  const display=document.getElementById('reg-code-display'); if(!display) return;
+  try{ const c=await sbRpc('bhd_reg_code_get', {p_token:_adminToken()}); display.textContent=c||'(belum diatur)'; }
+  catch(e){ display.textContent='(login ulang untuk melihat)'; }
+}
 function changeRegCode(){
   const tEl=document.getElementById('sm-title-text'),body=document.getElementById('sm-body');
   tEl.textContent='Ganti Kode Daftar Admin';
@@ -7389,13 +7384,7 @@ async function saveRegCode(){
   const code=document.getElementById('new-reg-code')?.value?.trim();
   if(!code){showToast('Kode tidak boleh kosong');return;}
   try{
-    const res=await fetch(`${SB_URL}/rest/v1/settings?key=eq.admin_reg_code`,{
-      method:'PATCH',
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({value:code})
-    });
-    if(!res.ok) throw new Error('Gagal simpan ke database');
-    window._ADMIN_REG_CODE=code;
+    await sbRpc('bhd_reg_code_set', {p_token:_adminToken(), p_code:code});
     const display=document.getElementById('reg-code-display');
     if(display) display.textContent=code;
     closeSm();showToast('Kode daftar diperbarui ke database Central ✅');
@@ -7441,7 +7430,7 @@ async function loadDataArsip(){
   if(statusEl) statusEl.textContent='';
   try{
     const url=`${SB_URL}/rest/v1/transactions?select=*&limit=5000&order=created_at.desc&date=gte.${from}&date=lte.${to}`;
-    const res=await fetch(url,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}});
+    const res=await fetch(url,{headers:sbHeaders({'Content-Type':'application/json'})});
     if(!res.ok) throw new Error('Server error '+res.status);
     const txns=await res.json();
     const mapped=(Array.isArray(txns)?txns:[]).map(t=>({

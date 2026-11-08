@@ -45,6 +45,20 @@ app.use((req, res, next) => {
     next();
 });
 
+// ── KUNCI API DI SERVER PUBLIK ───────────────────────────────
+// API ini tidak punya login, dan aplikasi web tidak memakainya (langsung ke Supabase).
+// Di Vercel hanya /api/ping dan /api/health yang dibuka. Untuk menjalankan semuanya
+// (mis. lokal lewat start.bat) cukup jalan di luar Vercel, atau set BHD_ENABLE_API=true.
+const API_TERBUKA = ['/api/ping', '/api/health'];
+app.use((req, res, next) => {
+    const diVercel = !!process.env.VERCEL;
+    const diizinkan = process.env.BHD_ENABLE_API === 'true';
+    if (diVercel && !diizinkan && req.path.startsWith('/api/') && !API_TERBUKA.includes(req.path)) {
+        return res.status(404).json({ error: 'Not found' });
+    }
+    next();
+});
+
 // Serve static files from the root directory (to allow access via http://127.0.0.1:3001)
 const path = require('path');
 app.use(express.static(path.join(__dirname, '../')));
