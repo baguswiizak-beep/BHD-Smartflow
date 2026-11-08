@@ -1,6 +1,9 @@
 const { Client } = require('pg');
 
-const connectionString = 'postgresql://postgres.fwuuhtmwhgisrkbtmasi:bagus07Juli2001@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres';
+// Jangan simpan password database di kode. Isi lewat file .env (sudah di-.gitignore) atau variabel lingkungan.
+require('dotenv').config();
+const connectionString = process.env.SUPABASE_URL_POOLER || process.env.POSTGRES_URL;
+if (!connectionString) { console.error('Set SUPABASE_URL_POOLER atau POSTGRES_URL dulu.'); process.exit(1); }
 
 const client = new Client({
   connectionString: connectionString,

@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="BHD Smart Flow"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous"></script>
+<!-- Library Excel (861 KB) dimuat saat fitur Excel dipakai saja — lihat ensureXLSX() -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -83,7 +83,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 
 /* ── BG ── */
 #bg-layer{position:fixed;inset:0;z-index:0;background:var(--bg);background-size:cover;background-position:center;transition:all .4s;}
-#bg-overlay{position:fixed;inset:0;z-index:1;background:transparent;backdrop-filter:blur(0px);pointer-events:none;transition:all .4s;}
+#bg-overlay{position:fixed;inset:0;z-index:1;background:transparent;backdrop-filter:none;pointer-events:none;transition:all .4s;}
 
 /* ── LAYOUT ── */
 #app{position:relative;z-index:2;display:flex;min-height:100vh;}
@@ -554,8 +554,8 @@ input[type="date"].form-input::-webkit-calendar-picker-indicator{opacity:.45;cur
 /* ══════════════════════════════════════
    MAIN MODAL (bottom sheet)
 ══════════════════════════════════════ */
-#modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
-#modal-overlay.open{opacity:1;pointer-events:all;}
+#modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+#modal-overlay.open{opacity:1;pointer-events:all;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);}
 #modal-sheet{width:100%;max-width:520px;background:var(--card);border-radius:22px 22px 0 0;padding:0 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:92vh;overflow-y:auto;}
 #modal-overlay.open #modal-sheet{transform:translateY(0);}
 .modal-handle{width:34px;height:4px;background:var(--card-b);border-radius:2px;margin:0 auto 14px;}
@@ -565,8 +565,8 @@ input[type="date"].form-input::-webkit-calendar-picker-indicator{opacity:.45;cur
 .mt-dot.inflow{background:var(--success);}.mt-dot.outflow{background:var(--danger);}
 
 /* Small modal (center) */
-#sm-overlay{position:fixed;inset:0;z-index:350;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s;}
-#sm-overlay.open{opacity:1;pointer-events:all;}
+#sm-overlay{position:fixed;inset:0;z-index:350;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s;}
+#sm-overlay.open{opacity:1;pointer-events:all;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);}
 #sm-box{background:var(--card);border-radius:20px;padding:20px;width:100%;max-width:400px;max-height:88vh;overflow-y:auto;transform:scale(.94);transition:transform .22s;box-shadow:var(--sh-lg);}
 #sm-overlay.open #sm-box{transform:scale(1);}
 .sm-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:-20px;background:var(--card);padding-top:20px;margin-top:-20px;z-index:5;}
@@ -582,7 +582,8 @@ input[type="date"].form-input::-webkit-calendar-picker-indicator{opacity:.45;cur
 ══════════════════════════════════════ */
 #ptr-indicator{display:flex;align-items:center;justify-content:center;gap:8px;height:0;overflow:hidden;transition:height .3s;font-size:12px;font-weight:600;color:var(--green2);}
 #ptr-indicator.show{height:44px;}
-.ptr-spin{width:16px;height:16px;border:2px solid var(--green-bd);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;}
+.ptr-spin{width:16px;height:16px;border:2px solid var(--green-bd);border-top-color:var(--green);border-radius:50%;}
+#ptr-indicator.show .ptr-spin{animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
 /* ══════════════════════════════════════
@@ -934,6 +935,11 @@ body{background:var(--bg);}
 @media(max-width:768px){
   .card,.chart-wrap,.settings-card,.wa-panel,.ov-welcome,.ov-card,.dash-hero,.armada-hero,.gudang-hero,.dp-hero,#topbar{box-shadow:none!important;}
   .pulse-ring,.ap-dot{animation:none;}
+  /* Blur adalah efek paling berat di HP — ganti latar gelap biasa */
+  #modal-overlay.open,#sm-overlay.open,#sb-overlay{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(0,0,0,.6);}
+  .dh-stat{backdrop-filter:none;-webkit-backdrop-filter:none;}
+  /* Animasi truk/garis sidebar menggeser posisi tiap frame — matikan di HP */
+  .sb-truck-anim,.sb-dash{animation:none;}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
 
@@ -1795,6 +1801,27 @@ body{background:var(--bg);}
 </div><!-- /app -->
 
 <script>
+// Muat library Excel hanya saat dibutuhkan (ekspor/impor), bukan saat aplikasi dibuka
+let _xlsxPromise=null;
+function ensureXLSX(){
+  if(window.XLSX) return Promise.resolve(true);
+  if(!_xlsxPromise){
+    if(typeof showToast==='function') showToast('⏳ Menyiapkan Excel...');
+    _xlsxPromise=new Promise(res=>{
+      const sc=document.createElement('script');
+      sc.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      sc.crossOrigin='anonymous';
+      sc.onload=()=>res(!!window.XLSX);
+      sc.onerror=()=>{_xlsxPromise=null;res(false);};
+      document.head.appendChild(sc);
+    });
+  }
+  return _xlsxPromise.then(ok=>{ if(!ok&&typeof showToast==='function') showToast('⚠️ Gagal memuat library Excel, cek koneksi'); return ok; });
+}
+// Grafik: tanpa animasi di HP, animasi singkat di desktop (grafik digambar ulang tiap ganti filter/menu)
+if(window.Chart){
+  Chart.defaults.animation = window.matchMedia('(max-width:768px)').matches ? false : {duration:300};
+}
 // ═══════════════════════════════════════════════════════
 // API CLIENT — BHD SmartFlow Backend
 // ═══════════════════════════════════════════════════════
@@ -4351,7 +4378,7 @@ function renderLaporanTable(){
 }
 // ═══ BACKUP DATABASE — Export semua data mentah ke Excel (.xlsx) multi-sheet ═══
 async function exportBackupXLSX(){
-  if(typeof XLSX==='undefined'){showToast('⚠️ Library Excel belum siap, coba lagi sebentar');return;}
+  if(!(await ensureXLSX())) return;
   showToast('⏳ Mengambil semua data transaksi (bisa beberapa detik)...');
 
   // Backup Excel HARUS lengkap semua periode — jadi ambil langsung dari server,
@@ -4474,8 +4501,8 @@ async function exportBackupXLSX(){
 }
 
 // ═══════════════════════════════ IMPORT TRANSAKSI DARI EXCEL ═══════════════════════════════
-function downloadImportTemplate(){
-  if(typeof XLSX==='undefined'){showToast('⚠️ Library Excel belum siap, coba lagi sebentar');return;}
+async function downloadImportTemplate(){
+  if(!(await ensureXLSX())) return;
   const wb=XLSX.utils.book_new();
   const contoh=[
     {'Tipe':'Inflow','Tanggal':'2026-07-01','No Polisi':'B 9199 BYW','Nama Driver':'KOMENG','Titik Muat':'Pasir Cilegon','Titik Bongkar':'Cisauk','Kategori':'','Sub Kategori':'','Jumlah':'','Satuan':'','Harga Satuan':'','Nominal':1100000,'No Nota':'','Nama Toko':'','Keterangan':'Setoran'},
@@ -4512,9 +4539,10 @@ function downloadImportTemplate(){
 }
 
 let _importRows=[]; // baris valid siap-import, hasil parsing terakhir
-function handleImportFile(event){
+async function handleImportFile(event){
   const file=event.target.files?.[0];
   if(!file) return;
+  if(!(await ensureXLSX())) return;
   const statusEl=document.getElementById('import-status');
   const previewWrap=document.getElementById('import-preview-wrap');
   if(statusEl) statusEl.textContent='⏳ Membaca file...';
@@ -6796,9 +6824,9 @@ function lhLoadArrayBuffer(buf,fileName){
     const st=document.getElementById('lh-status'); if(st) st.innerHTML='<span style="color:var(--danger);">⚠️ Gagal membaca file: '+_ovEsc(e.message)+'</span>';
   }
 }
-function lhHandleLocalFile(ev){
+async function lhHandleLocalFile(ev){
   const f=ev.target.files?.[0]; if(!f) return;
-  if(typeof XLSX==='undefined'){showToast('⚠️ Library Excel belum siap, coba lagi');return;}
+  if(!(await ensureXLSX())) return;
   const st=document.getElementById('lh-status'); if(st) st.textContent='⏳ Membaca file...';
   const rd=new FileReader(); rd.onload=e=>lhLoadArrayBuffer(e.target.result,f.name); rd.readAsArrayBuffer(f);
   ev.target.value='';
@@ -6833,7 +6861,7 @@ async function lhPickFromDrive(){
   const st=document.getElementById('lh-status');
   const apiKey=localStorage.getItem('bhd_gdrive_api_key')||'';
   if(!apiKey){ if(st) st.innerHTML='⚠️ Isi dulu <b>Google API Key</b> di <b>Pengaturan → Sync ke Google Sheets</b>, lalu klik Simpan.'; showToast('Isi Google API Key di Pengaturan dulu'); return; }
-  if(typeof XLSX==='undefined'){showToast('⚠️ Library Excel belum siap, coba lagi');return;}
+  if(!(await ensureXLSX())) return;
   try{
     if(st) st.textContent='⏳ Membuka Google Drive...';
     const token=await _lhGetDriveToken();
@@ -7082,13 +7110,33 @@ let _companyProfile = {
   logoDataUrl: '' // base64 image
 };
 
+// Perkecil gambar ke sisi terpanjang maxPx (PNG, transparansi tetap). Kalau gagal, pakai aslinya.
+function _shrinkImageDataUrl(dataUrl, maxPx){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const k=Math.min(1, maxPx/Math.max(img.naturalWidth,img.naturalHeight));
+        if(k>=1){res(dataUrl);return;}
+        const c=document.createElement('canvas');
+        c.width=Math.round(img.naturalWidth*k); c.height=Math.round(img.naturalHeight*k);
+        const g=c.getContext('2d'); g.imageSmoothingQuality='high';
+        g.drawImage(img,0,0,c.width,c.height);
+        const out=c.toDataURL('image/png');
+        res(out.length<dataUrl.length?out:dataUrl);
+      }catch(err){res(dataUrl);}
+    };
+    img.onerror=()=>res(dataUrl);
+    img.src=dataUrl;
+  });
+}
 function onLogoUpload(input){
   const file = input.files[0];
   if(!file) return;
-  if(file.size > 500*1024){ showToast('⚠️ Ukuran logo maksimal 500KB'); return; }
+  if(file.size > 5*1024*1024){ showToast("⚠️ Ukuran logo maksimal 5MB"); return; }
   const reader = new FileReader();
-  reader.onload = e => {
-    _companyProfile.logoDataUrl = e.target.result;
+  reader.onload = async e => {
+    _companyProfile.logoDataUrl = await _shrinkImageDataUrl(e.target.result, 256);
     const preview = document.getElementById('cp-logo-preview');
     if(preview){
       preview.style.backgroundImage = `url(${e.target.result})`;
@@ -7461,21 +7509,44 @@ async function resetDataArsip(){
   if(typeof renderKeuanganStats==='function') renderKeuanganStats();
   showToast('✅ Kembali ke tampilan 3 bulan terakhir');
 }
-async function syncFromSupabase(){
+// Sidik jari data terakhir dari server. Sync otomatis (tiap 20 detik / saat tab aktif lagi)
+// hanya menggambar ulang layar kalau datanya benar-benar berubah — ini yang dulu bikin terasa patah-patah.
+let _lastSyncFingerprint = '';
+async function syncFromSupabase(opts){
+  const auto = !!(opts && opts.auto === true);
+  if(auto && document.hidden) return; // tab tidak terlihat: tidak perlu tarik data
   if(_isSyncing) return;
   _isSyncing = true;
-  setSyncStatus('syncing');
+  if(!auto) setSyncStatus('syncing');
   let txnSuccess = false;
   
   try{
+    // Ambil semua tabel sekaligus (paralel), bukan satu per satu
+    const cutoff=new Date(); cutoff.setMonth(cutoff.getMonth()-SYNC_MONTHS_BACK);
+    const cutoffStr=cutoff.toISOString().split('T')[0];
+    const _wrap = p => p.then(v=>({v}), e=>({e}));
+    const [rTxn, rFleet, rInv, rInvInst, rDrv, rSet] = await Promise.all([
+      sbFetch('transactions',{select:'*',limit:3000,order:'created_at.desc',filters:{date:'gte.'+cutoffStr}}),
+      sbFetch('fleet',{select:'*',limit:100,order:'nopol.asc'}),
+      sbFetch('inventory',{select:'*',limit:500,order:'nama.asc'}),
+      sbFetch('inventory_installed',{select:'*',limit:2000,order:'id.asc'}),
+      sbFetch('drivers',{select:'*',limit:200,order:'name.asc'}),
+      sbFetch('settings',{select:'*',limit:100,order:'key.asc'})
+    ].map(_wrap));
+    const _val = r => { if(r.e) throw r.e; return r.v; };
+    const _anyErr = [rTxn,rFleet,rInv,rInvInst,rDrv,rSet].some(r=>r.e);
+    const _fp = _anyErr ? '' : JSON.stringify([rTxn.v,rFleet.v,rInv.v,rInvInst.v,rDrv.v,rSet.v]);
+    if(auto && _fp && _fp === _lastSyncFingerprint){
+      setSyncStatus('ok');
+      return; // data sama persis: tidak ada yang perlu digambar ulang
+    }
+    _lastSyncFingerprint = _fp;
     // 1. Sync Transaksi (KRUSIAL)
     try {
       // Sync rutin cuma narik 3 bulan terakhir (kayak mutasi rekening) — hemat kuota transfer data.
       // Data lebih lama TETAP AMAN tersimpan di database, cuma tidak ikut ditarik tiap sync otomatis.
       // Untuk lihat data lebih lama, pakai "Muat Data Lama" di halaman Laporan.
-      const cutoff=new Date(); cutoff.setMonth(cutoff.getMonth()-SYNC_MONTHS_BACK);
-      const cutoffStr=cutoff.toISOString().split('T')[0];
-      const txns = await sbFetch('transactions',{select:'*',limit:3000,order:'created_at.desc',filters:{date:'gte.'+cutoffStr}});
+      const txns = _val(rTxn);
       if(Array.isArray(txns)){
         transactions = txns.map(t=>({
           id:t.id, type:t.type, amount:Number(t.amount||0),
@@ -7499,7 +7570,7 @@ async function syncFromSupabase(){
 
     // 2. Sync Armada — order by nopol (fleet tidak punya created_at)
     try {
-      const fleet = await sbFetch('fleet',{select:'*',limit:100,order:'nopol.asc'});
+      const fleet = _val(rFleet);
       if(Array.isArray(fleet)){
         fleetData.length=0;
         fleet.forEach(f=>fleetData.push({id:f.id,nopol:f.nopol,driver:f.driver||'',status:f.status||'jalan',pajak:f.pajak||'',kir:f.kir||'',stnk:f.stnk||''}));
@@ -7510,9 +7581,9 @@ async function syncFromSupabase(){
 
     // 3. Sync Inventory + inventory_installed — order by nama (inventory tidak punya created_at)
     try {
-      const inv = await sbFetch('inventory',{select:'*',limit:500,order:'nama.asc'});
+      const inv = _val(rInv);
       // Ambil data installed dari tabel inventory_installed
-      const invInstalled = await sbFetch('inventory_installed',{select:'*',limit:2000,order:'id.asc'}).catch(()=>[]);
+      const invInstalled = rInvInst.e ? [] : rInvInst.v;
       if(Array.isArray(inv)){
         sparepartStock.length=0;
         inv.forEach(sp=>{
@@ -7542,7 +7613,7 @@ async function syncFromSupabase(){
 
     // 3b. Sync Drivers — selalu replace, tidak append; order by name
     try {
-      const drivers = await sbFetch('drivers',{select:'*',limit:200,order:'name.asc'});
+      const drivers = _val(rDrv);
       if(Array.isArray(drivers)){
         const fromDb = drivers.map(d => d.name || d.nama || '').filter(Boolean);
         // Gabungkan dengan driver dari fleet (yang tidak ada di driverList)
@@ -7553,7 +7624,7 @@ async function syncFromSupabase(){
 
     // 4. Sync Settings — order by key (settings tidak punya created_at)
     try {
-      const dbSettings = await sbFetch('settings',{select:'*',limit:100,order:'key.asc'});
+      const dbSettings = _val(rSet);
       if(Array.isArray(dbSettings)){
         const regCode = dbSettings.find(s=>s.key==='admin_reg_code')?.value;
         if(regCode) {
@@ -7673,8 +7744,8 @@ async function _appInit(){
     await syncFromSupabase();
     showToast('✅ Data berhasil dimuat');
     checkDocWarnings();
-    setInterval(syncFromSupabase, 20000);
-    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) syncFromSupabase(); });
+    setInterval(()=>syncFromSupabase({auto:true}), 20000);
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) syncFromSupabase({auto:true}); });
     // Audit log format: [Waktu] - [Admin] - [Aksi] - [Detail]
     const waktu=new Date().toLocaleString('id-ID');
     const adminName=window.activeAdmin?.name||'System';
