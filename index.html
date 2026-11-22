@@ -5,7 +5,7 @@
 <title>BHD SmartFlow System</title>
 <!-- PWA: bisa "Add to Home Screen" seperti aplikasi asli -->
 <link rel="manifest" href="manifest.json"/>
-<meta name="theme-color" content="#1F4A57"/>
+<meta name="theme-color" content="#1C2E27"/>
 <link rel="icon" type="image/png" href="icon-192.png"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -959,6 +959,251 @@ body{background:var(--bg);}
 .ov-dd-all:hover{background:var(--green-bg);}
 .ov-dd-empty{font-size:12px;color:var(--text3);text-align:center;padding:16px;}
 @media(max-width:768px){.ov-dd{min-width:0;}}
+
+/* ═════════════════════════════════════════════════════════════
+   TEMA "SMARTFLOW GREEN" — palet #0F1A16 · #1C2E27 · #2F4A3F · #557566 · #94AE9F · #DCE7DF
+   (menimpa tema sebelumnya; hapus blok ini untuk kembali ke tema lama)
+═════════════════════════════════════════════════════════════ */
+:root{
+  --p0:#0F1A16;--p1:#1C2E27;--p2:#2F4A3F;--p3:#557566;--p4:#94AE9F;--p5:#DCE7DF;
+  --green:#2F4A3F;--green2:#1C2E27;--green-bg:rgba(47,74,63,.08);--green-bd:rgba(47,74,63,.2);
+  --bg:#EDF2EE;--bg2:#FFFFFF;--bg3:#F1F5F2;--bg4:#E3EBE5;--bg5:#F7FAF8;
+  --card:#FFFFFF;--card-b:rgba(28,46,39,.08);
+  --text:#0F1A16;--text2:#3D554B;--text3:#7C9087;--text4:#BFCDC5;
+  --success:#2E7D5B;--danger:#C2553F;--warning:#B7832B;--info:#2F4A3F;
+  --side-bg:#FFFFFF;--side-txt:#3D554B;
+  --bg-grad:linear-gradient(180deg,#F3F7F4 0%,#E8EFEA 100%);
+  --sh:0 1px 2px rgba(15,26,22,.04),0 6px 20px rgba(15,26,22,.04);
+  --sh-md:0 14px 34px rgba(15,26,22,.10);
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+[data-theme="dark"]{
+  --green:#94AE9F;--green2:#DCE7DF;--green-bg:rgba(148,174,159,.12);--green-bd:rgba(148,174,159,.26);
+  --bg:#0A120F;--bg2:#14211C;--bg3:#1A2B24;--bg4:#22372E;--bg5:#14211C;
+  --card:#13201B;--card-b:rgba(220,231,223,.08);
+  --text:#E9F0EB;--text2:#B4C6BB;--text3:#7D9488;--text4:#3F5449;
+  --success:#7FC4A0;--danger:#E3826D;--warning:#D9AE62;--info:#94AE9F;
+  --side-bg:#0F1A16;--side-txt:#B4C6BB;
+  --bg-grad:linear-gradient(180deg,#0E1814 0%,#0A120F 100%);
+  --sh:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.25);
+  --sh-md:0 14px 34px rgba(0,0,0,.45);
+}
+body{background:var(--bg);}
+
+/* Login */
+#login-overlay{background:radial-gradient(ellipse at 20% 80%,rgba(148,174,159,.18) 0%,transparent 55%),linear-gradient(160deg,#0F1A16 0%,#1C2E27 55%,#2F4A3F 100%);}
+.login-box{background:rgba(220,231,223,.06);border-color:rgba(220,231,223,.14);}
+.login-logo,.login-btn{background:linear-gradient(135deg,#1C2E27,#557566);}
+.login-input:focus{border-color:rgba(148,174,159,.6);box-shadow:0 0 0 3px rgba(148,174,159,.15);}
+#ltab-masuk[style*="0A84FF"],#ltab-daftar[style*="0A84FF"]{background:#557566!important;}
+
+/* ── Sidebar terang ala referensi ── */
+#sidebar{background:var(--side-bg);border-right:1px solid var(--card-b);box-shadow:none;}
+@media(min-width:769px){#sidebar{box-shadow:none;}}
+.sb-logo{border-bottom:1px solid var(--card-b);}
+.sb-logo .logo-mark{width:68px;height:68px;border:3px solid var(--bg4);background:linear-gradient(135deg,#1C2E27,#557566);box-shadow:0 8px 22px rgba(28,46,39,.25);}
+.lt-main{color:var(--text);}
+.lt-sub{color:var(--text3);}
+.sb-clock{border-bottom:1px solid var(--card-b);}
+#sb-clock{color:var(--text);}
+#sb-date{color:var(--text3);}
+.sb-input-btns{border-bottom:1px solid var(--card-b);}
+.sb-input-btn{transition:transform .25s var(--ease),background .25s,box-shadow .25s;}
+.sb-input-btn.inflow{background:var(--p1);color:#fff;border:1px solid var(--p1);}
+.sb-input-btn.inflow:hover{background:var(--p2);box-shadow:0 6px 16px rgba(28,46,39,.25);transform:translateY(-1px);}
+.sb-input-btn.outflow{background:var(--bg3);color:var(--text2);border:1px solid var(--card-b);}
+.sb-input-btn.outflow:hover{background:var(--bg4);transform:translateY(-1px);}
+[data-theme="dark"] .sb-input-btn.inflow{background:var(--p2);border-color:var(--p2);color:var(--p5);}
+.nav-sec{padding:10px 12px 0;}
+.nav-lbl{color:var(--text3);}
+.nav-item{color:var(--side-txt);border-radius:12px;padding:10px 12px;margin:2px 0;transition:background .3s var(--ease),color .3s var(--ease),transform .3s var(--ease),box-shadow .3s var(--ease);}
+.nav-item:hover{background:var(--bg3);color:var(--text);transform:translateX(3px);}
+.nav-item.active{background:var(--p1);color:#fff;font-weight:700;box-shadow:0 8px 18px rgba(28,46,39,.22);transform:none;}
+.nav-item.active svg{stroke:#fff;}
+[data-theme="dark"] .nav-item.active{background:var(--p2);color:var(--p5);}
+[data-theme="dark"] .nav-item.active svg{stroke:var(--p5);}
+#sidebar .nav-sec > div:last-child{background:var(--bg3)!important;border-color:var(--card-b)!important;margin:8px 0 0!important;}
+#sync-text{color:var(--text3)!important;}
+.sb-foot{border-top:1px solid var(--card-b);}
+.user-av{background:linear-gradient(135deg,#2F4A3F,#94AE9F);color:#fff;}
+.user-name{color:var(--text);}
+.user-role{color:var(--text3);}
+.sb-foot button{color:var(--text3)!important;}
+.tb-lm{background:linear-gradient(135deg,#1C2E27,#557566);}
+.ah-icon,.gh-icon{background:linear-gradient(135deg,#1C2E27,#557566);}
+.fab-circle{background:linear-gradient(135deg,#1C2E27,#557566);box-shadow:0 6px 18px rgba(28,46,39,.4);}
+.fab-opt-c.inflow{background:linear-gradient(135deg,#1C2E27,#557566);}
+
+/* ── Komponen umum ── */
+.card,.chart-wrap,.kas-card,.settings-card,.wa-panel,.txn-item,.sp-card,.fleet-card-unit,.driver-card,.search-bar,.export-card{border-radius:18px;}
+.cmp-badge{font-size:10px;font-weight:700;padding:3px 8px;}
+.cmp-badge.up{background:rgba(46,125,91,.12);color:var(--success);}
+.cmp-badge.dn{background:rgba(194,85,63,.1);color:var(--danger);}
+.cf-btn{border:none;background:var(--bg3);color:var(--text2);border-radius:10px;padding:5px 11px;font-weight:600;transition:background .25s var(--ease),color .25s,transform .2s;}
+.cf-btn:hover{background:var(--bg4);}
+.cf-btn:active,.period-chip:active,.dz-link:active{transform:scale(.96);}
+.cf-btn.active{background:var(--p1);color:#fff;}
+[data-theme="dark"] .cf-btn.active{background:var(--p2);color:var(--p5);}
+.period-chip{border-radius:12px;background:var(--card);border:1px solid var(--card-b);color:var(--text2);transition:background .3s var(--ease),color .3s,box-shadow .3s,transform .2s;}
+.period-chip:hover{background:var(--bg3);}
+.period-chip.active{background:var(--p1);color:#fff;border-color:var(--p1);box-shadow:0 6px 16px rgba(28,46,39,.22);}
+[data-theme="dark"] .period-chip.active{background:var(--p2);border-color:var(--p2);color:var(--p5);}
+.fleet-row{background:var(--bg3);border-radius:12px;transition:background .25s var(--ease),transform .25s var(--ease);}
+.fleet-row:hover{background:var(--bg4);transform:translateX(3px);}
+
+/* ── Dashboard: header ── */
+.ov-welcome{background:transparent;border:none;box-shadow:none;padding:2px 2px 14px;margin-bottom:6px;}
+.ov-wtitle{font-size:24px;}
+.ov-wsub{font-size:12px;}
+.ov-search{background:var(--card);border:1px solid var(--card-b);box-shadow:var(--sh);transition:border-color .25s,box-shadow .25s;}
+.ov-search:focus-within{border-color:var(--p3);box-shadow:0 0 0 4px var(--green-bg);}
+.ov-clock{background:var(--card);border:1px solid var(--card-b);border-radius:14px;padding:6px 12px;box-shadow:var(--sh);}
+
+/* ── KPI cards ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:14px;}
+.kpi-card{background:var(--card);border:1px solid var(--card-b);border-radius:20px;padding:16px 16px 0;position:relative;overflow:hidden;box-shadow:var(--sh);min-width:0;transition:transform .45s var(--ease),box-shadow .45s var(--ease);}
+.kpi-card:hover{transform:translateY(-4px);box-shadow:var(--sh-md);}
+.kpi-card.warn{cursor:pointer;}
+.kpi-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.kpi-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--green-bg);flex-shrink:0;transition:transform .45s var(--ease);}
+.kpi-card:hover .kpi-ico{transform:rotate(-8deg) scale(1.06);}
+.kpi-ico svg{width:18px;height:18px;fill:none;stroke:var(--p2);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+[data-theme="dark"] .kpi-ico svg{stroke:var(--p4);}
+.kpi-ico.out{background:rgba(194,85,63,.1);} .kpi-ico.out svg{stroke:var(--danger);}
+.kpi-ico.prf{background:var(--p1);} .kpi-ico.prf svg{stroke:#fff;}
+[data-theme="dark"] .kpi-ico.prf{background:var(--p2);} [data-theme="dark"] .kpi-ico.prf svg{stroke:var(--p5);}
+.kpi-ico.warn{background:rgba(183,131,43,.13);} .kpi-ico.warn svg{stroke:var(--warning);}
+.kpi-lbl{font-size:12px;font-weight:600;color:var(--text2);}
+.kpi-val{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15;}
+.kpi-foot{display:flex;align-items:center;gap:6px;margin-top:7px;flex-wrap:wrap;min-height:20px;}
+.kpi-foot .cmp-badge{margin-top:0;}
+.kpi-vs{font-size:10px;color:var(--text3);}
+.kpi-spark{height:50px;margin:6px -16px 0;position:relative;}
+.kpi-bar{height:7px;background:var(--bg4);border-radius:6px;margin:16px 0 22px;overflow:hidden;}
+.kpi-bar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--p2),var(--p4));border-radius:6px;transition:width 1.2s var(--ease);}
+
+/* ── Grid & kartu grafik ── */
+.dz-row{display:grid;gap:14px;margin-bottom:14px;}
+.dz-row-21{grid-template-columns:minmax(0,2fr) minmax(0,1fr);}
+.dz-row-3{grid-template-columns:repeat(3,minmax(0,1fr));}
+.dz-row-2{grid-template-columns:repeat(2,minmax(0,1fr));}
+.dz-card{background:var(--card);border:1px solid var(--card-b);border-radius:20px;padding:18px;box-shadow:var(--sh);min-width:0;transition:box-shadow .45s var(--ease),transform .45s var(--ease);}
+.dz-card:hover{box-shadow:var(--sh-md);}
+.dz-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.dz-title{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
+.dz-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.dz-chart{position:relative;width:100%;}
+.dz-chart canvas{display:block;}
+.h130{height:130px;}.h140{height:140px;}.h180{height:180px;}.h240{height:240px;}.h260{height:260px;}
+.dz-range{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.dz-range input{flex:1;min-width:110px;padding:6px 10px;border-radius:10px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-family:'Inter',sans-serif;outline:none;font-size:12px!important;}
+.dz-range span{font-size:11px;color:var(--text3);}
+.dz-range button,.dz-link{padding:6px 12px;border-radius:10px;border:none;background:var(--p1);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:background .25s,transform .2s;}
+.dz-link{background:var(--bg3);color:var(--text2);}
+.dz-link:hover{background:var(--bg4);}
+.dz-card .txn-item{box-shadow:none;border-radius:14px;}
+
+/* Kartu gelap (Ringkasan Kas) */
+.dz-dark{background:linear-gradient(160deg,#1C2E27 0%,#0F1A16 100%);border-color:transparent;color:var(--p5);position:relative;overflow:hidden;}
+.dz-dark::before{content:'';position:absolute;top:-80px;right:-80px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(148,174,159,.22) 0%,transparent 70%);pointer-events:none;animation:dzGlow 7s ease-in-out infinite alternate;}
+@keyframes dzGlow{from{transform:translate(0,0) scale(1);}to{transform:translate(-30px,20px) scale(1.15);}}
+[data-theme="dark"] .dz-dark{background:linear-gradient(160deg,#2F4A3F 0%,#1C2E27 100%);}
+.dz-dark .dz-title{color:#fff;} .dz-dark .dz-sub{color:var(--p4);}
+.gauge-wrap{position:relative;}
+.gauge-center{position:absolute;left:0;right:0;bottom:4px;text-align:center;pointer-events:none;}
+.gauge-val{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.03em;}
+.gauge-lbl{font-size:10px;color:var(--p4);text-transform:uppercase;letter-spacing:.1em;font-weight:700;}
+.kas-list{display:flex;flex-direction:column;gap:8px;margin-top:14px;position:relative;}
+.kas-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:14px;background:rgba(220,231,223,.06);border:1px solid rgba(220,231,223,.08);transition:background .3s var(--ease),transform .3s var(--ease);}
+.kas-row:hover{background:rgba(220,231,223,.11);transform:translateX(3px);}
+.kas-l{font-size:12px;font-weight:700;color:var(--p5);}
+.kas-s{font-size:10px;color:var(--p4);margin-top:2px;}
+.kas-v{font-size:14px;font-weight:800;color:#fff;white-space:nowrap;}
+.kas-v.in{color:#A9D8BD;} .kas-v.out{color:#F0A99A;}
+.kas-row.total{background:var(--p5);border-color:transparent;}
+.kas-row.total .kas-l,.kas-row.total .kas-v{color:var(--p0);} .kas-row.total .kas-s{color:var(--p3);}
+
+/* Donut */
+.donut-wrap{position:relative;}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+.donut-val{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.02em;}
+.donut-lbl{font-size:10px;color:var(--text3);margin-top:1px;}
+.dz-legend-hdr{display:flex;gap:6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;padding:12px 4px 6px;border-bottom:1px solid var(--card-b);}
+.dz-legend{max-height:180px;overflow-y:auto;margin-top:2px;}
+.dz-legend-total{display:flex;gap:6px;padding:8px 4px 0;font-size:12px;font-weight:800;color:var(--text);border-top:1px solid var(--card-b);margin-top:4px;}
+.lg-row{display:flex;flex-direction:column;gap:5px;padding:8px 2px;border-bottom:1px solid var(--card-b);}
+.lg-row:last-child{border-bottom:none;}
+.lg-top{display:flex;align-items:center;gap:8px;font-size:11px;}
+.lg-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
+.lg-name{flex:1;min-width:0;color:var(--text2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lg-amt{color:var(--text);font-weight:700;white-space:nowrap;}
+.lg-pct{color:var(--text3);font-weight:600;width:42px;text-align:right;}
+.lg-bar{height:4px;background:var(--bg4);border-radius:4px;overflow:hidden;}
+.lg-bar > i{display:block;height:100%;border-radius:4px;width:0;transition:width 1s var(--ease);}
+
+/* Armada */
+.fleet-split{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.donut-wrap.sm{width:140px;flex-shrink:0;}
+.fleet-stats{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0;}
+.fst{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:12px;background:var(--bg3);font-size:12px;transition:transform .3s var(--ease);}
+.fst:hover{transform:translateX(3px);}
+.fst-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.fst.jalan .fst-dot{background:var(--p2);} [data-theme="dark"] .fst.jalan .fst-dot{background:var(--p4);}
+.fst.bengkel .fst-dot{background:var(--warning);}
+.fst.antre .fst-dot{background:var(--p4);} [data-theme="dark"] .fst.antre .fst-dot{background:var(--p3);}
+.fst-l{flex:1;color:var(--text2);}
+.fst b{font-size:15px;color:var(--text);}
+
+/* ── Animasi masuk halus (berurutan) ── */
+@keyframes dzIn{from{opacity:0;transform:translateY(16px) scale(.985);}to{opacity:1;transform:none;}}
+@keyframes pageIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.page.active{animation:pageIn .45s var(--ease) both;}
+#page-dashboard.active .dz-anim{animation:dzIn .7s var(--ease) both;animation-delay:var(--d,0ms);}
+
+/* ── Responsif ── */
+@media(max-width:1180px){
+  .dz-row-3{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .dz-row-3 > :last-child{grid-column:1/-1;}
+}
+@media(max-width:980px){
+  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .dz-row-21,.dz-row-2,.dz-row-3{grid-template-columns:minmax(0,1fr);}
+}
+@media(max-width:768px){
+  .kpi-grid{gap:10px;}
+  .kpi-card{padding:13px 13px 0;border-radius:16px;}
+  .kpi-spark{margin:4px -13px 0;height:40px;}
+  .kpi-val{font-size:16px;}
+  .kpi-vs{display:none;}
+  .dz-row{gap:10px;margin-bottom:10px;}
+  .dz-card{padding:14px;border-radius:16px;}
+  .kpi-card,.dz-card{box-shadow:none;}
+  .h260,.h240{height:210px;}
+  .ov-clock{display:none;}
+  .ov-wtitle{font-size:19px;}
+}
+@media(max-width:420px){
+  .kpi-ico{width:32px;height:32px;}
+  .kpi-lbl{font-size:11px;}
+  .fleet-split{flex-direction:column;}
+  .donut-wrap.sm{width:150px;}
+  .fleet-stats{width:100%;}
+}
+
+/* ── Emoji kategori onderdil (emoji sistem → gaya Samsung di HP Samsung) ── */
+.sp-emo,.kat-emo,.kat-chip{font-family:'Samsung Color Emoji','Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;}
+.sp-emo{display:inline-flex;align-items:center;justify-content:center;font-size:22px;line-height:1;}
+.txn-ico .sp-emo{font-size:17px;}
+.kat-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg3);border-radius:14px;margin-bottom:7px;transition:transform .3s var(--ease),background .25s;}
+.kat-row:hover{transform:translateX(3px);background:var(--bg4);}
+.kat-emo{width:38px;height:38px;border-radius:12px;background:var(--card);border:1px solid var(--card-b);display:inline-flex;align-items:center;justify-content:center;font-size:21px;line-height:1;flex-shrink:0;box-shadow:var(--sh);}
+.kat-emo.pop{animation:emoPop .35s var(--ease);}
+@keyframes emoPop{0%{transform:scale(.6);}60%{transform:scale(1.15);}100%{transform:scale(1);}}
+.kat-name{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kat-suggest{display:flex;flex-wrap:wrap;gap:6px;max-height:150px;overflow-y:auto;padding:2px;}
+.kat-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;border:1px solid var(--card-b);background:var(--card);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:background .25s,transform .2s,border-color .25s;}
+.kat-chip:hover{background:var(--green-bg);border-color:var(--green-bd);color:var(--green2);}
+.kat-chip:active{transform:scale(.95);}
 </style>
 </head>
 <body>
@@ -1089,7 +1334,7 @@ body{background:var(--bg);}
       <div class="skel skel-card"></div>
     </div>
     <div id="real-content">
-      <div class="ov-welcome">
+      <div class="ov-welcome dz-anim">
         <div style="min-width:0;">
           <div class="ov-wtitle">Welcome <span id="ov-name">Admin</span> !</div>
           <div class="ov-wsub">PT. Bagus Harya Dwiprima · BHD Smart Flow</div>
@@ -1104,30 +1349,8 @@ body{background:var(--bg);}
         </div>
       </div>
 
-      <div class="ov-card">
-        <div class="ov-title">Over View</div>
-        <div class="ov-grid">
-          <div class="ov-tile">
-            <div class="ov-ico"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-            <div class="ov-body"><div class="ov-val" id="h-in">—</div><div class="ov-lbl">Inflow</div><div class="cmp-badge up" id="cmp-in">↑ 0%</div></div>
-          </div>
-          <div class="ov-tile">
-            <div class="ov-ico"><svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
-            <div class="ov-body"><div class="ov-val" id="h-out">—</div><div class="ov-lbl">Outflow</div><div class="cmp-badge dn" id="cmp-out">↓ 0%</div></div>
-          </div>
-          <div class="ov-tile">
-            <div class="ov-ico"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
-            <div class="ov-body"><div class="ov-val" id="h-prf">—</div><div class="ov-lbl">Net Profit</div><div class="cmp-badge up" id="cmp-prf">↑ 0%</div></div>
-          </div>
-          <div class="ov-tile warn" onclick="showPage('gudang',document.getElementById('sb-gudang'),'bn-gudang')">
-            <div class="ov-ico"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
-            <div class="ov-body"><div class="ov-val" id="ov-kritis">0</div><div class="ov-lbl">Stok Kritis</div><div class="cmp-badge" style="background:transparent;color:var(--text3);padding-left:0;" id="ov-armada-jalan">0 armada jalan</div></div>
-          </div>
-        </div>
-      </div>
-
       <!-- Period -->
-      <div class="period-scroll" id="period-scroll">
+      <div class="period-scroll dz-anim" id="period-scroll">
         <div class="period-chip active" onclick="setPeriod('today',this)">Hari Ini</div>
         <div class="period-chip" onclick="setPeriod('week',this)">Minggu Ini</div>
         <div class="period-chip" onclick="setPeriod('month',this)">Bulan Ini</div>
@@ -1135,121 +1358,188 @@ body{background:var(--bg);}
         <div class="period-chip" onclick="setPeriod('all',this)">Semua</div>
       </div>
 
-      <div class="sec-title">Ringkasan Kas</div>
-      <div class="kas-grid">
-        <div class="kas-card kc-in">
-          <div class="kc-icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-          <div class="kc-lbl">Pemasukan</div>
-          <div class="kc-val" id="kc-in">—</div>
-          <div class="kc-sub">Setoran netto periode ini</div>
+      <!-- KPI cards + sparkline -->
+      <div class="kpi-grid">
+        <div class="kpi-card dz-anim">
+          <div class="kpi-top">
+            <div class="kpi-ico in"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <div class="kpi-lbl">Total Inflow</div>
+          </div>
+          <div class="kpi-val" id="h-in">—</div>
+          <div class="kpi-foot"><span class="cmp-badge up" id="cmp-in">↑ 0%</span><span class="kpi-vs">vs periode lalu</span></div>
+          <div class="kpi-spark"><canvas id="spark-in"></canvas></div>
         </div>
-        <div class="kas-card kc-out">
-          <div class="kc-icon"><svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
-          <div class="kc-lbl">Pengeluaran</div>
-          <div class="kc-val" id="kc-out">—</div>
-          <div class="kc-sub">Per unit: <span id="kc-per-unit">—</span></div>
+        <div class="kpi-card dz-anim">
+          <div class="kpi-top">
+            <div class="kpi-ico out"><svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
+            <div class="kpi-lbl">Total Outflow</div>
+          </div>
+          <div class="kpi-val" id="h-out">—</div>
+          <div class="kpi-foot"><span class="cmp-badge dn" id="cmp-out">↓ 0%</span><span class="kpi-vs">vs periode lalu</span></div>
+          <div class="kpi-spark"><canvas id="spark-out"></canvas></div>
         </div>
-        <div class="kas-card kc-prf">
-          <div class="kc-inner">
-            <div><div class="kc-lbl">Net Profit Bersih</div><div class="kc-val" id="kc-prf">—</div><div class="kc-sub">Margin: <span id="kc-margin">—</span></div></div>
-            <div class="kc-icon"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+        <div class="kpi-card dz-anim">
+          <div class="kpi-top">
+            <div class="kpi-ico prf"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <div class="kpi-lbl">Net Profit</div>
+          </div>
+          <div class="kpi-val" id="h-prf">—</div>
+          <div class="kpi-foot"><span class="cmp-badge up" id="cmp-prf">↑ 0%</span><span class="kpi-vs">vs periode lalu</span></div>
+          <div class="kpi-spark"><canvas id="spark-prf"></canvas></div>
+        </div>
+        <div class="kpi-card warn dz-anim" onclick="showPage('gudang',document.getElementById('sb-gudang'),'bn-gudang')">
+          <div class="kpi-top">
+            <div class="kpi-ico warn"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+            <div class="kpi-lbl">Stok Kritis</div>
+          </div>
+          <div class="kpi-val" id="ov-kritis">0</div>
+          <div class="kpi-foot"><span class="kpi-vs" id="ov-armada-jalan">0 armada jalan</span></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" id="ov-jalan-bar"></div></div>
+        </div>
+      </div>
+
+      <!-- Row: Cash Flow Trend (besar) + Ringkasan Kas (kartu gelap) -->
+      <div class="dz-row dz-row-21">
+        <div class="dz-card dz-anim">
+          <div class="dz-hdr">
+            <div>
+              <div class="dz-title">Cash Flow Trend</div>
+              <div class="dz-sub">Net profit, inflow &amp; outflow harian</div>
+            </div>
+            <div class="cw-filters" id="trend-filter-btns">
+              <button class="cf-btn active" id="trend-btn-7d" onclick="setTrendFilter('7d',this)">7 Hr</button>
+              <button class="cf-btn" id="trend-btn-30d" onclick="setTrendFilter('30d',this)">30 Hr</button>
+              <button class="cf-btn" id="trend-btn-custom" onclick="setTrendFilter('custom',this)">Custom</button>
+            </div>
+          </div>
+          <div id="trend-custom-range" class="dz-range" style="display:none;">
+            <input type="date" id="trend-from"/>
+            <span>s/d</span>
+            <input type="date" id="trend-to"/>
+            <button onclick="applyTrendCustom()">Terapkan</button>
+          </div>
+          <div class="dz-chart h260"><canvas id="miniLineChart"></canvas></div>
+        </div>
+
+        <div class="dz-card dz-dark dz-anim">
+          <div class="dz-hdr">
+            <div>
+              <div class="dz-title">Ringkasan Kas</div>
+              <div class="dz-sub">Periode terpilih</div>
+            </div>
+          </div>
+          <div class="gauge-wrap">
+            <div class="dz-chart h130"><canvas id="marginGauge"></canvas></div>
+            <div class="gauge-center"><div class="gauge-val" id="kc-margin">—</div><div class="gauge-lbl">Margin</div></div>
+          </div>
+          <div class="kas-list">
+            <div class="kas-row"><div><div class="kas-l">Pemasukan</div><div class="kas-s">Setoran netto</div></div><div class="kas-v in" id="kc-in">—</div></div>
+            <div class="kas-row"><div><div class="kas-l">Pengeluaran</div><div class="kas-s">Per unit: <span id="kc-per-unit">—</span></div></div><div class="kas-v out" id="kc-out">—</div></div>
+            <div class="kas-row total"><div><div class="kas-l">Net Profit Bersih</div><div class="kas-s">Pemasukan − pengeluaran</div></div><div class="kas-v" id="kc-prf">—</div></div>
           </div>
         </div>
       </div>
 
-      <!-- Swipeable Chart Carousel -->
-      <div id="chart-carousel-wrap" style="margin-bottom:14px;position:relative;">
-        <!-- Dots indicator -->
-        <div style="display:flex;justify-content:center;gap:6px;margin-bottom:8px;">
-          <span class="chart-dot active" id="cdot-0" onclick="goToChart(0)" style="width:6px;height:6px;border-radius:50%;background:var(--green);cursor:pointer;transition:all .2s;"></span>
-          <span class="chart-dot" id="cdot-1" onclick="goToChart(1)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;"></span>
-          <span class="chart-dot" id="cdot-2" onclick="goToChart(2)" style="width:6px;height:6px;border-radius:50%;background:var(--card-b);cursor:pointer;transition:all .2s;"></span>
+      <!-- Row: 3 donut -->
+      <div class="dz-row dz-row-3">
+        <div class="dz-card dz-anim">
+          <div class="dz-hdr">
+            <div><div class="dz-title">Inflow Driver</div><div class="dz-sub">Kontribusi setoran per driver</div></div>
+          </div>
+          <div class="cw-filters" id="ddon-filter-btns" style="margin-bottom:8px;">
+            <button class="cf-btn" onclick="setDriverDonutPeriod('hari-ini',this)">Hari Ini</button>
+            <button class="cf-btn active" onclick="setDriverDonutPeriod('bulan-ini',this)">Bln Ini</button>
+            <button class="cf-btn" onclick="setDriverDonutPeriod('3bulan',this)">3 Bln</button>
+            <button class="cf-btn" onclick="setDriverDonutPeriod('tahun-ini',this)">Thn Ini</button>
+            <button class="cf-btn" onclick="setDriverDonutPeriod('semua',this)">Semua</button>
+            <button class="cf-btn" id="ddon-btn-custom" onclick="toggleDriverDonutCustom()">Custom</button>
+          </div>
+          <div id="ddon-custom-range" class="dz-range" style="display:none;">
+            <input type="date" id="ddon-from"/>
+            <span>s/d</span>
+            <input type="date" id="ddon-to"/>
+            <button onclick="applyDriverDonutCustom()">Terapkan</button>
+          </div>
+          <div class="donut-wrap">
+            <div class="dz-chart h180"><canvas id="driverDonutChart"></canvas></div>
+            <div class="donut-center"><div class="donut-val" id="ddon-center">—</div><div class="donut-lbl">Total Inflow</div></div>
+          </div>
+          <div class="dz-legend-hdr"><div style="flex:1;">Driver</div><div style="width:118px;text-align:right;">Revenue</div><div style="width:40px;text-align:right;">%</div></div>
+          <div id="driver-donut-legend" class="dz-legend"></div>
+          <div id="driver-donut-total" class="dz-legend-total"></div>
         </div>
-        <div id="chart-carousel" style="overflow:hidden;touch-action:pan-y;">
-          <div id="chart-slides" style="display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform;">
-            <!-- Slide 1: Inflow Driver -->
-            <div class="chart-slide chart-wrap" style="min-width:100%;box-sizing:border-box;margin-bottom:0;">
-              <div class="cw-hdr" style="flex-direction:column;align-items:flex-start;gap:7px;">
-                <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
-                  <span class="cw-title">Inflow Driver</span>
-                  <span style="font-size:10px;color:var(--text3);">← geser →</span>
-                </div>
-                <div class="cw-filters" id="ddon-filter-btns" style="flex-wrap:wrap;">
-                  <button class="cf-btn" onclick="setDriverDonutPeriod('hari-ini',this)">Hari Ini</button>
-                  <button class="cf-btn active" onclick="setDriverDonutPeriod('bulan-ini',this)">Bln Ini</button>
-                  <button class="cf-btn" onclick="setDriverDonutPeriod('3bulan',this)">3 Bln</button>
-                  <button class="cf-btn" onclick="setDriverDonutPeriod('tahun-ini',this)">Thn Ini</button>
-                  <button class="cf-btn" onclick="setDriverDonutPeriod('semua',this)">Semua</button>
-                  <button class="cf-btn" id="ddon-btn-custom" onclick="toggleDriverDonutCustom()">Custom</button>
-                </div>
-                <div id="ddon-custom-range" style="display:none;gap:5px;width:100%;flex-wrap:wrap;align-items:center;">
-                  <input type="date" id="ddon-from" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
-                  <span style="font-size:10px;color:var(--text3);">s/d</span>
-                  <input type="date" id="ddon-to" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
-                  <button onclick="applyDriverDonutCustom()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--green-bd);background:var(--green-bg);color:var(--green2);font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;white-space:nowrap;">Terapkan</button>
-                </div>
-              </div>
-              <div style="margin-top:10px;">
-                <div style="display:flex;justify-content:center;margin-bottom:12px;">
-                  <div style="position:relative;width:150px;height:150px;"><canvas id="driverDonutChart" width="150" height="150"></canvas></div>
-                </div>
-                <div style="display:flex;padding:0 4px 6px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--card-b);margin-bottom:2px;gap:6px;">
-                  <div style="flex:1;min-width:0;">Driver</div>
-                  <div style="flex-shrink:0;width:118px;text-align:right;white-space:nowrap;">Revenue</div>
-                  <div style="flex-shrink:0;width:36px;text-align:right;white-space:nowrap;">%</div>
-                </div>
-                <div id="driver-donut-legend" style="max-height:180px;overflow-y:auto;"></div>
-                <div id="driver-donut-total" style="display:flex;padding:8px 4px 2px;font-size:12px;font-weight:800;color:var(--text);border-top:1px solid var(--card-b);margin-top:4px;gap:6px;"></div>
-              </div>
+
+        <div class="dz-card dz-anim">
+          <div class="dz-hdr">
+            <div><div class="dz-title">Pengeluaran per Kategori</div><div class="dz-sub">Mengikuti periode terpilih</div></div>
+          </div>
+          <div class="donut-wrap">
+            <div class="dz-chart h180"><canvas id="dashKatChart"></canvas></div>
+            <div class="donut-center"><div class="donut-val" id="dkat-center">—</div><div class="donut-lbl">Total Outflow</div></div>
+          </div>
+          <div id="dkat-legend" class="dz-legend"></div>
+        </div>
+
+        <div class="dz-card dz-anim">
+          <div class="dz-hdr">
+            <div><div class="dz-title">Status Armada</div><div class="dz-sub">Kondisi unit saat ini</div></div>
+            <span class="chip chip-green" id="fleet-total-chip">0 Unit</span>
+          </div>
+          <div class="fleet-split">
+            <div class="donut-wrap sm">
+              <div class="dz-chart h140"><canvas id="fleetStatusChart"></canvas></div>
+              <div class="donut-center"><div class="donut-val" id="fleet-pct-jalan">0%</div><div class="donut-lbl">Jalan</div></div>
             </div>
-            <!-- Slide 2: Trend Line -->
-            <div class="chart-slide chart-wrap" style="min-width:100%;box-sizing:border-box;margin-bottom:0;">
-              <div class="cw-hdr" style="flex-direction:column;align-items:flex-start;gap:7px;">
-                <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
-                  <span class="cw-title">Cash Flow Trend</span>
-                  <div class="cw-filters" id="trend-filter-btns">
-                    <button class="cf-btn active" id="trend-btn-7d" onclick="setTrendFilter('7d',this)">7 Hr</button>
-                    <button class="cf-btn" id="trend-btn-30d" onclick="setTrendFilter('30d',this)">30 Hr</button>
-                    <button class="cf-btn" id="trend-btn-custom" onclick="setTrendFilter('custom',this)">Custom</button>
-                  </div>
-                </div>
-                <div id="trend-custom-range" style="display:none;gap:5px;width:100%;flex-wrap:wrap;align-items:center;">
-                  <input type="date" id="trend-from" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
-                  <span style="font-size:10px;color:var(--text3);">s/d</span>
-                  <input type="date" id="trend-to" style="flex:1;min-width:100px;padding:4px 8px;border-radius:8px;border:1px solid var(--card-b);background:var(--bg3);color:var(--text);font-size:11px;font-family:'Inter',-apple-system,sans-serif;outline:none;"/>
-                  <button onclick="applyTrendCustom()" style="padding:4px 12px;border-radius:8px;border:1px solid var(--green-bd);background:var(--green-bg);color:var(--green2);font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;white-space:nowrap;">Terapkan</button>
-                </div>
-              </div>
-              <canvas id="miniLineChart" style="max-height:130px;"></canvas>
-            </div>
-            <!-- Slide 3: Monthly Bar -->
-            <div class="chart-slide chart-wrap" style="min-width:100%;box-sizing:border-box;margin-bottom:0;">
-              <div class="cw-hdr">
-                <span class="cw-title">Perbandingan Bulanan</span>
-                <div class="cw-filters">
-                  <button class="cf-btn active" onclick="setBarFilter('6m',this)">6 Bln</button>
-                  <button class="cf-btn" onclick="setBarFilter('12m',this)">12 Bln</button>
-                </div>
-              </div>
-              <canvas id="barChart" style="max-height:160px;"></canvas>
+            <div class="fleet-stats">
+              <div class="fst jalan"><span class="fst-dot"></span><span class="fst-l">Jalan</span><b id="fs-jalan">0</b></div>
+              <div class="fst bengkel"><span class="fst-dot"></span><span class="fst-l">Bengkel</span><b id="fs-bengkel">0</b></div>
+              <div class="fst antre"><span class="fst-dot"></span><span class="fst-l">Antre</span><b id="fs-antre">0</b></div>
             </div>
           </div>
+          <div class="fleet-rows" id="fleet-rows-dash"></div>
         </div>
       </div>
 
-      <div class="sec-title">Status Armada</div>
-      <div class="card" style="margin-bottom:14px;">
-        <div class="card-hdr"><span class="card-title">Armada</span><span class="chip chip-green" id="fleet-total-chip">12 Unit</span></div>
-        <div class="fleet-grid3">
-          <div class="fs-box jalan"><div class="fs-icon-wrap jalan"><span class="pulse-ring"></span><svg viewBox="0 0 24 24" class="fs-svg"><path d="M1 3h15v11H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/></svg></div><div class="fs-num" id="fs-jalan">0</div><div class="fs-lbl">Jalan</div></div>
-          <div class="fs-box bengkel"><div class="fs-icon-wrap bengkel"><svg viewBox="0 0 24 24" class="fs-svg"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div><div class="fs-num" id="fs-bengkel">0</div><div class="fs-lbl">Bengkel</div></div>
-          <div class="fs-box antre"><div class="fs-icon-wrap antre"><svg viewBox="0 0 24 24" class="fs-svg"><path d="M5 3h14M5 21h14M12 3v2M12 19v2"/><ellipse cx="12" cy="8" rx="4" ry="2.5"/><ellipse cx="12" cy="16" rx="4" ry="2.5"/></svg></div><div class="fs-num" id="fs-antre">0</div><div class="fs-lbl">Antre</div></div>
+      <!-- Row: Perbandingan bulanan + Net cash flow harian -->
+      <div class="dz-row dz-row-2">
+        <div class="dz-card dz-anim">
+          <div class="dz-hdr">
+            <div><div class="dz-title">Perbandingan Bulanan</div><div class="dz-sub">Inflow vs outflow per bulan</div></div>
+            <div class="cw-filters" id="bar-filter-btns">
+              <button class="cf-btn active" onclick="setBarFilter('6m',this)">6 Bln</button>
+              <button class="cf-btn" onclick="setBarFilter('12m',this)">12 Bln</button>
+            </div>
+          </div>
+          <div class="dz-chart h240"><canvas id="barChart"></canvas></div>
         </div>
-        <div class="fleet-rows" id="fleet-rows-dash"></div>
+        <div class="dz-card dz-anim">
+          <div class="dz-hdr">
+            <div><div class="dz-title">Net Cash Flow Harian</div><div class="dz-sub" id="netflow-sum">—</div></div>
+            <div class="cw-filters" id="netflow-filter-btns">
+              <button class="cf-btn active" onclick="setNetFlowDays(14,this)">14 Hr</button>
+              <button class="cf-btn" onclick="setNetFlowDays(30,this)">30 Hr</button>
+            </div>
+          </div>
+          <div class="dz-chart h240"><canvas id="netFlowChart"></canvas></div>
+        </div>
       </div>
 
-      <div class="sec-title">Transaksi Terakhir</div>
-      <div class="txn-list" id="txn-dash"></div>
+      <!-- Row: Top armada + transaksi terakhir -->
+      <div class="dz-row dz-row-2">
+        <div class="dz-card dz-anim">
+          <div class="dz-hdr">
+            <div><div class="dz-title">Top Armada</div><div class="dz-sub">Inflow per unit · periode terpilih</div></div>
+          </div>
+          <div class="dz-chart h260"><canvas id="topArmadaChart"></canvas></div>
+        </div>
+        <div class="dz-card dz-anim">
+          <div class="dz-hdr">
+            <div><div class="dz-title">Transaksi Terakhir</div><div class="dz-sub">4 transaksi terbaru</div></div>
+            <button class="dz-link" onclick="showPage('keuangan',document.getElementById('sb-keuangan'),'bn-keuangan')">Lihat Semua</button>
+          </div>
+          <div class="txn-list" id="txn-dash"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1821,8 +2111,11 @@ function ensureXLSX(){
 // Grafik: tanpa animasi di HP, animasi singkat di desktop (grafik digambar ulang tiap ganti filter/menu)
 if(window.Chart){
   // Ubah durasinya saja — mengganti seluruh objek animation menghapus easing dan membuat Chart.js error
-  if(window.matchMedia('(max-width:768px)').matches) Chart.defaults.animation.duration = 0;
-  else Chart.defaults.animation.duration = 300;
+  // Animasi halus: grafik di-update di tempat (tidak dihancurkan) sehingga transisinya mulus
+  Chart.defaults.animation.duration = window.matchMedia('(max-width:768px)').matches ? 550 : 900;
+  Chart.defaults.animation.easing = 'easeOutQuart';
+  Chart.defaults.font.family = "'Inter',-apple-system,sans-serif";
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) Chart.defaults.animation.duration = 0;
 }
 // ═══════════════════════════════════════════════════════
 // API CLIENT — BHD SmartFlow Backend
@@ -1996,42 +2289,123 @@ const TIRE_POSITIONS = [
   'Sumbu 3 Kiri Dalam (SKR D 3)', 'Sumbu 3 Kiri Luar (SKR L 3)', 'Sumbu 2 Kanan Dalam (SKN D 3)', 'Sumbu 3 Kanan Luar (SKN L 3)'
 ];
 
-// Ikon kategori onderdil — gaya Samsung/iOS, warna vivid, stroke rounded
-const spCatIconSVG = {
-  // ── RODA & TRAKSI ──
-  Ban:       `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>`,
-  Oli:       `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#EAB308" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 007-7c0-2.2-1.1-4.1-3-5.8L12 5l-4 4.2C6.1 10.9 5 12.8 5 15a7 7 0 007 7z"/><path d="M9.5 15.5a3 3 0 004 0" opacity=".6"/></svg>`,
-  Aki:       `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 7V5M17 7V5M7 12h3M14 12h3M9 12v3M15 12v3" opacity=".8"/></svg>`,
-  Filter:    `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16l-6 7.5V19l-4-2v-5.5L4 4z"/></svg>`,
-  Rem:       `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" opacity=".5"/></svg>`,
-  Lampu:     `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6M12 3a6 6 0 016 6c0 2.2-1.2 4.1-3 5.2V17H9v-2.8C7.2 13.1 6 11.2 6 9a6 6 0 016-6z"/></svg>`,
-  Mesin:     `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="12" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M6 12h.01M10 12h4M18 12h.01M6 16h.01M18 16h.01"/></svg>`,
-  Gardan:    `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>`,
-  Suspensi:  `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#A855F7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v6l4 4-4 4v4M19 3v6l-4 4 4 4v4"/><path d="M9 12h6" opacity=".5"/></svg>`,
-  Body:      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l3-3h14l3 3v6l-3 3H5l-3-3V9z"/><path d="M6 9H4M20 9h-2M7 15H4M20 15h-3" opacity=".5"/></svg>`,
-  Baut:      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 4H9l3-4z"/><rect x="9" y="6" width="6" height="12" rx="1"/><path d="M9 22h6M7 10h10M7 14h10"/></svg>`,
-  // ── TAMBAHAN ──
-  Kopling:   `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="12" r="4"/><circle cx="17" cy="12" r="4"/><path d="M11 12h2"/></svg>`,
-  Radiator:  `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#06B6D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M11 5v14M15 5v14M19 5v14" opacity=".5"/><path d="M3 9h18M3 15h18" opacity=".5"/></svg>`,
-  AC:        `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="8" rx="3"/><path d="M6 15l-2 4M10 15l-1 4M14 15l1 4M18 15l2 4M6 11h12" opacity=".7"/></svg>`,
-  Klakson:   `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F43F5E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l6 5V4L8 9H4z"/><path d="M19 5a9 9 0 010 14M16 7.5a5 5 0 010 9" opacity=".7"/></svg>`,
-  Rantai:    `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>`,
-  Gearbox:   `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="7" opacity=".3"/></svg>`,
-  Spare:     `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3-3a6 6 0 01-7.5 7.5l-6.2 6.2a2.12 2.12 0 01-3-3l6.2-6.2a6 6 0 017.5-7.5L14.7 6.3z"/></svg>`,
-  // ── TAMBAHAN VARIASI ──
-  Kaca:      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l3-4h12l3 4v3H3V8z"/><path d="M3 11v7a2 2 0 002 2h14a2 2 0 002-2v-7" opacity=".5"/><path d="M8 4v7M16 4v7" opacity=".4"/></svg>`,
-  Wiper:     `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L15 4"/><path d="M4 20l3.5-2M15 4l3.5 2"/><circle cx="4" cy="20" r="1.5"/></svg>`,
-  Spion:     `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="12" height="9" rx="4"/><path d="M15 10l6-2v9l-6-2" opacity=".6"/></svg>`,
-  Knalpot:   `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9h11l3-2h6v6h-6l-3-2H2z"/><path d="M20 10.5c1.5 0 2 1 2 1.5s-.5 1.5-2 1.5" opacity=".5"/></svg>`,
-  Selang:    `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4c0 6 4 4 4 10s4 4 4 6"/><circle cx="4" cy="4" r="2"/><circle cx="12" cy="20" r="2"/></svg>`,
-  Kabel:     `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 003 3h6a3 3 0 013 3v6"/><circle cx="6" cy="3" r="1.5"/><circle cx="18" cy="21" r="1.5"/></svg>`,
-  Starter:   `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="12" height="8" rx="2"/><circle cx="18" cy="12" r="3"/><path d="M6 8V6a2 2 0 012-2h2a2 2 0 012 2v2" opacity=".6"/></svg>`,
-  Steering:  `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#A855F7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 5v4.5M6.5 15.5l3.4-2M17.5 15.5l-3.4-2" opacity=".7"/></svg>`,
-  Pompa:     `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#06B6D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="12" r="6"/><path d="M14.5 8.5L20 3M20 3v4M20 3h-4" opacity=".7"/></svg>`,
-  Karet:     `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4" opacity=".5"/></svg>`,
-  Velg:      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#71717A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v7M12 14v7M3 12h7M14 12h7" opacity=".7"/></svg>`,
-  Lainnya:   `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>`
-};
+// Ikon kategori onderdil — EMOJI otomatis dari nama kategori/barang.
+// Memakai emoji sistem, jadi di HP Samsung tampil dengan gaya emoji Samsung One UI.
+// Aturan dicek berurutan: yang lebih spesifik (mis. "kampas kopling", "oli hidrolik") di atas yang umum.
+// Kata kunci dicocokkan di AWAL kata (mis. "ban" cocok "ban dalam", tapi tidak "bantalan").
+const SP_EMOJI_RULES = [
+  {e:'🛡️', k:['oil seal','seal oli','sil oli','seal hidrolik','seal kit']},
+  // ── Cairan & pelumas ──
+  {e:'🧪', k:['minyak rem','brake fluid','coolant','air radiator','air aki','adblue','def fluid','cairan','radiator coolant','ketsol']},
+  {e:'🛢️', k:['oli','oil','pelumas','lubricant','atf','gear oil','minyak']},
+  {e:'🧴', k:['grease','gemuk','stempet','lem','sealant','silicone','silikon','pasta','chemical','cleaner','pembersih','degreaser']},
+  {e:'🛡️', k:['oil seal','karet','rubber','seal','sil ','o-ring','oring','packing','paking','gasket','mounting','dudukan']},
+  // ── Hidrolik & dump hoist ──
+  {e:'🏗️', k:['hidrolik','hydraulic','hoist','dongkrak','jack','silinder angkat','pto','power take']},
+  // ── Kopling (sebelum rem agar "kampas kopling" tidak jadi rem) ──
+  {e:'🦶', k:['kopling','clutch','pressure plate','release bearing','dekrup','matahari kopling','master kopling']},
+  // ── Rem & angin ──
+  {e:'🛑', k:['rem','pengereman','ngerem','brake','kampas','cakram','tromol','drum','kanvas','sepatu rem','master rem','booster']},
+  {e:'🌬️', k:['angin','air dryer','tabung angin','air tank','valve angin','kompresor angin','air compressor','relay valve']},
+  // ── Roda ──
+  {e:'🩹', k:['tambal','vulkanisir','vulkanisasi','patch','retread','lem ban']},
+  {e:'🛟', k:['ban dalam','inner tube','tube','marset','flap']},
+  {e:'🛞', k:['ban','tire','tyre','roda','pentil','valve ban']},
+  {e:'💿', k:['velg','pelek','rim','wheel disc','dop','hub cap']},
+  {e:'🔘', k:['bearing','laher','klaher','bantalan','bushing','bos ','boss']},
+  {e:'🔄', k:['gardan','differential','diferensial','axle','as roda','as kopel','kopel','propeller','cardan','kardan','spider','cross joint','hub','tromol gardan','crown']},
+  {e:'🕹️', k:['transmisi','gearbox','persneling','perseneling','gigi','gear','synchro','sinkron','tuas']},
+  {e:'↕️', k:['suspensi','shock','shockbreaker','per ','per daun','pegas','leaf spring','spring','u bolt','u-bolt','hanger','stabilizer','balancer','torque rod']},
+  {e:'☸️', k:['setir','steering','kemudi','tie rod','long tie','ball joint','pitman','king pin','kingpin','power steering']},
+  // ── Mesin & bahan bakar ──
+  {e:'🧽', k:['filter','saringan','separator','strainer','element','elemen']},
+  {e:'💉', k:['injektor','injector','nozzle','nozel']},
+  {e:'⛽', k:['solar','bbm','fuel','bensin','diesel','tangki','tank','feed pump','pompa solar','fuel pump']},
+  {e:'💨', k:['knalpot','exhaust','muffler','turbo','turbocharger','intake','manifold']},
+  {e:'🌡️', k:['radiator','cooling','pendingin','thermostat','termostat','water pump','waterpump','intercooler']},
+  {e:'➰', k:['v-belt','vbelt','v belt','fan belt','timing belt','belt','tali kipas']},
+  {e:'🌀', k:['kipas','fan','blower','viscous']},
+  {e:'⛓️', k:['rantai','chain','track','undercarriage','sprocket']},
+  {e:'⚙️', k:['mesin','engine','piston','liner','silinder','cylinder','ring piston','crankshaft','kruk as','noken','camshaft','klep','blok','oil pump','metal jalan','metal duduk','overhaul']},
+  // ── Kelistrikan ──
+  {e:'🔋', k:['aki','accu','battery','baterai','batre']},
+  {e:'🔑', k:['starter','kunci kontak','ignition','kontak']},
+  {e:'⚡', k:['alternator','dinamo','dynamo','sekring','fuse','relay','regulator','kiprok','listrik']},
+  {e:'🔌', k:['kabel','cable','wiring','soket','socket','konektor','connector','terminal','saklar','switch','kelistrikan','harness']},
+  {e:'🚨', k:['rotary','strobe','sirine','sirene','beacon','lampu rotari','lampu strobo']},
+  {e:'💡', k:['lampu','light','bulb','bohlam','led','sein','senja','headlamp','foglamp','stoplamp','reflektor']},
+  {e:'📢', k:['klakson','horn','buzzer','alarm','alarm mundur','backup alarm']},
+  {e:'📡', k:['gps','tracker','antena','antenna','telematik']},
+  {e:'📷', k:['kamera','camera','dashcam','cctv','mdvr']},
+  {e:'📻', k:['radio','rig','ht ','handy talky','tape','audio','speaker']},
+  {e:'⏲️', k:['speedometer','tachometer','takometer','panel','indikator','meter','gauge','odometer','tachograph']},
+  {e:'📟', k:['sensor','ecu','ecm','modul','module','elektronik','controller']},
+  {e:'❄️', k:['ac','freon','kompresor ac','evaporator','kondensor','condenser','cabin filter']},
+  // ── Body & kabin ──
+  {e:'🪞', k:['spion','mirror']},
+  {e:'🧹', k:['wiper','penghapus kaca']},
+  {e:'🪟', k:['kaca','glass','windshield','jendela','window','power window']},
+  {e:'💺', k:['jok','seat','kursi','sabuk','seat belt','safety belt']},
+  {e:'🎨', k:['cat','paint','dempul','thinner','pernis','primer','stiker','sticker','striping']},
+  {e:'⛺', k:['terpal','tarpaulin','penutup bak','cover']},
+  {e:'🚛', k:['bak','dump','vessel','tailgate','pintu bak','hoist body','sasis','chassis','frame','kepala truk']},
+  {e:'🚚', k:['body','karoseri','kabin','cabin','pintu','bumper','fender','spakbor','plat body','grill','gril','engsel','handle','kap']},
+  // ── Alat berat & tambang ──
+  {e:'🚜', k:['excavator','loader','dozer','bulldozer','grader','alat berat','heavy equipment','forklift','crane']},
+  {e:'🪨', k:['bucket','kuku','teeth','tooth','cutting edge','ripper','adapter bucket','pin bucket']},
+  {e:'⛏️', k:['tambang','mining','bor','drill','breaker']},
+  // ── Perkakas, safety & umum ──
+  {e:'🔩', k:['baut','mur','bolt','nut','sekrup','screw','ring','washer','klem','clamp','pin','paku','rivet','keling','stud']},
+  {e:'🚰', k:['selang','hose','pipa','pipe','fitting','nepel','nipple','kran','keran']},
+  {e:'💦', k:['pompa','pump']},
+  {e:'🪢', k:['tali','sling','strap','tambang tali','webbing','sabuk pengikat','spanband','span band']},
+  {e:'🧰', k:['toolkit','tool kit','alat','tools','perkakas','kunci','obeng','tang','dongkrak botol']},
+  {e:'🧯', k:['apar','pemadam','fire extinguisher']},
+  {e:'🦺', k:['apd','safety','rompi','vest','helm','sepatu safety','sarung tangan','glove','kacamata safety']},
+  {e:'🩺', k:['p3k','first aid','kotak obat']},
+  {e:'🧱', k:['ganjal','stopper','wheel chock','balok']},
+  {e:'🧻', k:['majun','lap','kain','tissue','tisu']},
+  {e:'🛠️', k:['servis','service','perbaikan','repair','jasa','ongkos','upah']},
+  {e:'📦', k:['lain','lainnya','misc','umum','spare','part','sparepart','onderdil','consumable','habis pakai']}
+];
+const SP_EMOJI_DEFAULT='📦';
+// Saran kategori siap pakai untuk bidang truk / dump truck / angkutan tambang
+const SP_KAT_SUGGEST=['Ban','Ban Dalam','Velg','Oli','Grease','Filter','Aki','Kampas Rem','Rem Angin','Kopling','Transmisi','Gardan','Per & Suspensi','Hidrolik','Radiator','Lampu','Kelistrikan','Bearing','Baut & Mur','Selang','Karet & Seal','Kaca & Spion','Wiper','Body & Kabin','Bak Dump','Terpal','Injektor','BBM','Knalpot','V-Belt','Sensor','GPS','Klakson','Jok','Cat','Toolkit','APAR','Safety (APD)','Alat Berat','Lainnya'];
+
+function _spNorm(s){return ' '+String(s||'').toLowerCase().replace(/[_/&+,.()-]+/g,' ').replace(/\s+/g,' ').trim()+' ';}
+// Cari aturan yang cocok; kata kunci harus muncul di awal sebuah kata
+function spEmojiRule(text){
+  const n=_spNorm(text);
+  if(n.trim()==='') return null;
+  for(const r of SP_EMOJI_RULES){
+    for(const kw of r.k){
+      const k=kw.toLowerCase().replace(/[_/&+,.()-]+/g,' ');
+      if(k.endsWith(' ')){ if(n.includes(' '+k)) return r; }        // kata utuh (mis. "per ")
+      else if(k.length<=3){ if(new RegExp('\\s'+k+'\\s').test(n)) return r; } // kata pendek (ac, rig) harus utuh
+      else if(n.includes(' '+k)) return r;                           // awal kata
+    }
+  }
+  return null;
+}
+function spCatEmoji(kat){const r=spEmojiRule(kat);return r?r.e:SP_EMOJI_DEFAULT;}
+// svg=true → HTML (span emoji berukuran), svg=false → teks emoji polos (untuk <option>)
+function getSpCatIcon(kat, svg=false){
+  const e=spCatEmoji(kat);
+  return svg?`<span class="sp-emo">${e}</span>`:e;
+}
+
+function autoDetectIcon(namaInput){
+  const el=document.getElementById('sp-kat');
+  if(!el||!namaInput) return;
+  const r=spEmojiRule(namaInput);
+  if(!r) return;
+  // Pilih kategori yang ada yang punya ikon sama dengan nama barang
+  const match=gudangKategori.find(k=>spEmojiRule(k)===r);
+  if(match && el.value!==match){
+    el.value=match;
+    const preview=document.getElementById('cat-icon-preview');if(preview)preview.innerHTML=getSpCatIcon(match,true);
+  }
+}
 
 let gudangFilter='all';
 let waDataReady=false,waTextCache='';
@@ -2055,73 +2429,6 @@ function spStatusLabel(sp){
              critical:'<span class="sp-status-badge critical">Kritis</span>'};
   return map[s];
 }
-function getSpCatIcon(kat, svg=false){
-  if(!kat) return svg ? spCatIconSVG['Lainnya'] : '📦';
-  // Exact match key
-  if(spCatIconSVG[kat]) return spCatIconSVG[kat];
-  const k=kat.toLowerCase();
-  // Keyword matching — ordered by specificity
-  if(k.includes('ban')||k.includes('tire')||k.includes('roda')) return spCatIconSVG['Ban'];
-  if(k.includes('oli')||k.includes('oil')||k.includes('pelumas')||k.includes('grease')) return spCatIconSVG['Oli'];
-  if(k.includes('aki')||k.includes('accu')||k.includes('battery')||k.includes('baterai')) return spCatIconSVG['Aki'];
-  if(k.includes('rem')||k.includes('brake')||k.includes('kampas')||k.includes('cakram')) return spCatIconSVG['Rem'];
-  if(k.includes('filter')||k.includes('saringan')||k.includes('udara')) return spCatIconSVG['Filter'];
-  if(k.includes('lampu')||k.includes('light')||k.includes('bulb')||k.includes('led')) return spCatIconSVG['Lampu'];
-  if(k.includes('mesin')||k.includes('engine')||k.includes('piston')||k.includes('silinder')) return spCatIconSVG['Mesin'];
-  if(k.includes('gardan')||k.includes('differential')||k.includes('propeller')) return spCatIconSVG['Gardan'];
-  if(k.includes('transmisi')||k.includes('gearbox')||k.includes('persneling')) return spCatIconSVG['Gearbox'];
-  if(k.includes('shock')||k.includes('per ')||k.includes('suspensi')||k.includes('pegas')) return spCatIconSVG['Suspensi'];
-  if(k.includes('kopling')||k.includes('clutch')||k.includes('plat kopling')) return spCatIconSVG['Kopling'];
-  if(k.includes('radiator')||k.includes('cooling')||k.includes('pendingin')) return spCatIconSVG['Radiator'];
-  if(k.includes('ac')||k.includes('kompresor')||k.includes('freon')) return spCatIconSVG['AC'];
-  if(k.includes('klakson')||k.includes('horn')||k.includes('suara')) return spCatIconSVG['Klakson'];
-  if(k.includes('rantai')||k.includes('chain')||k.includes('belt')||k.includes('v-belt')) return spCatIconSVG['Rantai'];
-  if(k.includes('body')||k.includes('plat')||k.includes('karoseri')||k.includes('bak')) return spCatIconSVG['Body'];
-  if(k.includes('baut')||k.includes('mur')||k.includes('sekrup')||k.includes('bolt')) return spCatIconSVG['Baut'];
-  if(k.includes('kaca')||k.includes('glass')||k.includes('windshield')) return spCatIconSVG['Kaca'];
-  if(k.includes('wiper')||k.includes('penghapus')) return spCatIconSVG['Wiper'];
-  if(k.includes('spion')||k.includes('mirror')||k.includes('kaca spion')) return spCatIconSVG['Spion'];
-  if(k.includes('knalpot')||k.includes('exhaust')||k.includes('muffler')) return spCatIconSVG['Knalpot'];
-  if(k.includes('selang')||k.includes('hose')) return spCatIconSVG['Selang'];
-  if(k.includes('kabel')||k.includes('cable')||k.includes('kelistrikan')||k.includes('wiring')) return spCatIconSVG['Kabel'];
-  if(k.includes('starter')||k.includes('dinamo')||k.includes('alternator')) return spCatIconSVG['Starter'];
-  if(k.includes('power steering')||k.includes('setir')||k.includes('kemudi')) return spCatIconSVG['Steering'];
-  if(k.includes('pompa')||k.includes('pump')) return spCatIconSVG['Pompa'];
-  if(k.includes('karet')||k.includes('seal')||k.includes('gasket')||k.includes('packing')) return spCatIconSVG['Karet'];
-  if(k.includes('velg')||k.includes('pelek')||k.includes('rim')) return spCatIconSVG['Velg'];
-  if(k.includes('lain')||k.includes('misc')||k.includes('spare')) return spCatIconSVG['Spare'];
-  // Fallback: generate icon dari huruf pertama kategori
-  return spCatIconSVG['Lainnya'];
-}
-
-function autoDetectIcon(namaInput){
-  const el=document.getElementById('sp-kat');
-  if(!el||!namaInput) return;
-  const n=namaInput.toLowerCase();
-  let detected='';
-  if(n.includes('ban')||n.includes('tire')||n.includes('roda')) detected='Ban';
-  else if(n.includes('oli')||n.includes('oil')||n.includes('pelumas')||n.includes('grease')) detected='Oli';
-  else if(n.includes('aki')||n.includes('accu')||n.includes('battery')) detected='Aki';
-  else if(n.includes('rem')||n.includes('brake')||n.includes('kampas')||n.includes('cakram')) detected='Rem';
-  else if(n.includes('filter')||n.includes('saringan')||n.includes('udara')) detected='Filter';
-  else if(n.includes('lampu')||n.includes('light')||n.includes('bohlam')||n.includes('led')) detected='Lampu';
-  else if(n.includes('mesin')||n.includes('piston')||n.includes('liner')) detected='Mesin';
-  else if(n.includes('transmisi')||n.includes('gearbox')||n.includes('persneling')) detected='Gearbox';
-  else if(n.includes('gardan')||n.includes('differential')||n.includes('propeller')) detected='Gardan';
-  else if(n.includes('kopling')||n.includes('clutch')) detected='Kopling';
-  else if(n.includes('radiator')||n.includes('cooling')||n.includes('pendingin')) detected='Radiator';
-  else if(n.includes(' ac ')||n.includes('freon')||n.includes('kompresor ac')) detected='AC';
-  else if(n.includes('klakson')||n.includes('horn')) detected='Klakson';
-  else if(n.includes('rantai')||n.includes('belt')||n.includes('v-belt')) detected='Rantai';
-  else if(n.includes('per ')||n.includes('suspensi')||n.includes('shock')) detected='Suspensi';
-  else if(n.includes('body')||n.includes('plat')||n.includes('pintu')||n.includes('bak')) detected='Body';
-  else if(n.includes('baut')||n.includes('mur')||n.includes('sekrup')) detected='Baut';
-  
-  if(detected && el.value!==detected){
-    if(gudangKategori.includes(detected)){el.value=detected;const preview=document.getElementById('cat-icon-preview');if(preview)preview.innerHTML=getSpCatIcon(detected,true);}
-  }
-}
-
 function setGudangFilter(f,btn){
   gudangFilter=f;
   document.querySelectorAll('#page-gudang .fs-chip').forEach(b=>b.classList.remove('active'));
@@ -2145,11 +2452,26 @@ function _renderKatList(){
     const delBtn=canDel
       ?`<button onclick="deleteKategori('${k}')" style="background:rgba(224,48,48,.1);color:var(--danger);border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;">Hapus</button>`
       :'<span style="font-size:10px;color:var(--text3);">Min 1</span>';
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg3);border-radius:10px;margin-bottom:6px;">
-      <span style="font-size:13px;font-weight:600;">${getSpCatIcon(k)} ${k}</span>
+    return `<div class="kat-row">
+      <span class="kat-emo">${spCatEmoji(k)}</span>
+      <span class="kat-name">${k}</span>
       ${delBtn}
     </div>`;
   }).join('');
+  _renderKatSuggest();
+}
+// Saran kategori (klik untuk menambah) — yang sudah ada tidak ditampilkan
+function _renderKatSuggest(){
+  const el=document.getElementById('kat-suggest');if(!el)return;
+  const pv=document.getElementById('kat-new-preview'),inp=document.getElementById('kat-new-name');
+  if(pv&&inp&&!inp.value) pv.textContent=SP_EMOJI_DEFAULT;
+  const have=new Set(gudangKategori.map(k=>k.toLowerCase()));
+  const list=SP_KAT_SUGGEST.filter(k=>!have.has(k.toLowerCase()));
+  el.innerHTML=list.length?list.map(k=>`<button class="kat-chip" onclick="document.getElementById('kat-new-name').value='${k.replace(/'/g,"\\'")}';addKategori()">${spCatEmoji(k)} ${k}</button>`).join(''):'<span style="font-size:11px;color:var(--text3);">Semua saran sudah ditambahkan</span>';
+}
+// Pratinjau ikon otomatis saat mengetik nama kategori baru
+function previewKatIcon(v){
+  const p=document.getElementById('kat-new-preview');if(p){p.textContent=spCatEmoji(v);p.classList.remove('pop');void p.offsetWidth;p.classList.add('pop');}
 }
 
 // ── ONDERDIL: Armada Usage Popup (#7) ──
@@ -2293,12 +2615,15 @@ function openKategoriModal(){
     <div id="kat-list"></div>
     <div style="margin-top:10px;">
       <label class="form-label">Nama Kategori Baru</label>
-      <div style="display:flex;gap:8px;">
-        <input class="form-input" id="kat-new-name" placeholder="Contoh: Aki, Lampu..." style="flex:1;"/>
-        <button onclick="addKategori()" style="padding:9px 14px;border-radius:11px;border:none;background:var(--green-bg);color:var(--green2);font-weight:700;font-size:12px;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;white-space:nowrap;">+ Tambah</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="kat-emo" id="kat-new-preview" title="Ikon otomatis">📦</span>
+        <input class="form-input" id="kat-new-name" placeholder="Contoh: Aki, Lampu..." style="flex:1;" oninput="previewKatIcon(this.value)" onkeydown="if(event.key==='Enter')addKategori()"/>
+        <button onclick="addKategori()" style="padding:9px 14px;border-radius:11px;border:none;background:var(--green2);color:var(--bg2);font-weight:700;font-size:12px;cursor:pointer;font-family:'Inter',-apple-system,sans-serif;white-space:nowrap;">+ Tambah</button>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--text3);margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:9px;">💡 Kategori yang dihapus tidak menghapus item yang sudah ada.</div>`;
+    <div class="form-label" style="margin-top:14px;">Saran cepat · klik untuk menambah</div>
+    <div id="kat-suggest" class="kat-suggest"></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:10px;padding:8px 10px;background:var(--bg3);border-radius:9px;">💡 Ikon dipilih otomatis dari nama kategori. Kategori yang dihapus tidak menghapus item yang sudah ada.</div>`;
   _renderKatList();
   document.getElementById('sm-overlay').classList.add('open');
 }
@@ -3196,7 +3521,10 @@ function renderDashboard(){
   if(ovK) ovK.textContent=sparepartStock.filter(sp=>(!isNonStokItem(sp)||sp.stokSisa>0)&&spStatus(sp)!=='fresh').length;
   const ovJ=document.getElementById('ov-armada-jalan');
   if(ovJ) ovJ.textContent=(counts.jalan||0)+' dari '+fleetData.length+' armada jalan';
+  const ovB=document.getElementById('ov-jalan-bar');
+  if(ovB) requestAnimationFrame(()=>{ovB.style.width=(fleetData.length?Math.round((counts.jalan||0)/fleetData.length*100):0)+'%';});
   renderFleetRows('fleet-rows-dash',4);
+  renderDashExtras(filtered,counts,inf>0?(prf/inf*100):0);
   // Pastikan filtered diurutkan terbaru (descending)
   filtered.sort((a,b) => {
     const da = new Date(a.date).getTime();
@@ -3249,8 +3577,9 @@ const svgOut='<svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5
 function getSmartIcon(label, type){
   const l = (label||'').toLowerCase();
   // Try to get dynamic detailed SVG first
-  const icon = getSpCatIcon(l, true);
-  if(icon && icon !== '📦') return icon;
+  // Pakai emoji kategori bila label cocok dengan onderdil tertentu (bukan default 📦)
+  const r = spEmojiRule(l);
+  if(r && r.e !== SP_EMOJI_DEFAULT) return getSpCatIcon(l, true);
   return type==='inflow' ? svgIn : svgOut;
 }
 
@@ -3749,7 +4078,7 @@ function loadMoreTxn(){txnPage+=10;applyTxnFilters();}
 // ═══ DISTRIBUSI INFLOW PER SUPIR (donut, periode bisa diedit) ═══
 let driverDonutChart=null;
 let _driverDonutPeriod='bulan-ini', _driverDonutFrom='', _driverDonutTo='';
-const DRIVER_DONUT_COLORS=['#1F4A57','#3F8197','#7FB3C4','#B9D4DE','#D9692E','#E9A27A','#2F7A6B','#7BB8A8','#5C6F7A','#9AAAB2','#B7791F','#E4C58A'];
+const DRIVER_DONUT_COLORS=['#1C2E27','#2F4A3F','#557566','#94AE9F','#C5D6CB','#3F7A62','#6E9E86','#A7C4B2','#B08A4A','#D2B27A','#7A6A58','#E3D3B0'];
 
 function setDriverDonutPeriod(preset,btn){
   _driverDonutPeriod=preset;
@@ -3808,21 +4137,21 @@ function renderDriverDonut(){
   const legendEl=document.getElementById('driver-donut-legend');
   const totalEl=document.getElementById('driver-donut-total');
 
-  if(driverDonutChart){driverDonutChart.destroy();driverDonutChart=null;}
+  const centerEl=document.getElementById('ddon-center');
+  if(centerEl) centerEl.textContent=_abbrRp(total);
 
-  if(!entries.length){
-    if(legendEl) legendEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:8px 0;">Belum ada data driver</div>';
-    if(totalEl) totalEl.innerHTML='';
-    driverDonutChart=new Chart(ctx,{type:'pie',data:{datasets:[{data:[1],backgroundColor:[dark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)'],borderWidth:0}]},options:{plugins:{legend:{display:false},tooltip:{enabled:false}}}});
-    return;
+  if(!entries.length||total<=0){
+    if(!entries.length&&legendEl) legendEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:8px 0;">Belum ada data driver</div>';
+    if(!entries.length&&totalEl) totalEl.innerHTML='';
+    driverDonutChart=_dzEmptyDonut('driverDonutChart');
+    if(!entries.length) return;
   }
 
   const labels=entries.map(e=>e[0]);
   const data=entries.map(e=>e[1]);
   const colors=labels.map(nm=>colorOf(nm));
 
-  driverDonutChart=new Chart(ctx,{type:'pie',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:dark?'#12192B':'#fff',borderWidth:2,hoverOffset:6}]},
-    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+fmtFull(c.raw)+' ('+(total>0?(c.raw/total*100).toFixed(1):'0.0')+'%)'},backgroundColor:dark?'rgba(22,30,46,.95)':'rgba(255,255,255,.95)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#5AC8FA':'#0064D6',borderColor:'rgba(10,132,255,.2)',borderWidth:1,padding:9,cornerRadius:9}},animation:{animateRotate:true,duration:800}}});
+  if(total>0) driverDonutChart=_upsertChart('driverDonutChart',_dzDonutCfg(labels,data,colors,total));
 
   if(legendEl){
     legendEl.innerHTML=entries.map(([nm,amt])=>{
@@ -3908,7 +4237,7 @@ function renderKatDonut(){
   if(!entries.length){
     if(legendEl) legendEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:8px 0;">Belum ada pengeluaran di periode ini</div>';
     if(totalEl) totalEl.innerHTML='';
-    katDonutChart=new Chart(ctx,{type:'pie',data:{datasets:[{data:[1],backgroundColor:[dark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)'],borderWidth:0}]},options:{plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+    katDonutChart=new Chart(ctx,{type:'doughnut',data:{datasets:[{data:[1],backgroundColor:[dark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)'],borderWidth:0}]},options:{cutout:'62%',plugins:{legend:{display:false},tooltip:{enabled:false}}}});
     return;
   }
 
@@ -3916,8 +4245,8 @@ function renderKatDonut(){
   const data=entries.map(e=>e[1]);
   const colors=labels.map((_,i)=>DRIVER_DONUT_COLORS[i%DRIVER_DONUT_COLORS.length]);
 
-  katDonutChart=new Chart(ctx,{type:'pie',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:dark?'#12192B':'#fff',borderWidth:2,hoverOffset:6}]},
-    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+fmtFull(c.raw)+' ('+(c.raw/total*100).toFixed(1)+'%)'},backgroundColor:dark?'rgba(22,30,46,.95)':'rgba(255,255,255,.95)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#5AC8FA':'#0064D6',borderColor:'rgba(10,132,255,.2)',borderWidth:1,padding:9,cornerRadius:9}},animation:{animateRotate:true,duration:800}}});
+  katDonutChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:dark?'#13201B':'#fff',borderWidth:3,borderRadius:5,hoverOffset:8}]},
+    options:{cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+fmtFull(c.raw)+' ('+(c.raw/total*100).toFixed(1)+'%)'},backgroundColor:dark?'rgba(15,26,22,.95)':'rgba(255,255,255,.97)',titleColor:dark?'#E9F0EB':'#0F1A16',bodyColor:dark?'#DCE7DF':'#2F4A3F',borderColor:'rgba(47,74,63,.2)',borderWidth:1,padding:9,cornerRadius:9}},animation:{animateRotate:true,duration:800}}});
 
   if(legendEl){
     legendEl.innerHTML=entries.map(([k,amt],i)=>{
@@ -3994,7 +4323,7 @@ function renderArmadaInflowDonut(){
   if(!entries.length){
     if(legendEl) legendEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:8px 0;">Belum ada inflow di periode ini</div>';
     if(totalEl) totalEl.innerHTML='';
-    armadaInflowChart=new Chart(ctx,{type:'pie',data:{datasets:[{data:[1],backgroundColor:[dark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)'],borderWidth:0}]},options:{plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+    armadaInflowChart=new Chart(ctx,{type:'doughnut',data:{datasets:[{data:[1],backgroundColor:[dark?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)'],borderWidth:0}]},options:{cutout:'62%',plugins:{legend:{display:false},tooltip:{enabled:false}}}});
     return;
   }
 
@@ -4002,8 +4331,8 @@ function renderArmadaInflowDonut(){
   const data=entries.map(e=>e[1]);
   const colors=labels.map((_,i)=>DRIVER_DONUT_COLORS[i%DRIVER_DONUT_COLORS.length]);
 
-  armadaInflowChart=new Chart(ctx,{type:'pie',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:dark?'#12192B':'#fff',borderWidth:2,hoverOffset:6}]},
-    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+fmtFull(c.raw)+' ('+(c.raw/total*100).toFixed(1)+'%)'},backgroundColor:dark?'rgba(22,30,46,.95)':'rgba(255,255,255,.95)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#5AC8FA':'#0064D6',borderColor:'rgba(10,132,255,.2)',borderWidth:1,padding:9,cornerRadius:9}},animation:{animateRotate:true,duration:800}}});
+  armadaInflowChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:dark?'#13201B':'#fff',borderWidth:3,borderRadius:5,hoverOffset:8}]},
+    options:{cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+fmtFull(c.raw)+' ('+(c.raw/total*100).toFixed(1)+'%)'},backgroundColor:dark?'rgba(15,26,22,.95)':'rgba(255,255,255,.97)',titleColor:dark?'#E9F0EB':'#0F1A16',bodyColor:dark?'#DCE7DF':'#2F4A3F',borderColor:'rgba(47,74,63,.2)',borderWidth:1,padding:9,cornerRadius:9}},animation:{animateRotate:true,duration:800}}});
 
   if(legendEl){
     legendEl.innerHTML=entries.map(([nm,amt],i)=>{
@@ -4025,7 +4354,8 @@ function renderArmadaInflowDonut(){
 
 function setBarFilter(f,btn){
   currentBarFilter=f;
-  document.querySelectorAll('.cf-btn').forEach(b=>b.classList.remove('active'));
+  // Hanya tombol grafik bulanan — dulu menghapus 'active' di SEMUA tombol filter halaman
+  document.querySelectorAll('#bar-filter-btns .cf-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   renderBarChart(f);
 }
@@ -4051,18 +4381,14 @@ function buildMonthlyData(numMonths){
 
 function renderBarChart(f){
   if(typeof Chart==='undefined')return;
-  const ctx=document.getElementById('barChart');if(!ctx)return;
-  const dark=document.documentElement.getAttribute('data-theme')==='dark';
-  const gc=dark?'rgba(255,255,255,.04)':'rgba(0,0,0,.03)';
-  const tc=dark?'#3A4D64':'#8494AA';
+  if(!document.getElementById('barChart'))return;
+  const T=_dzT();
   const numMonths=f==='12m'?12:6;
   const d=buildMonthlyData(numMonths);
-  if(barChart)barChart.destroy();
-  barChart=new Chart(ctx,{type:'bar',data:{labels:d.labels,datasets:[
-    {label:'Inflow',data:d.inflow,backgroundColor:dark?'rgba(10,168,96,.55)':'rgba(10,168,96,.72)',borderRadius:5,borderSkipped:false},
-    {label:'Outflow',data:d.outflow,backgroundColor:dark?'rgba(224,48,48,.5)':'rgba(224,48,48,.65)',borderRadius:5,borderSkipped:false}
-  ]},options:{responsive:true,plugins:{legend:{display:true,labels:{font:{family:'Inter',size:10},color:tc,boxWidth:10,boxHeight:10}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtFull(c.raw)},backgroundColor:dark?'rgba(16,22,36,.97)':'rgba(255,255,255,.97)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#5AC8FA':'#0064D6',borderColor:'rgba(10,132,255,.2)',borderWidth:1,padding:9,cornerRadius:9}},
-  scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:10},color:tc}},y:{grid:{color:gc,drawBorder:false},ticks:{font:{family:'Inter',size:10},color:tc,callback:v=>{const abs=Math.abs(v);if(abs>=1e9)return(v/1e9).toFixed(1)+'M';if(abs>=1e6)return(v/1e6).toFixed(1)+'Jt';if(abs>=1e3)return(v/1e3).toFixed(0)+'Rb';return v;}}}},barPercentage:0.65,categoryPercentage:0.7}});
+  barChart=_upsertChart('barChart',{type:'bar',data:{labels:d.labels,datasets:[
+    {label:'Inflow',data:d.inflow,backgroundColor:T.main,hoverBackgroundColor:T.dark?T.c5:T.c1,borderRadius:8,borderSkipped:false,barPercentage:.72,categoryPercentage:.62},
+    {label:'Outflow',data:d.outflow,backgroundColor:T.soft,hoverBackgroundColor:T.dark?T.c4:T.c3,borderRadius:8,borderSkipped:false,barPercentage:.72,categoryPercentage:.62}
+  ]},options:_dzAxisOpts(T,{legend:true,tooltipLabel:c=>' '+c.dataset.label+': '+fmtFull(c.raw)})});
 }
 
 // ═══════════════════════════════ CASH FLOW TREND ═════════════════
@@ -4147,102 +4473,215 @@ function renderMiniLine(){
 }
 
 function _buildMiniLineChart(ctx,dark,gc,tc,labels,profits,inflowArr,outflowArr){
-  if(miniChart){miniChart.destroy();miniChart=null;}
-  const hasAnyData=profits.some(v=>v!==0)||inflowArr.some(v=>v!==0);
-  const maxTicks=labels.length>14?Math.ceil(labels.length/6):labels.length;
-  miniChart=new Chart(ctx,{
+  const T=_dzT();
+  const many=labels.length>20;
+  miniChart=_upsertChart('miniLineChart',{
     type:'line',
     data:{labels,datasets:[
-      {
-        label:'Net Profit',
-        data:profits,
-        borderColor:'#2C6577',
-        backgroundColor:(ctx2)=>{
-          const c=ctx2.chart.ctx;
-          const g=c.createLinearGradient(0,0,0,ctx2.chart.height);
-          g.addColorStop(0,'rgba(44,101,119,.22)');g.addColorStop(1,'rgba(44,101,119,.01)');return g;
-        },
-        borderWidth:2.5,
-        pointBackgroundColor:profits.map(v=>v>=0?'#2C6577':'#E03030'),
-        pointBorderColor:dark?'#131921':'#fff',
-        pointBorderWidth:2,
-        pointRadius:hasAnyData?(labels.length>20?0:3):0,
-        pointHoverRadius:5,
-        tension:0.4,
-        fill:true,
-        order:1
-      },
-      {
-        label:'Inflow',
-        data:inflowArr,
-        borderColor:'rgba(10,168,96,.8)',
-        backgroundColor:'transparent',
-        borderWidth:1.5,
-        borderDash:[5,4],
-        pointRadius:0,
-        pointHoverRadius:4,
-        tension:0.4,
-        fill:false,
-        order:2
-      },
-      {
-        label:'Outflow',
-        data:outflowArr,
-        borderColor:'rgba(224,48,48,.75)',
-        backgroundColor:'transparent',
-        borderWidth:1.5,
-        borderDash:[5,4],
-        pointRadius:0,
-        pointHoverRadius:4,
-        tension:0.4,
-        fill:false,
-        order:3
-      }
+      {label:'Net Profit',data:profits,borderColor:T.main,backgroundColor:_dzGrad(T.main,.28,0),borderWidth:2.6,
+        pointRadius:many?0:3,pointHoverRadius:6,pointBackgroundColor:profits.map(v=>v>=0?T.main:T.neg),
+        pointBorderColor:T.border,pointBorderWidth:2,pointHoverBorderWidth:3,tension:.42,fill:true,order:1},
+      {label:'Inflow',data:inflowArr,borderColor:T.soft,backgroundColor:'transparent',borderWidth:2,
+        pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:T.soft,tension:.42,fill:false,order:2},
+      {label:'Outflow',data:outflowArr,borderColor:T.neg,backgroundColor:'transparent',borderWidth:1.6,borderDash:[5,5],
+        pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:T.neg,tension:.42,fill:false,order:3}
     ]},
-    options:{
-      responsive:true,
-      maintainAspectRatio:true,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{
-          display:true,
-          labels:{font:{family:'Inter',size:9},color:tc,boxWidth:8,boxHeight:8,padding:8}
-        },
-        tooltip:{
-          callbacks:{
-            title:items=>items[0].label,
-            label:c=>' '+c.dataset.label+': '+fmtFull(c.raw)
-          },
-          backgroundColor:dark?'rgba(16,22,36,.97)':'rgba(255,255,255,.97)',
-          titleColor:dark?'#DDE6F5':'#0B1220',
-          bodyColor:dark?'#5AC8FA':'#0064D6',
-          borderColor:'rgba(10,132,255,.25)',
-          borderWidth:1,padding:9,cornerRadius:9,
-          titleFont:{family:'Inter',size:10,weight:'700'},
-          bodyFont:{family:'JetBrains Mono',size:10}
-        }
-      },
-      scales:{
-        x:{
-          grid:{display:false},
-          ticks:{font:{family:'Inter',size:9},color:tc,maxRotation:0,maxTicksLimit:maxTicks,autoSkip:true}
-        },
-        y:{
-          grid:{color:gc,drawBorder:false},
-          ticks:{font:{family:'JetBrains Mono',size:9},color:tc,
-            callback:v=>{
-              const abs=Math.abs(v);
-              if(abs>=1e9)return(v/1e9).toFixed(1)+'M';
-              if(abs>=1e6)return(v/1e6).toFixed(1)+'Jt';
-              if(abs>=1e3)return(v/1e3).toFixed(0)+'Rb';
-              return v===0?'0':v;
-            }
-          }
-        }
-      }
-    }
+    options:_dzAxisOpts(T,{legend:true,crosshair:true,maxTicks:labels.length>14?7:labels.length,
+      tooltipLabel:c=>' '+c.dataset.label+': '+fmtFull(c.raw)})
   });
 }
+
+// ═══════════════════════════════ CHART KIT (tema hijau + animasi halus) ═══════════════
+// Palet: #0F1A16 · #1C2E27 · #2F4A3F · #557566 · #94AE9F · #DCE7DF
+function _dzT(){
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  return {dark,
+    c0:'#0F1A16',c1:'#1C2E27',c2:'#2F4A3F',c3:'#557566',c4:'#94AE9F',c5:'#DCE7DF',
+    main:dark?'#94AE9F':'#2F4A3F', soft:dark?'#557566':'#94AE9F',
+    pos:dark?'#7FC4A0':'#2E7D5B', neg:dark?'#E3826D':'#C2553F', warn:dark?'#D9AE62':'#B7832B',
+    grid:dark?'rgba(220,231,223,.06)':'rgba(15,26,22,.06)', tick:dark?'#7D9488':'#7C9087',
+    border:dark?'#13201B':'#FFFFFF', empty:dark?'rgba(220,231,223,.08)':'rgba(15,26,22,.06)'};
+}
+function _hexA(hex,a){const h=hex.replace('#','');const n=parseInt(h.length===3?h.split('').map(x=>x+x).join(''):h,16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
+// Isi gradasi vertikal (dibuat ulang saat ukuran berubah)
+function _dzGrad(hex,a1,a2){
+  return c=>{const {ctx,chartArea}=c.chart;if(!chartArea)return _hexA(hex,a1);
+    const g=ctx.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
+    g.addColorStop(0,_hexA(hex,a1));g.addColorStop(1,_hexA(hex,a2));return g;};
+}
+function _abbr(v){const a=Math.abs(v);if(a>=1e9)return(v/1e9).toFixed(1).replace('.',',')+' M';if(a>=1e6)return(v/1e6).toFixed(1).replace('.',',')+' Jt';if(a>=1e3)return Math.round(v/1e3)+' Rb';return String(Math.round(v));}
+function _abbrRp(v){return 'Rp '+_abbr(v||0);}
+function _dzTooltip(T,extra){
+  return Object.assign({backgroundColor:'rgba(15,26,22,.94)',titleColor:'#DCE7DF',bodyColor:'#FFFFFF',
+    borderColor:'rgba(148,174,159,.35)',borderWidth:1,padding:11,cornerRadius:12,boxPadding:4,usePointStyle:true,
+    titleFont:{size:11,weight:'700'},bodyFont:{size:11},caretSize:6},extra||{});
+}
+// Garis vertikal putus-putus mengikuti tooltip (seperti referensi)
+const _dzCrosshair={id:'dzCrosshair',afterDatasetsDraw(chart){
+  if(!chart.options.plugins.dzCrosshair) return;
+  const act=chart.tooltip&&chart.tooltip.getActiveElements();if(!act||!act.length)return;
+  const x=act[0].element.x,{top,bottom}=chart.chartArea,ctx=chart.ctx;
+  ctx.save();ctx.beginPath();ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.strokeStyle=_dzT().tick;
+  ctx.moveTo(x,top);ctx.lineTo(x,bottom);ctx.stroke();ctx.restore();
+}};
+function _dzAxisOpts(T,o){
+  o=o||{};
+  return {responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    indexAxis:o.horizontal?'y':'x',
+    animation:{duration:Chart.defaults.animation.duration,easing:'easeOutQuart'},
+    plugins:{
+      dzCrosshair:!!o.crosshair,
+      legend:{display:!!o.legend,align:'end',labels:{color:T.tick,usePointStyle:true,pointStyle:'circle',boxWidth:7,boxHeight:7,padding:12,font:{size:11,weight:'600'}}},
+      tooltip:_dzTooltip(T,{callbacks:{label:o.tooltipLabel||(c=>' '+fmtFull(c.raw))}})
+    },
+    scales:{
+      x:{grid:{display:!!o.horizontal,color:T.grid,drawTicks:false},border:{display:false},
+        ticks:Object.assign({color:T.tick,font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:o.maxTicks||12,padding:6},
+          o.horizontal?{callback:v=>_abbr(v)}:{})},
+      y:{grid:{display:!o.horizontal,color:T.grid,drawTicks:false},border:{display:false},
+        ticks:{color:T.tick,font:{size:10},padding:8,maxTicksLimit:6,
+          callback:o.horizontal?function(v){const l=this.getLabelForValue(v);return l.length>14?l.slice(0,13)+'…':l;}:(v=>v===0?'0':_abbr(v))}}
+    }};
+}
+// Buat grafik baru, atau perbarui yang sudah ada supaya data "bergerak" halus, bukan berkedip
+function _upsertChart(id,cfg){
+  if(typeof Chart==='undefined')return null;
+  const cv=document.getElementById(id);if(!cv)return null;
+  cfg.plugins=[_dzCrosshair];
+  const ch=Chart.getChart(cv);
+  if(ch&&ch.config.type===cfg.type&&ch.data.datasets.length===cfg.data.datasets.length){
+    ch.data.labels=cfg.data.labels;
+    cfg.data.datasets.forEach((ds,i)=>{const cur=ch.data.datasets[i];Object.keys(cur).forEach(k=>{if(!(k in ds)&&k!=='_meta')delete cur[k];});Object.assign(cur,ds);});
+    ch.options=cfg.options;
+    ch.update();
+    return ch;
+  }
+  if(ch)ch.destroy();
+  return new Chart(cv,cfg);
+}
+function _dzDonutCfg(labels,data,colors,total,cutout,labelFn){
+  const T=_dzT();
+  return {type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:T.border,borderWidth:3,borderRadius:6,hoverOffset:10,spacing:1}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:cutout||'72%',layout:{padding:8},
+      animation:{animateRotate:true,animateScale:false,duration:Math.max(Chart.defaults.animation.duration,700),easing:'easeOutQuart'},
+      plugins:{legend:{display:false},tooltip:_dzTooltip(T,{callbacks:{label:labelFn||(c=>' '+c.label+': '+fmtFull(c.raw)+' ('+(total>0?(c.raw/total*100).toFixed(1):'0.0')+'%)')}})}}};
+}
+function _dzEmptyDonut(id,cutout){
+  const T=_dzT();
+  return _upsertChart(id,{type:'doughnut',data:{labels:['Kosong'],datasets:[{data:[1],backgroundColor:[T.empty],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:cutout||'72%',layout:{padding:8},plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+}
+// Ringkasan harian (sekali jalan — tidak memfilter seluruh transaksi berulang kali)
+function _dzDaily(days){
+  const map={};
+  transactions.forEach(t=>{if(!t.date)return;const m=map[t.date]||(map[t.date]={i:0,o:0});
+    if(t.type==='inflow')m.i+=Number(t.amount)||0;else if(t.type==='outflow')m.o+=Number(t.amount)||0;});
+  const out=[];
+  for(let k=days-1;k>=0;k--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-k);const m=map[_ds(d)]||{i:0,o:0};out.push({d,i:m.i,o:m.o});}
+  return out;
+}
+
+// ── KPI sparkline ──
+function renderSparklines(){
+  const T=_dzT();const s=_dzDaily(14);
+  const labels=s.map(x=>x.d.toLocaleDateString('id-ID',{day:'numeric',month:'short'}));
+  const mk=(id,data,color)=>_upsertChart(id,{type:'line',data:{labels,datasets:[{data,borderColor:color,borderWidth:2,
+      backgroundColor:_dzGrad(color,.25,0),fill:true,tension:.45,pointRadius:0,pointHoverRadius:4,pointHoverBackgroundColor:color}]},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:4,bottom:0}},interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:_dzTooltip(T,{displayColors:false,padding:8,callbacks:{label:c=>fmtFull(c.raw)}})},
+      scales:{x:{display:false},y:{display:false,beginAtZero:true}}}});
+  mk('spark-in',s.map(x=>x.i),T.main);
+  mk('spark-out',s.map(x=>x.o),T.neg);
+  mk('spark-prf',s.map(x=>x.i-x.o),T.dark?T.c5:T.c3);
+}
+
+// ── Gauge margin (setengah lingkaran) ──
+function renderMarginGauge(margin){
+  const m=Math.max(0,Math.min(100,Number(margin)||0));
+  _upsertChart('marginGauge',{type:'doughnut',data:{labels:['Margin','Sisa'],datasets:[{data:[m,100-m],
+      backgroundColor:c=>c.dataIndex===0?_dzGradH('#557566','#DCE7DF')(c):'rgba(220,231,223,.1)',borderWidth:0,borderRadius:10}]},
+    options:{responsive:true,maintainAspectRatio:false,rotation:-90,circumference:180,cutout:'80%',layout:{padding:{top:6,left:10,right:10}},
+      animation:{animateRotate:true,duration:1200,easing:'easeOutQuart'},
+      plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+}
+function _dzGradH(a,b){
+  return c=>{const {ctx,chartArea}=c.chart;if(!chartArea)return a;const g=ctx.createLinearGradient(chartArea.left,0,chartArea.right,0);g.addColorStop(0,a);g.addColorStop(1,b);return g;};
+}
+
+// ── Donut pengeluaran per kategori (dashboard, ikut periode) ──
+function renderDashKat(list){
+  const byKat={};
+  list.filter(t=>t.type==='outflow').forEach(t=>{const k=t.kategori&&t.kategori.trim()?t.kategori.trim():'Lainnya';byKat[k]=(byKat[k]||0)+(Number(t.amount)||0);});
+  let entries=Object.entries(byKat).sort((a,b)=>b[1]-a[1]);
+  if(entries.length>6){const rest=entries.slice(5).reduce((s,[,v])=>s+v,0);entries=entries.slice(0,5).concat([['Lainnya (gabungan)',rest]]);}
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  const ce=document.getElementById('dkat-center');if(ce)ce.textContent=_abbrRp(total);
+  const lg=document.getElementById('dkat-legend');
+  const colors=['#1C2E27','#2F4A3F','#557566','#94AE9F','#C5D6CB','#B08A4A'];
+  if(_dzT().dark){colors[0]='#DCE7DF';colors[4]='#3F5449';}
+  if(!total){_dzEmptyDonut('dashKatChart');if(lg)lg.innerHTML='<div style="font-size:11px;color:var(--text3);padding:10px 0;">Belum ada pengeluaran di periode ini</div>';return;}
+  _upsertChart('dashKatChart',_dzDonutCfg(entries.map(e=>e[0]),entries.map(e=>e[1]),colors.slice(0,entries.length),total));
+  if(lg){
+    lg.innerHTML=entries.map(([k,v],i)=>{const p=(v/total*100);return `<div class="lg-row"><div class="lg-top"><span class="lg-dot" style="background:${colors[i]}"></span><span class="lg-name">${k}</span><span class="lg-amt">${_abbrRp(v)}</span><span class="lg-pct">${p.toFixed(1)}%</span></div><div class="lg-bar"><i data-w="${p.toFixed(1)}" style="background:${colors[i]}"></i></div></div>`;}).join('');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>lg.querySelectorAll('.lg-bar > i').forEach(el=>el.style.width=el.dataset.w+'%')));
+  }
+}
+
+// ── Donut status armada ──
+function renderFleetStatus(counts){
+  const T=_dzT();const j=counts.jalan||0,b=counts.bengkel||0,a=counts.antre||0,tot=j+b+a;
+  const pe=document.getElementById('fleet-pct-jalan');if(pe)pe.textContent=tot?Math.round(j/tot*100)+'%':'0%';
+  if(!tot){_dzEmptyDonut('fleetStatusChart','74%');return;}
+  _upsertChart('fleetStatusChart',_dzDonutCfg(['Jalan','Bengkel','Antre'],[j,b,a],[T.main,T.warn,T.dark?T.c3:T.c4],tot,'74%',c=>' '+c.label+': '+c.raw+' unit'));
+}
+
+// ── Net cash flow harian (bar positif/negatif) ──
+let _netFlowDays=14;
+function setNetFlowDays(n,btn){
+  _netFlowDays=n;
+  document.querySelectorAll('#netflow-filter-btns .cf-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderNetFlow();
+}
+function renderNetFlow(){
+  const T=_dzT();const s=_dzDaily(_netFlowDays);
+  const net=s.map(x=>x.i-x.o);
+  const sum=net.reduce((a,b)=>a+b,0);
+  const se=document.getElementById('netflow-sum');
+  if(se)se.innerHTML=`Total ${_netFlowDays} hari: <b style="color:${sum>=0?'var(--success)':'var(--danger)'}">${fmt(sum)}</b>`;
+  _upsertChart('netFlowChart',{type:'bar',data:{labels:s.map(x=>x.d.toLocaleDateString('id-ID',{day:'numeric',month:'short'})),
+    datasets:[{label:'Net',data:net,backgroundColor:net.map(v=>v>=0?T.main:_hexA(T.neg,.85)),hoverBackgroundColor:net.map(v=>v>=0?(T.dark?T.c5:T.c1):T.neg),
+      borderRadius:6,borderSkipped:false,barPercentage:.7,categoryPercentage:.8}]},
+    options:_dzAxisOpts(T,{maxTicks:7,tooltipLabel:c=>{const x=s[c.dataIndex];return [' Net: '+fmtFull(c.raw),' Inflow: '+fmtFull(x.i),' Outflow: '+fmtFull(x.o)];}})});
+}
+
+// ── Top armada berdasarkan inflow (bar horizontal, ikut periode) ──
+function renderTopArmada(list){
+  const T=_dzT();const by={};
+  list.filter(t=>t.type==='inflow').forEach(t=>{const k=t.armada&&t.armada.trim()?t.armada.trim():'Tanpa Armada';by[k]=(by[k]||0)+(Number(t.amount)||0);});
+  const e=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const labels=e.length?e.map(x=>x[0]):['Belum ada data'];
+  const data=e.length?e.map(x=>x[1]):[0];
+  const base=T.dark?'#94AE9F':'#2F4A3F';
+  _upsertChart('topArmadaChart',{type:'bar',data:{labels,datasets:[{label:'Inflow',data,
+      backgroundColor:data.map((_,i)=>_hexA(base,Math.max(.35,1-i*.09))),hoverBackgroundColor:T.dark?T.c5:T.c1,
+      borderRadius:8,borderSkipped:false,barPercentage:.72,categoryPercentage:.8}]},
+    options:_dzAxisOpts(T,{horizontal:true,tooltipLabel:c=>' Inflow: '+fmtFull(c.raw)})});
+}
+
+// Semua grafik tambahan dashboard (dipanggil dari renderDashboard & saat ganti tema)
+function renderDashExtras(filtered,counts,margin){
+  if(typeof Chart==='undefined'||!document.getElementById('spark-in'))return;
+  if(!filtered) filtered=filterByPeriod(transactions);
+  if(!counts){counts={jalan:0,bengkel:0,antre:0};fleetData.forEach(f=>counts[f.status]=(counts[f.status]||0)+1);}
+  if(margin===undefined){const i=totalInflow(filtered),o=totalOutflow(filtered);margin=i>0?((i-o)/i*100):0;}
+  try{renderSparklines();renderMarginGauge(margin);renderDashKat(filtered);renderFleetStatus(counts);renderNetFlow();renderTopArmada(filtered);}
+  catch(e){console.warn('Dashboard chart error:',e);}
+}
+// Urutan animasi masuk kartu dashboard
+function _dzStagger(){document.querySelectorAll('#page-dashboard .dz-anim').forEach((el,i)=>el.style.setProperty('--d',Math.min(i*55,700)+'ms'));}
+document.addEventListener('DOMContentLoaded',_dzStagger);
 
 // ═══════════════════════════════ ARMADA PERF CHART ═══════════════
 let armadaPerfChart=null;
@@ -4268,11 +4707,11 @@ function renderArmadaPerfChart(txns){
   });
   if(armadaPerfChart)armadaPerfChart.destroy();
   armadaPerfChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[
-    {label:'Net Income',data:netData,backgroundColor:netData.map(v=>v>=0?'rgba(10,168,96,.72)':'rgba(224,48,48,.65)'),borderRadius:6,yAxisID:'yNet'},
-    {label:'Ritase',data:ritaseData,backgroundColor:'rgba(255,103,0,.55)',borderRadius:6,type:'bar',yAxisID:'yRit'}
+    {label:'Net Income',data:netData,backgroundColor:netData.map(v=>v>=0?(dark?'#94AE9F':'#2F4A3F'):(dark?'rgba(227,130,109,.85)':'rgba(194,85,63,.85)')),borderRadius:8,borderSkipped:false,yAxisID:'yNet'},
+    {label:'Ritase',data:ritaseData,backgroundColor:dark?'rgba(85,117,102,.75)':'rgba(148,174,159,.8)',borderRadius:8,borderSkipped:false,type:'bar',yAxisID:'yRit'}
   ]},options:{responsive:true,plugins:{legend:{display:true,labels:{font:{family:'Inter',size:10},color:tc,boxWidth:10,boxHeight:10}},
     tooltip:{callbacks:{label:c=>{if(c.dataset.label==='Ritase')return 'Ritase: '+c.raw+' trip';return c.dataset.label+': '+fmtFull(c.raw);}},
-    backgroundColor:dark?'rgba(16,22,36,.97)':'rgba(255,255,255,.97)',titleColor:dark?'#DDE6F5':'#0B1220',bodyColor:dark?'#5AC8FA':'#0064D6',borderColor:'rgba(10,132,255,.2)',borderWidth:1,padding:9,cornerRadius:9}},
+    backgroundColor:dark?'rgba(15,26,22,.95)':'rgba(255,255,255,.97)',titleColor:dark?'#E9F0EB':'#0F1A16',bodyColor:dark?'#DCE7DF':'#2F4A3F',borderColor:'rgba(47,74,63,.2)',borderWidth:1,padding:9,cornerRadius:9}},
   scales:{
     x:{grid:{display:false},ticks:{font:{family:'Inter',size:10},color:tc}},
     yNet:{position:'left',grid:{color:gc,drawBorder:false},ticks:{font:{family:'Inter',size:9},color:tc,callback:v=>{const abs=Math.abs(v);if(abs>=1e6)return(v/1e6).toFixed(1)+'Jt';if(abs>=1e3)return(v/1e3).toFixed(0)+'Rb';return v;}}},
@@ -6363,7 +6802,7 @@ function setTheme(t){
   const bl=document.getElementById('btn-light'),bd=document.getElementById('btn-dark');
   if(bl){bl.style.borderColor=isDark?'var(--card-b)':'var(--green)';bl.style.background=isDark?'var(--bg3)':'var(--green-bg)';bl.style.color=isDark?'var(--text2)':'var(--green2)';}
   if(bd){bd.style.borderColor=isDark?'var(--green)':'var(--card-b)';bd.style.background=isDark?'var(--green-bg)':'var(--bg3)';bd.style.color=isDark?'var(--green2)':'var(--text2)';}
-  setTimeout(()=>{renderMiniLine();renderBarChart(currentBarFilter);renderDriverDonut();},50);
+  setTimeout(()=>{renderMiniLine();renderBarChart(currentBarFilter);renderDriverDonut();if(typeof renderDashExtras==='function')renderDashExtras();},50);
 }
 function toggleTheme(){setTheme(isDark?'light':'dark');}
 
